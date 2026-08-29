@@ -8,4 +8,4 @@ La plataforma está enfocada en proporcionar una experiencia fluida, combinando 
 
 ### Objetivo
 
-Desarrollar una solución de comercio electrónico que conecte tecnología, diseño y accesibilidad para simplificar la experiencia de compra online.
+Desarrollar una solución de comercio electrónico que conecte tecnología, diseño y accesibilidad para simplificar la experiencia de compra online

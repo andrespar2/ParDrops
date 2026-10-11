@@ -1,0 +1,80 @@
+package com.pardorps.pardrops.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Manejador global de errores de la API.
+ *
+ * <p>Convierte las excepciones en respuestas JSON homogéneas
+ * ({@link ErrorResponse}) con el código HTTP adecuado, de modo que el frontend
+ * siempre reciba un mensaje claro y pueda mostrarlo al usuario.</p>
+ */
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    /**
+     * Maneja los errores de negocio controlados.
+     *
+     * @param exception excepción lanzada por un servicio.
+     * @return respuesta con el estado y el mensaje de la excepción.
+     */
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ErrorResponse> handleApiException(ApiException exception) {
+        return ResponseEntity
+                .status(exception.getStatus())
+                .body(ErrorResponse.of(exception.getMessage()));
+    }
+
+    /**
+     * Maneja los fallos de validación de los datos de entrada.
+     *
+     * @param exception excepción con el detalle por campo.
+     * @return respuesta 400 con un mapa de errores campo → mensaje.
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException exception) {
+        Map<String, String> errors = new HashMap<>();
+        for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
+            errors.put(fieldError.getField(), fieldError.getDefaultMessage());
+        }
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse("Datos inválidos", errors));
+    }
+
+    /**
+     * Maneja credenciales incorrectas durante el login.
+     *
+     * @param exception excepción de autenticación.
+     * @return respuesta 401 con un mensaje genérico.
+     */
+    @ExceptionHandler({BadCredentialsException.class, AuthenticationException.class})
+    public ResponseEntity<ErrorResponse> handleAuthentication(AuthenticationException exception) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of("Correo o contraseña incorrectos"));
+    }
+
+    /**
+     * Red de seguridad para cualquier error no previsto.
+     *
+     * @param exception excepción inesperada.
+     * @return respuesta 500 con un mensaje genérico.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnexpected(Exception exception) {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.of("Ha ocurrido un error inesperado: " + exception.getMessage()));
+    }
+}

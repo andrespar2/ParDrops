@@ -12,18 +12,7 @@
       </p>
     </header>
 
-    @if (purchaseCompleted) {
-      <div class="success-message">
-        <div class="success-message__icon">✓</div>
-        <h2 class="success-message__title">¡Compra completada con éxito!</h2>
-        <p class="success-message__description">
-          Gracias por tu compra. Recibirás un email de confirmación en breve.
-        </p>
-        <a routerLink="/productos" class="success-message__button">
-          Seguir comprando
-        </a>
-      </div>
-    } @else if (cart().isEmpty) {
+    @if (cart().isEmpty) {
       <div class="empty-cart">
         <div class="empty-cart__icon">🛒</div>
         <h2 class="empty-cart__title">Tu carrito está vacío</h2>
@@ -162,7 +151,7 @@
             <span>{{ formatPrice(cart().total) }}</span>
           </div>
 
-          <button type="button" class="checkout-btn" (click)="checkout()">
+          <button type="button" class="checkout-btn" (click)="goToCheckout()">
             Finalizar compra
           </button>
 

@@ -1,0 +1,167 @@
+<!--
+  @file src/app/pages/checkout/checkout.component.html
+  @description Plantilla de la página de checkout.
+-->
+
+<main class="page">
+  <div class="container">
+    <!-- Confirmación de compra -->
+    @if (isCompleted()) {
+      <div class="success">
+        <div class="success__icon">✓</div>
+        <h1 class="success__title">¡Pedido realizado con éxito!</h1>
+        <p class="success__text">
+          Tu pedido <strong>#{{ createdOrder()!.id }}</strong> se ha registrado por un total de
+          <strong>{{ formatPrice(createdOrder()!.total) }}</strong>.
+        </p>
+        @if (isAuthenticated()) {
+          <p class="success__text">Puedes consultarlo en tu historial de pedidos.</p>
+          <div class="success__actions">
+            <a routerLink="/cuenta" class="success__button">Ver mis pedidos</a>
+            <a routerLink="/productos" class="success__button success__button--ghost">Seguir comprando</a>
+          </div>
+        } @else {
+          <p class="success__text">
+            Has comprado como <strong>invitado</strong>, por lo que este pedido no se guardará en
+            ningún historial. Crea una cuenta para guardar tus próximas compras.
+          </p>
+          <div class="success__actions">
+            <a routerLink="/login" class="success__button">Crear cuenta</a>
+            <a routerLink="/productos" class="success__button success__button--ghost">Seguir comprando</a>
+          </div>
+        }
+      </div>
+    } @else if (cart().isEmpty) {
+      <!-- Carrito vacío -->
+      <div class="empty">
+        <h1 class="empty__title">No hay nada que comprar</h1>
+        <p class="empty__text">Tu carrito está vacío. Añade productos antes de finalizar la compra.</p>
+        <a routerLink="/productos" class="empty__button">Ver productos</a>
+      </div>
+    } @else {
+      <!-- Formulario de checkout -->
+      <header class="page__header">
+        <h1 class="page__title">Finalizar compra</h1>
+        <p class="page__subtitle">Completa tus datos para registrar el pedido.</p>
+      </header>
+
+      @if (!isAuthenticated()) {
+        <div class="guest-note">
+          Estás comprando como <strong>invitado</strong>. Este pedido no se guardará en tu historial.
+          <a routerLink="/login" [queryParams]="{ redirect: '/checkout' }" class="guest-note__link">
+            Inicia sesión o crea una cuenta
+          </a>
+          para guardar tus compras.
+        </div>
+      }
+
+      @if (errorMessage()) {
+        <div class="checkout__error" role="alert">{{ errorMessage() }}</div>
+      }
+
+      <div class="checkout">
+        <!-- Datos del cliente -->
+        <form class="checkout__form" [formGroup]="form" (ngSubmit)="onSubmit()">
+          <fieldset class="checkout__group">
+            <legend class="checkout__legend">Datos de contacto</legend>
+
+            <div class="field">
+              <label class="field__label" for="c-name">Nombre completo</label>
+              <input id="c-name" type="text" class="field__input" formControlName="customerName">
+              @if (form.controls.customerName.touched && form.controls.customerName.invalid) {
+                <span class="field__error">El nombre es obligatorio.</span>
+              }
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="c-email">Correo electrónico</label>
+              <input id="c-email" type="email" class="field__input" formControlName="customerEmail">
+              @if (form.controls.customerEmail.touched && form.controls.customerEmail.invalid) {
+                <span class="field__error">Introduce un correo válido.</span>
+              }
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="c-phone">Teléfono</label>
+              <input id="c-phone" type="tel" class="field__input" formControlName="customerPhone">
+              @if (form.controls.customerPhone.touched && form.controls.customerPhone.invalid) {
+                <span class="field__error">El teléfono es obligatorio.</span>
+              }
+            </div>
+          </fieldset>
+
+          <fieldset class="checkout__group">
+            <legend class="checkout__legend">Dirección de envío</legend>
+
+            <div class="field">
+              <label class="field__label" for="c-street">Calle y número</label>
+              <input id="c-street" type="text" class="field__input" formControlName="addressStreet">
+              @if (form.controls.addressStreet.touched && form.controls.addressStreet.invalid) {
+                <span class="field__error">La dirección es obligatoria.</span>
+              }
+            </div>
+
+            <div class="checkout__row">
+              <div class="field">
+                <label class="field__label" for="c-city">Ciudad</label>
+                <input id="c-city" type="text" class="field__input" formControlName="addressCity">
+                @if (form.controls.addressCity.touched && form.controls.addressCity.invalid) {
+                  <span class="field__error">Obligatorio.</span>
+                }
+              </div>
+              <div class="field">
+                <label class="field__label" for="c-postal">Código postal</label>
+                <input id="c-postal" type="text" class="field__input" formControlName="addressPostalCode">
+                @if (form.controls.addressPostalCode.touched && form.controls.addressPostalCode.invalid) {
+                  <span class="field__error">Obligatorio.</span>
+                }
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="c-country">País</label>
+              <input id="c-country" type="text" class="field__input" formControlName="addressCountry">
+              @if (form.controls.addressCountry.touched && form.controls.addressCountry.invalid) {
+                <span class="field__error">El país es obligatorio.</span>
+              }
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="c-notes">Notas del pedido (opcional)</label>
+              <textarea id="c-notes" class="field__input field__input--textarea" formControlName="notes" rows="3"></textarea>
+            </div>
+          </fieldset>
+
+          <button type="submit" class="checkout__submit" [disabled]="submitting()">
+            {{ submitting() ? 'Procesando…' : 'Confirmar pedido' }}
+          </button>
+        </form>
+
+        <!-- Resumen del pedido -->
+        <aside class="summary">
+          <h2 class="summary__title">Resumen del pedido</h2>
+
+          <ul class="summary__items">
+            @for (item of cart().items; track item.id) {
+              <li class="summary__item">
+                <span class="summary__item-name">
+                  {{ item.product.name }}
+                  <span class="summary__item-qty">×{{ item.quantity }}</span>
+                </span>
+                <span>{{ formatPrice((item.selectedVariant?.price ?? item.product.price) * item.quantity) }}</span>
+              </li>
+            }
+          </ul>
+
+          <div class="summary__line"><span>Subtotal</span><span>{{ formatPrice(cart().subtotal) }}</span></div>
+          <div class="summary__line"><span>IVA (21%)</span><span>{{ formatPrice(cart().tax) }}</span></div>
+          <div class="summary__line">
+            <span>Envío</span>
+            <span>{{ cart().shipping === 0 ? 'Gratis' : formatPrice(cart().shipping) }}</span>
+          </div>
+          <div class="summary__total"><span>Total</span><span>{{ formatPrice(cart().total) }}</span></div>
+        </aside>
+      </div>
+    }
+  </div>
+</main>

@@ -1,0 +1,234 @@
+/**
+ * @file src/app/pages/account/account.component.scss
+ * @description Estilos de la página de la cuenta.
+ */
+
+.page {
+  padding: var(--space-12) 0;
+}
+
+.page__header {
+  margin-bottom: var(--space-8);
+}
+
+.page__title {
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--space-2);
+}
+
+.page__subtitle {
+  color: var(--color-text-tertiary);
+}
+
+.account {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: var(--space-8);
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.profile {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.profile__avatar {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-4);
+  border-radius: 9999px;
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile__name {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-1);
+}
+
+.profile__email,
+.profile__phone {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+.profile__role {
+  display: inline-block;
+  margin-top: var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 9999px;
+  background-color: var(--color-surface-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+
+  &--admin {
+    background-color: var(--color-primary);
+    color: #ffffff;
+  }
+}
+
+.profile__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+}
+
+.profile__button {
+  display: block;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: none;
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+
+  &--ghost {
+    background-color: transparent;
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+  }
+}
+
+.orders__title {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--space-4);
+}
+
+.orders__message {
+  color: var(--color-text-tertiary);
+
+  &--error {
+    color: var(--color-danger);
+  }
+}
+
+.orders__empty {
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-10);
+  text-align: center;
+}
+
+.orders__empty-text {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-4);
+}
+
+.orders__empty-link {
+  color: var(--color-text-primary);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.orders__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.order {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.order__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4);
+  background-color: var(--color-surface-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.order__id {
+  font-weight: 700;
+  display: block;
+}
+
+.order__date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.order__status {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 9999px;
+  background-color: var(--color-border-light);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+
+  &--pending { background-color: #fef3c7; color: #92400e; }
+  &--paid { background-color: #dbeafe; color: #1e40af; }
+  &--shipped { background-color: #e0e7ff; color: #3730a3; }
+  &--delivered { background-color: #dcfce7; color: #166534; }
+  &--cancelled { background-color: #fee2e2; color: #991b1b; }
+}
+
+.order__items {
+  list-style: none;
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.order__item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--space-4);
+  font-size: var(--font-size-sm);
+}
+
+.order__item-name {
+  color: var(--color-text-primary);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.order__item-variant {
+  color: var(--color-text-tertiary);
+}
+
+.order__item-qty {
+  color: var(--color-text-tertiary);
+}
+
+.order__item-price {
+  font-weight: 600;
+  min-width: 80px;
+  text-align: right;
+}
+
+.order__footer {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border-light);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.order__total {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}

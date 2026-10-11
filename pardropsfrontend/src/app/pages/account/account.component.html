@@ -1,0 +1,89 @@
+<!--
+  @file src/app/pages/account/account.component.html
+  @description Plantilla de la página de la cuenta del usuario.
+-->
+
+<main class="page">
+  <div class="container">
+    <header class="page__header">
+      <h1 class="page__title">Mi cuenta</h1>
+      <p class="page__subtitle">Gestiona tus datos y consulta tus pedidos.</p>
+    </header>
+
+    <div class="account">
+      <!-- Datos del usuario -->
+      <aside class="profile">
+        <div class="profile__avatar">{{ user()?.fullName?.charAt(0)?.toUpperCase() }}</div>
+        <h2 class="profile__name">{{ user()?.fullName }}</h2>
+        <p class="profile__email">{{ user()?.email }}</p>
+        @if (user()?.phone) {
+          <p class="profile__phone">{{ user()?.phone }}</p>
+        }
+        <span class="profile__role" [class.profile__role--admin]="isAdmin()">
+          {{ isAdmin() ? 'Administrador' : 'Cliente' }}
+        </span>
+
+        <div class="profile__actions">
+          @if (isAdmin()) {
+            <a routerLink="/admin/productos" class="profile__button">Panel de administración</a>
+          }
+          <button type="button" class="profile__button profile__button--ghost" (click)="logout()">
+            Cerrar sesión
+          </button>
+        </div>
+      </aside>
+
+      <!-- Historial de pedidos -->
+      <section class="orders">
+        <h2 class="orders__title">Historial de pedidos</h2>
+
+        @if (loading()) {
+          <p class="orders__message">Cargando tus pedidos…</p>
+        } @else if (errorMessage()) {
+          <p class="orders__message orders__message--error">{{ errorMessage() }}</p>
+        } @else if (orders().length === 0) {
+          <div class="orders__empty">
+            <p class="orders__empty-text">Todavía no has realizado ningún pedido.</p>
+            <a routerLink="/productos" class="orders__empty-link">Explorar productos</a>
+          </div>
+        } @else {
+          <div class="orders__list">
+            @for (order of orders(); track order.id) {
+              <article class="order">
+                <header class="order__header">
+                  <div>
+                    <span class="order__id">Pedido #{{ order.id }}</span>
+                    <span class="order__date">{{ formatDate(order.createdAt) }}</span>
+                  </div>
+                  <span class="order__status order__status--{{ order.status.toLowerCase() }}">
+                    {{ statusLabel(order.status) }}
+                  </span>
+                </header>
+
+                <ul class="order__items">
+                  @for (item of order.items; track item.productId + (item.variantName ?? '')) {
+                    <li class="order__item">
+                      <a [routerLink]="['/productos', item.productSlug]" class="order__item-name">
+                        {{ item.productName }}
+                        @if (item.variantName) {
+                          <span class="order__item-variant">({{ item.variantName }})</span>
+                        }
+                      </a>
+                      <span class="order__item-qty">×{{ item.quantity }}</span>
+                      <span class="order__item-price">{{ formatPrice(item.subtotal) }}</span>
+                    </li>
+                  }
+                </ul>
+
+                <footer class="order__footer">
+                  <span>{{ orderItemCount(order) }} artículo(s)</span>
+                  <span class="order__total">Total: {{ formatPrice(order.total) }}</span>
+                </footer>
+              </article>
+            }
+          </div>
+        }
+      </section>
+    </div>
+  </div>
+</main>

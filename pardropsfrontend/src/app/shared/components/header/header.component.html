@@ -73,8 +73,53 @@
       </li>
     </ul>
 
-    <!-- Acciones: carrito -->
+    <!-- Acciones: cuenta de usuario y carrito -->
     <div class="nav__actions">
+      @if (isAuthenticated()) {
+        <!-- Menú de usuario autenticado -->
+        <div class="nav__user">
+          <button
+            type="button"
+            class="nav__user-button"
+            (click)="toggleUserMenu()"
+            [attr.aria-expanded]="isUserMenuOpen()"
+            aria-label="Abrir menú de usuario"
+          >
+            <span class="nav__user-avatar">{{ user()?.fullName?.charAt(0)?.toUpperCase() }}</span>
+            <span class="nav__user-name">{{ user()?.fullName }}</span>
+          </button>
+
+          @if (isUserMenuOpen()) {
+            <div class="nav__user-menu">
+              <a routerLink="/cuenta" class="nav__user-link" (click)="toggleUserMenu()">
+                Mi cuenta
+              </a>
+              <a routerLink="/cuenta" class="nav__user-link" (click)="toggleUserMenu()">
+                Mis pedidos
+              </a>
+              @if (isAdmin()) {
+                <a routerLink="/admin/productos" class="nav__user-link" (click)="toggleUserMenu()">
+                  Administrar productos
+                </a>
+              }
+              <button
+                type="button"
+                class="nav__user-link nav__user-link--danger"
+                (click)="logout()"
+              >
+                Cerrar sesión
+              </button>
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- Acceso para invitados -->
+        <a routerLink="/login" class="nav__login" (click)="closeMobileMenu()">
+          Iniciar sesión
+        </a>
+      }
+
+      <!-- Carrito -->
       <a 
         routerLink="/carrito" 
         class="nav__cart"

@@ -1,0 +1,24 @@
+# ============================================================
+# .gitignore raíz del monorepo ParDrops
+# ------------------------------------------------------------
+# Contiene reglas que aplican a todo el repositorio. Cada
+# submódulo (pardrops/ y pardropsfrontend/) mantiene además su
+# propio .gitignore con reglas específicas de su tecnología.
+# ============================================================
+
+# --- Herramientas locales de desarrollo -----------------------
+# JDK portátil y cualquier utilidad local usada solo para
+# compilar/verificar durante el desarrollo. No se versiona.
+/.tools/
+
+# --- Base de datos local (H2) ---------------------------------
+# Archivos generados por la base de datos H2 en modo archivo.
+*.mv.db
+*.trace.db
+/data/
+
+# --- Artefactos de pruebas y compilación ----------------------
+# Volcados de la herramienta Playwright y logs de build generados
+# durante la verificación manual. No forman parte del producto.
+.playwright-mcp/
+build.log

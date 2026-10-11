@@ -1,15 +1,19 @@
 /**
  * @file src/app/pages/product-detail/product-detail.component.ts
  * @description Página de detalle de producto.
- * 
+ *
  * Muestra información completa del producto: imágenes, descripción larga,
  * precio, stock, categorías y botón para añadir al carrito con cantidad.
- * 
+ *
+ * El producto se obtiene de la lista ya cargada por el servicio (que a su vez
+ * la descarga de la API). Si el slug no corresponde a ningún producto, se
+ * redirige al catálogo.
+ *
  * @author ParDrops E-commerce
  * @version 1.0.0
  */
 
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -30,41 +34,49 @@ export class ProductDetailComponent {
   private readonly productService = inject(ProductService);
   private readonly cartService = inject(CartService);
 
-  /** Producto actual */
-  public product = signal<Product | undefined>(undefined);
+  /** Slug de la ruta actual. */
+  private readonly slug = signal<string | null>(null);
 
-  /** Imagen seleccionada */
-  public selectedImageIndex = signal<number>(0);
+  /** Producto actual, derivado de la lista cargada y del slug de la ruta. */
+  public readonly product = computed<Product | undefined>(() => {
+    const currentSlug = this.slug();
+    if (!currentSlug) return undefined;
+    return this.productService.products().find(product => product.slug === currentSlug);
+  });
 
-  /** Cantidad seleccionada */
-  public quantity = signal<number>(1);
+  /** Imagen seleccionada. */
+  public readonly selectedImageIndex = signal<number>(0);
 
-  /** Indica si se ha añadido al carrito (feedback) */
-  public addedToCart = signal<boolean>(false);
+  /** Cantidad seleccionada. */
+  public readonly quantity = signal<number>(1);
 
-  /** Tiempo de feedback para "añadido al carrito" */
+  /** Indica si se ha añadido al carrito (feedback). */
+  public readonly addedToCart = signal<boolean>(false);
+
+  /** Tiempo de feedback para "añadido al carrito". */
   private feedbackTimeout: any;
 
   constructor() {
     this.route.paramMap.subscribe(params => {
-      const slug = params.get('slug');
-      if (slug) {
-        const foundProduct = this.productService.getProductBySlug(slug);
-        if (foundProduct) {
-          this.product.set(foundProduct);
-          this.selectedImageIndex.set(0);
-          this.quantity.set(1);
-          this.addedToCart.set(false);
-        } else {
-          // Producto no encontrado, redirigir
-          this.router.navigate(['/productos']);
-        }
+      this.slug.set(params.get('slug'));
+      this.selectedImageIndex.set(0);
+      this.quantity.set(1);
+      this.addedToCart.set(false);
+    });
+
+    // Si el catálogo ya se cargó y el slug no existe, se vuelve al listado.
+    effect(() => {
+      const loaded = this.productService.loaded();
+      if (loaded && this.slug() && !this.product()) {
+        this.router.navigate(['/productos']);
       }
     });
   }
 
   /**
    * Obtiene las imágenes del producto.
+   *
+   * @returns lista de imágenes del producto actual.
    */
   public getImages() {
     return this.product()?.images || [];
@@ -108,7 +120,7 @@ export class ProductDetailComponent {
 
     this.cartService.addItem(prod, this.quantity());
     this.addedToCart.set(true);
-    
+
     if (this.feedbackTimeout) {
       clearTimeout(this.feedbackTimeout);
     }
@@ -130,4 +142,4 @@ export class ProductDetailComponent {
       minimumFractionDigits: 2
     }).format(price);
   }
-}
+}

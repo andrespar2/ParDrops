@@ -1,18 +1,19 @@
 /**
  * @file src/app/pages/cart/cart.component.ts
  * @description Página del carrito de compras.
- * 
+ *
  * Muestra todos los ítems en el carrito, permite gestionar cantidades,
- * eliminar productos, y muestra un resumen con subtotal, impuestos,
- * envío y total. También incluye funcionalidad para "comprar".
- * 
+ * eliminar productos y muestra un resumen con subtotal, impuestos, envío y
+ * total. El botón «Finalizar compra» lleva a la página de checkout, donde se
+ * recogen los datos del cliente.
+ *
  * @author ParDrops E-commerce
  * @version 1.0.0
  */
 
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
 
 @Component({
@@ -23,14 +24,14 @@ import { CartService } from '../../core/services/cart.service';
   styleUrls: ['./cart.component.scss']
 })
 export class CartComponent {
-  /** Servicio del carrito */
+  /** Servicio del carrito. */
   private readonly cartService = inject(CartService);
 
-  /** Referencia al carrito computado */
-  public readonly cart = this.cartService.cart;
+  /** Router para navegar al checkout. */
+  private readonly router = inject(Router);
 
-  /** Indica si se ha realizado una compra */
-  public purchaseCompleted = false;
+  /** Referencia al carrito computado. */
+  public readonly cart = this.cartService.cart;
 
   /**
    * Incrementa la cantidad de un ítem.
@@ -77,15 +78,12 @@ export class CartComponent {
   }
 
   /**
-   * Procesa la compra.
+   * Lleva al usuario a la página de checkout para completar la compra.
+   *
+   * @returns {void}
    */
-  public checkout(): void {
-    this.purchaseCompleted = true;
-    this.cartService.clearCart();
-    
-    setTimeout(() => {
-      this.purchaseCompleted = false;
-    }, 5000);
+  public goToCheckout(): void {
+    this.router.navigate(['/checkout']);
   }
 
   /**
@@ -99,4 +97,4 @@ export class CartComponent {
       minimumFractionDigits: 2
     }).format(price);
   }
-}
+}

@@ -1,0 +1,212 @@
+<!--
+  @file src/app/pages/admin-products/admin-products.component.html
+  @description Plantilla del panel de administración de productos.
+-->
+
+<main class="page">
+  <div class="container">
+    <header class="page__header">
+      <div>
+        <h1 class="page__title">Administración de productos</h1>
+        <p class="page__subtitle">Crea, edita y elimina los productos del catálogo.</p>
+      </div>
+      <button type="button" class="btn-primary" (click)="openCreate()">+ Nuevo producto</button>
+    </header>
+
+    @if (errorMessage()) {
+      <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
+    }
+
+    <!-- Formulario de creación/edición -->
+    @if (formOpen()) {
+      <section class="editor">
+        <h2 class="editor__title">
+          {{ editingId() ? 'Editar producto' : 'Nuevo producto' }}
+        </h2>
+
+        <form [formGroup]="form" (ngSubmit)="save()">
+          <div class="editor__grid">
+            <div class="field">
+              <label class="field__label" for="p-name">Nombre</label>
+              <input id="p-name" type="text" class="field__input" formControlName="name">
+              @if (form.controls.name.touched && form.controls.name.invalid) {
+                <span class="field__error">El nombre es obligatorio.</span>
+              }
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="p-slug">Slug (URL)</label>
+              <div class="field__inline">
+                <input id="p-slug" type="text" class="field__input" formControlName="slug">
+                <button type="button" class="btn-ghost" (click)="generateSlug()">Generar</button>
+              </div>
+              @if (form.controls.slug.touched && form.controls.slug.invalid) {
+                <span class="field__error">El slug es obligatorio.</span>
+              }
+            </div>
+
+            <div class="field field--full">
+              <label class="field__label" for="p-desc">Descripción corta</label>
+              <input id="p-desc" type="text" class="field__input" formControlName="description">
+              @if (form.controls.description.touched && form.controls.description.invalid) {
+                <span class="field__error">La descripción es obligatoria.</span>
+              }
+            </div>
+
+            <div class="field field--full">
+              <label class="field__label" for="p-long">Descripción larga</label>
+              <textarea id="p-long" class="field__input" rows="3" formControlName="longDescription"></textarea>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="p-price">Precio (€)</label>
+              <input id="p-price" type="number" step="0.01" min="0" class="field__input" formControlName="price">
+              @if (form.controls.price.touched && form.controls.price.invalid) {
+                <span class="field__error">Introduce un precio válido.</span>
+              }
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="p-original">Precio original (opcional)</label>
+              <input id="p-original" type="number" step="0.01" min="0" class="field__input" formControlName="originalPrice">
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="p-stock">Stock</label>
+              <input id="p-stock" type="number" min="0" class="field__input" formControlName="stock">
+              @if (form.controls.stock.touched && form.controls.stock.invalid) {
+                <span class="field__error">Introduce un stock válido.</span>
+              }
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="p-currency">Moneda</label>
+              <input id="p-currency" type="text" class="field__input" formControlName="currency">
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="p-rating">Valoración (0-5)</label>
+              <input id="p-rating" type="number" step="0.1" min="0" max="5" class="field__input" formControlName="rating">
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="p-reviews">Nº de reseñas</label>
+              <input id="p-reviews" type="number" min="0" class="field__input" formControlName="reviewCount">
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="p-categories">Categorías (separadas por comas)</label>
+              <input id="p-categories" type="text" class="field__input" formControlName="categoriesText" placeholder="Ropa, Camisetas">
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="p-tags">Etiquetas (separadas por comas)</label>
+              <input id="p-tags" type="text" class="field__input" formControlName="tagsText" placeholder="minimalista, negro">
+            </div>
+          </div>
+
+          <!-- Imágenes -->
+          <div class="images">
+            <div class="images__header">
+              <h3 class="images__title">Imágenes</h3>
+              <button type="button" class="btn-ghost" (click)="addImage()">+ Añadir imagen</button>
+            </div>
+
+            @for (image of images(); track $index) {
+              <div class="image-row">
+                <input
+                  type="text"
+                  class="field__input"
+                  placeholder="https://… (URL de la imagen)"
+                  [value]="image.url"
+                  (input)="updateImageUrl($index, $any($event.target).value)"
+                >
+                <input
+                  type="text"
+                  class="field__input"
+                  placeholder="Texto alternativo"
+                  [value]="image.alt"
+                  (input)="updateImageAlt($index, $any($event.target).value)"
+                >
+                <label class="image-row__primary">
+                  <input
+                    type="radio"
+                    name="primaryImage"
+                    [checked]="image.isPrimary"
+                    (change)="setPrimaryImage($index)"
+                  >
+                  Principal
+                </label>
+                <button type="button" class="btn-danger" (click)="removeImage($index)">Quitar</button>
+              </div>
+            }
+          </div>
+
+          <!-- Indicadores -->
+          <div class="flags">
+            <label class="flag"><input type="checkbox" formControlName="isNew"> Nuevo</label>
+            <label class="flag"><input type="checkbox" formControlName="isFeatured"> Destacado</label>
+            <label class="flag"><input type="checkbox" formControlName="onSale"> En oferta</label>
+          </div>
+
+          <div class="editor__actions">
+            <button type="submit" class="btn-primary" [disabled]="saving()">
+              {{ saving() ? 'Guardando…' : 'Guardar producto' }}
+            </button>
+            <button type="button" class="btn-ghost" (click)="cancel()">Cancelar</button>
+          </div>
+        </form>
+      </section>
+    }
+
+    <!-- Listado de productos -->
+    <section class="list">
+      @if (loading() && products().length === 0) {
+        <p class="list__message">Cargando productos…</p>
+      } @else if (products().length === 0) {
+        <p class="list__message">No hay productos. Crea el primero con «Nuevo producto».</p>
+      } @else {
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Imagen</th>
+              <th>Producto</th>
+              <th>Precio</th>
+              <th>Stock</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (product of products(); track product.id) {
+              <tr>
+                <td>
+                  <img [src]="primaryImage(product)" [alt]="product.name" class="table__image">
+                </td>
+                <td>
+                  <span class="table__name">{{ product.name }}</span>
+                  <span class="table__slug">{{ product.slug }}</span>
+                </td>
+                <td>{{ formatPrice(product.price) }}</td>
+                <td>{{ product.stock }}</td>
+                <td>
+                  <div class="badges">
+                    @if (product.isNew) { <span class="badge badge--new">Nuevo</span> }
+                    @if (product.isFeatured) { <span class="badge badge--feat">Destacado</span> }
+                    @if (product.onSale) { <span class="badge badge--sale">Oferta</span> }
+                  </div>
+                </td>
+                <td>
+                  <div class="table__actions">
+                    <button type="button" class="btn-ghost" (click)="openEdit(product)">Editar</button>
+                    <button type="button" class="btn-danger" (click)="delete(product)">Eliminar</button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  </div>
+</main>

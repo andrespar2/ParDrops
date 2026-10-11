@@ -1,0 +1,168 @@
+<!--
+  @file src/app/pages/login/login.component.html
+  @description Plantilla de la página de autenticación.
+-->
+
+<main class="page">
+  <div class="container auth">
+    <div class="auth__card">
+      <!-- Pestañas -->
+      <div class="auth__tabs">
+        <button
+          type="button"
+          class="auth__tab"
+          [class.auth__tab--active]="!isRegisterMode()"
+          (click)="setMode('login')"
+        >
+          Iniciar sesión
+        </button>
+        <button
+          type="button"
+          class="auth__tab"
+          [class.auth__tab--active]="isRegisterMode()"
+          (click)="setMode('register')"
+        >
+          Crear cuenta
+        </button>
+      </div>
+
+      <h1 class="auth__title">
+        {{ isRegisterMode() ? 'Crea tu cuenta' : 'Bienvenido de nuevo' }}
+      </h1>
+      <p class="auth__subtitle">
+        @if (isRegisterMode()) {
+          Guarda tu carrito, tus pedidos y tus datos para futuras compras.
+        } @else {
+          Accede para consultar tus pedidos y finalizar la compra.
+        }
+      </p>
+
+      @if (errorMessage()) {
+        <div class="auth__error" role="alert">{{ errorMessage() }}</div>
+      }
+
+      <!-- Formulario de inicio de sesión -->
+      @if (!isRegisterMode()) {
+        <form class="auth__form" [formGroup]="loginForm" (ngSubmit)="onLogin()">
+          <div class="field">
+            <label class="field__label" for="login-email">Correo electrónico</label>
+            <input
+              id="login-email"
+              type="email"
+              class="field__input"
+              formControlName="email"
+              autocomplete="email"
+              placeholder="tu@correo.com"
+            >
+            @if (loginForm.controls.email.touched && loginForm.controls.email.invalid) {
+              <span class="field__error">Introduce un correo válido.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="login-password">Contraseña</label>
+            <input
+              id="login-password"
+              type="password"
+              class="field__input"
+              formControlName="password"
+              autocomplete="current-password"
+              placeholder="••••••"
+            >
+            @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
+              <span class="field__error">La contraseña es obligatoria.</span>
+            }
+          </div>
+
+          <button type="submit" class="auth__submit" [disabled]="loading()">
+            {{ loading() ? 'Entrando…' : 'Iniciar sesión' }}
+          </button>
+        </form>
+      } @else {
+        <!-- Formulario de registro -->
+        <form class="auth__form" [formGroup]="registerForm" (ngSubmit)="onRegister()">
+          <div class="field">
+            <label class="field__label" for="reg-name">Nombre completo</label>
+            <input
+              id="reg-name"
+              type="text"
+              class="field__input"
+              formControlName="fullName"
+              autocomplete="name"
+              placeholder="Nombre y apellidos"
+            >
+            @if (registerForm.controls.fullName.touched && registerForm.controls.fullName.invalid) {
+              <span class="field__error">El nombre es obligatorio.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="reg-email">Correo electrónico</label>
+            <input
+              id="reg-email"
+              type="email"
+              class="field__input"
+              formControlName="email"
+              autocomplete="email"
+              placeholder="tu@correo.com"
+            >
+            @if (registerForm.controls.email.touched && registerForm.controls.email.invalid) {
+              <span class="field__error">Introduce un correo válido.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="reg-phone">Teléfono (opcional)</label>
+            <input
+              id="reg-phone"
+              type="tel"
+              class="field__input"
+              formControlName="phone"
+              autocomplete="tel"
+              placeholder="600 000 000"
+            >
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="reg-password">Contraseña</label>
+            <input
+              id="reg-password"
+              type="password"
+              class="field__input"
+              formControlName="password"
+              autocomplete="new-password"
+              placeholder="Mínimo 6 caracteres"
+            >
+            @if (registerForm.controls.password.touched && registerForm.controls.password.invalid) {
+              <span class="field__error">La contraseña debe tener al menos 6 caracteres.</span>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="reg-confirm">Repite la contraseña</label>
+            <input
+              id="reg-confirm"
+              type="password"
+              class="field__input"
+              formControlName="confirmPassword"
+              autocomplete="new-password"
+              placeholder="••••••"
+            >
+            @if (registerForm.touched && registerForm.errors?.['passwordsMismatch']) {
+              <span class="field__error">Las contraseñas no coinciden.</span>
+            }
+          </div>
+
+          <button type="submit" class="auth__submit" [disabled]="loading()">
+            {{ loading() ? 'Creando cuenta…' : 'Crear cuenta' }}
+          </button>
+        </form>
+      }
+
+      <div class="auth__guest">
+        ¿Prefieres no crear una cuenta?
+        <a routerLink="/productos" class="auth__guest-link">Continuar como invitado</a>
+      </div>
+    </div>
+  </div>
+</main>

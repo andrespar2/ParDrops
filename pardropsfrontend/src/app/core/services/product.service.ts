@@ -1,55 +1,69 @@
 /**
  * @file src/app/core/services/product.service.ts
  * @description Servicio para la gestión y obtención de productos.
- * 
- * Este servicio proporciona métodos para obtener el catálogo completo de productos,
- * buscar productos por ID o slug, filtrar por categorías, y acceder a productos
- * destacados o en oferta. Incluye datos de ejemplo para el desarrollo.
- * 
+ *
+ * Carga el catálogo desde la API REST del backend y expone signals reactivos
+ * para que las vistas se actualicen solas. También incluye las operaciones de
+ * creación, edición y borrado usadas por el panel de administración, que
+ * mantienen la lista local sincronizada tras cada cambio.
+ *
  * @author ParDrops E-commerce
  * @version 1.0.0
  */
 
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
+import { API_BASE_URL } from '../config/api.config';
 import { Product } from '../models/product.model';
+import { ProductRequest } from '../models/product-request.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
-  /**
-   * Signal privado que almacena la lista completa de productos.
-   * @private
-   */
+  /** Cliente HTTP. */
+  private readonly http = inject(HttpClient);
+
+  /** URL base de los endpoints de productos. */
+  private readonly productsUrl = `${API_BASE_URL}/products`;
+
+  /** Signal privado con la lista de productos cargada desde la API. */
   private readonly _products = signal<Product[]>([]);
 
-  /**
-   * Signal computado que expone la lista completa de productos.
-   * @returns {Product[]} Lista de todos los productos.
-   */
-  public readonly products = computed(() => this._products());
+  /** Signal que indica si hay una carga en curso. */
+  private readonly _loading = signal<boolean>(false);
 
-  /**
-   * Signal computado que obtiene los productos destacados.
-   * @returns {Product[]} Lista de productos con isFeatured = true.
-   */
-  public readonly featuredProducts = computed(() => 
+  /** Signal que indica si el catálogo ya se ha cargado al menos una vez. */
+  private readonly _loaded = signal<boolean>(false);
+
+  /** Signal con el último mensaje de error de carga (si lo hubo). */
+  private readonly _error = signal<string | null>(null);
+
+  /** Lista completa de productos (solo lectura). */
+  public readonly products = this._products.asReadonly();
+
+  /** Indica si el catálogo está cargándose. */
+  public readonly loading = this._loading.asReadonly();
+
+  /** Indica si el catálogo ya se cargó. */
+  public readonly loaded = this._loaded.asReadonly();
+
+  /** Último error de carga, si existe. */
+  public readonly error = this._error.asReadonly();
+
+  /** Productos destacados. */
+  public readonly featuredProducts = computed(() =>
     this._products().filter(product => product.isFeatured)
   );
 
-  /**
-   * Signal computado que obtiene los productos nuevos.
-   * @returns {Product[]} Lista de productos con isNew = true.
-   */
-  public readonly newProducts = computed(() => 
+  /** Productos marcados como novedad. */
+  public readonly newProducts = computed(() =>
     this._products().filter(product => product.isNew)
   );
 
-  /**
-   * Signal computado que obtiene los productos en oferta.
-   * @returns {Product[]} Lista de productos con onSale = true.
-   */
-  public readonly saleProducts = computed(() => 
+  /** Productos en oferta. */
+  public readonly saleProducts = computed(() =>
     this._products().filter(product => product.onSale)
   );
 
@@ -58,220 +72,107 @@ export class ProductService {
   }
 
   /**
-   * Carga el catálogo de productos inicial.
-   * En un entorno de producción, estos datos vendrían de una API REST.
-   * @private
+   * Carga (o recarga) el catálogo completo desde la API.
+   *
+   * @returns {void}
    */
-  private loadProducts(): void {
-    const products: Product[] = [
-      {
-        id: 'prod-001',
-        name: 'Camiseta Minimalista Negra',
-        slug: 'camiseta-minimalista-negra',
-        description: 'Camiseta básica de algodón orgánico con diseño minimalista.',
-        longDescription: 'Camiseta confeccionada en algodón orgánico de alta calidad. Diseño minimalista con corte moderno y unisex. Ideal para looks casuales o sofisticados.',
-        price: 29.99,
-        currency: 'EUR',
-        images: [
-          {
-            url: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&h=800&fit=crop',
-            alt: 'Camiseta minimalista negra',
-            isPrimary: true
-          },
-          {
-            url: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&h=800&fit=crop',
-            alt: 'Camiseta minimalista negra - vista lateral'
-          }
-        ],
-        categories: ['Ropa', 'Camisetas'],
-        tags: ['minimalista', 'negra', 'algodón'],
-        stock: 50,
-        rating: 4.8,
-        reviewCount: 124,
-        isNew: true,
-        isFeatured: true,
-        onSale: false,
-        createdAt: new Date('2026-01-15')
+  public loadProducts(): void {
+    this._loading.set(true);
+    this._error.set(null);
+
+    this.http.get<Product[]>(this.productsUrl).subscribe({
+      next: products => {
+        this._products.set(products);
+        this._loaded.set(true);
+        this._loading.set(false);
       },
-      {
-        id: 'prod-002',
-        name: 'Pantalón Cargo Slim',
-        slug: 'pantalon-cargo-slim',
-        description: 'Pantalón cargo de corte slim con múltiples bolsillos.',
-        longDescription: 'Pantalón cargo moderno con corte slim fit. Confeccionado en mezcla de algodón y elastano para mayor comodidad. Múltiples bolsillos funcionales con diseño minimalista.',
-        price: 59.99,
-        originalPrice: 79.99,
-        currency: 'EUR',
-        images: [
-          {
-            url: 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&h=800&fit=crop',
-            alt: 'Pantalón cargo slim',
-            isPrimary: true
-          }
-        ],
-        categories: ['Ropa', 'Pantalones'],
-        tags: ['cargo', 'slim', 'negro'],
-        stock: 30,
-        rating: 4.6,
-        reviewCount: 89,
-        isNew: false,
-        isFeatured: true,
-        onSale: true,
-        createdAt: new Date('2025-12-10')
-      },
-      {
-        id: 'prod-003',
-        name: 'Zapatillas Urbanas Blancas',
-        slug: 'zapatillas-urbanas-blancas',
-        description: 'Zapatillas urbanas minimalistas en color blanco.',
-        longDescription: 'Zapatillas de estilo urbano minimalista. Suela de goma resistente y exterior de lona premium. Diseño versátil que combina con cualquier look.',
-        price: 79.99,
-        currency: 'EUR',
-        images: [
-          {
-            url: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&h=800&fit=crop',
-            alt: 'Zapatillas urbanas blancas',
-            isPrimary: true
-          },
-          {
-            url: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=800&h=800&fit=crop',
-            alt: 'Zapatillas urbanas blancas - detalle'
-          }
-        ],
-        categories: ['Calzado', 'Zapatillas'],
-        tags: ['zapatillas', 'urbanas', 'blancas'],
-        stock: 40,
-        rating: 4.9,
-        reviewCount: 256,
-        isNew: true,
-        isFeatured: true,
-        onSale: false,
-        createdAt: new Date('2026-02-01')
-      },
-      {
-        id: 'prod-004',
-        name: 'Mochila Minimalista',
-        slug: 'mochila-minimalista',
-        description: 'Mochila minimalista con compartimento para portátil.',
-        longDescription: 'Mochila de diseño minimalista con capacidad para portátil de 15". Fabricada en nylon resistente al agua con acolchado ergonómico en espalda y correas.',
-        price: 49.99,
-        currency: 'EUR',
-        images: [
-          {
-            url: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&h=800&fit=crop',
-            alt: 'Mochila minimalista',
-            isPrimary: true
-          }
-        ],
-        categories: ['Accesorios', 'Mochilas'],
-        tags: ['mochila', 'minimalista', 'portátil'],
-        stock: 25,
-        rating: 4.7,
-        reviewCount: 78,
-        isNew: false,
-        isFeatured: false,
-        onSale: false,
-        createdAt: new Date('2025-11-20')
-      },
-      {
-        id: 'prod-005',
-        name: 'Bufanda de Lana',
-        slug: 'bufanda-de-lana',
-        description: 'Bufanda de lana merino suave al tacto.',
-        longDescription: 'Bufanda confeccionada en 100% lana merino. Suave, cálida y ligera. Diseño minimalista unisex disponible en varios colores.',
-        price: 24.99,
-        currency: 'EUR',
-        images: [
-          {
-            url: 'https://images.unsplash.com/photo-1605236453806-6ff36851218e?w=800&h=800&fit=crop',
-            alt: 'Bufanda de lana',
-            isPrimary: true
-          }
-        ],
-        categories: ['Accesorios', 'Bufandas'],
-        tags: ['bufanda', 'lana', 'invierno'],
-        stock: 60,
-        rating: 4.5,
-        reviewCount: 45,
-        isNew: true,
-        isFeatured: false,
-        onSale: false,
-        createdAt: new Date('2026-01-28')
-      },
-      {
-        id: 'prod-006',
-        name: 'Cazadora Bomber Negra',
-        slug: 'cazadora-bomber-negra',
-        description: 'Cazadora bomber minimalista con forro interior.',
-        longDescription: 'Cazadora bomber de diseño minimalista. Exterior resistente al viento con forro acolchado. Bolsillos frontales y ribetes elásticos en puños y cintura.',
-        price: 89.99,
-        originalPrice: 109.99,
-        currency: 'EUR',
-        images: [
-          {
-            url: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&h=800&fit=crop',
-            alt: 'Cazadora bomber negra',
-            isPrimary: true
-          }
-        ],
-        categories: ['Ropa', 'Chaquetas'],
-        tags: ['bomber', 'negra', 'minimalista'],
-        stock: 15,
-        rating: 4.8,
-        reviewCount: 112,
-        isNew: false,
-        isFeatured: true,
-        onSale: true,
-        createdAt: new Date('2025-12-05')
+      error: () => {
+        this._error.set('No se pudo cargar el catálogo de productos.');
+        this._loading.set(false);
       }
-    ];
-
-    this._products.set(products);
+    });
   }
 
   /**
-   * Obtiene un producto por su ID.
-   * @param {string} id - Identificador único del producto.
-   * @returns {Product | undefined} El producto encontrado o undefined si no existe.
+   * Busca un producto por su slug en la lista ya cargada.
+   *
+   * @param slug slug del producto.
+   * @returns el producto encontrado o `undefined`.
    */
-  getProductById(id: string): Product | undefined {
-    return this._products().find(product => product.id === id);
-  }
-
-  /**
-   * Obtiene un producto por su slug.
-   * @param {string} slug - Slug del producto.
-   * @returns {Product | undefined} El producto encontrado o undefined si no existe.
-   */
-  getProductBySlug(slug: string): Product | undefined {
+  public getProductBySlug(slug: string): Product | undefined {
     return this._products().find(product => product.slug === slug);
   }
 
   /**
-   * Obtiene todos los productos pertenecientes a una categoría.
-   * @param {string} category - Nombre de la categoría.
-   * @returns {Product[]} Lista de productos filtrados por categoría.
+   * Obtiene todos los productos de una categoría.
+   *
+   * @param category nombre de la categoría.
+   * @returns productos filtrados.
    */
-  getProductsByCategory(category: string): Product[] {
-    return this._products().filter(product => 
+  public getProductsByCategory(category: string): Product[] {
+    return this._products().filter(product =>
       product.categories.some(cat => cat.toLowerCase() === category.toLowerCase())
     );
   }
 
   /**
    * Busca productos por término de búsqueda.
-   * @param {string} query - Término de búsqueda.
-   * @returns {Product[]} Lista de productos que coinciden con la búsqueda.
+   *
+   * @param query término a buscar.
+   * @returns productos que coinciden.
    */
-  searchProducts(query: string): Product[] {
+  public searchProducts(query: string): Product[] {
     const lowerQuery = query.toLowerCase().trim();
     if (!lowerQuery) return this._products();
-    
-    return this._products().filter(product => 
+
+    return this._products().filter(product =>
       product.name.toLowerCase().includes(lowerQuery) ||
       product.description.toLowerCase().includes(lowerQuery) ||
       product.tags?.some(tag => tag.toLowerCase().includes(lowerQuery)) ||
       product.categories.some(cat => cat.toLowerCase().includes(lowerQuery))
     );
   }
-}
+
+  // ------------------------------------------------------------------
+  // Operaciones de administración (crear, editar y eliminar).
+  // ------------------------------------------------------------------
+
+  /**
+   * Crea un producto y lo añade a la lista local.
+   *
+   * @param request datos del nuevo producto.
+   * @returns observable con el producto creado.
+   */
+  public createProduct(request: ProductRequest): Observable<Product> {
+    return this.http.post<Product>(this.productsUrl, request).pipe(
+      tap(created => this._products.update(list => [...list, created]))
+    );
+  }
+
+  /**
+   * Actualiza un producto y refresca la copia local.
+   *
+   * @param id      identificador del producto.
+   * @param request datos actualizados.
+   * @returns observable con el producto actualizado.
+   */
+  public updateProduct(id: string, request: ProductRequest): Observable<Product> {
+    return this.http.put<Product>(`${this.productsUrl}/${id}`, request).pipe(
+      tap(updated => this._products.update(list =>
+        list.map(product => (product.id === id ? updated : product))
+      ))
+    );
+  }
+
+  /**
+   * Elimina un producto y lo quita de la lista local.
+   *
+   * @param id identificador del producto.
+   * @returns observable que completa al borrar.
+   */
+  public deleteProduct(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.productsUrl}/${id}`).pipe(
+      tap(() => this._products.update(list => list.filter(product => product.id !== id)))
+    );
+  }
+}

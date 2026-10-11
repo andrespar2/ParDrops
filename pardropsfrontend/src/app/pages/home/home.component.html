@@ -1,0 +1,85 @@
+<!-- 
+  @file src/app/pages/home/home.component.html
+  @description Plantilla HTML de la página de inicio.
+-->
+
+<main>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero__content">
+        <span class="hero__tag">Colección Minimalista</span>
+        <h1 class="hero__title">
+          Diseño elegante. <br>
+          Calidad excepcional.
+        </h1>
+        <p class="hero__description">
+          Descubre nuestra selección curada de productos con un enfoque 
+          minimalista y atemporal.
+        </p>
+        <div class="hero__actions">
+          <a routerLink="/productos" class="hero__button hero__button--primary">
+            Ver productos
+          </a>
+          <a routerLink="/productos" [queryParams]="{ filter: 'ofertas' }" class="hero__button hero__button--secondary">
+            Ver ofertas
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Productos Destacados -->
+  @if (featuredProducts().length > 0) {
+    <section class="section">
+      <div class="container">
+        <div class="section__header">
+          <h2 class="section__title">Productos destacados</h2>
+          <p class="section__subtitle">Nuestra selección más popular</p>
+        </div>
+        <div class="grid grid--3">
+          @for (product of featuredProducts(); track product.id) {
+            <app-product-card [product]="product"></app-product-card>
+          }
+        </div>
+        <div class="section__actions">
+          <a routerLink="/productos" class="section__link">Ver todos los productos →</a>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- Productos Nuevos -->
+  @if (newProducts().length > 0) {
+    <section class="section section--gray">
+      <div class="container">
+        <div class="section__header">
+          <h2 class="section__title">Novedades</h2>
+          <p class="section__subtitle">Lo último que hemos añadido</p>
+        </div>
+        <div class="grid grid--3">
+          @for (product of newProducts(); track product.id) {
+            <app-product-card [product]="product"></app-product-card>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- Productos en Oferta -->
+  @if (saleProducts().length > 0) {
+    <section class="section">
+      <div class="container">
+        <div class="section__header">
+          <h2 class="section__title">Ofertas</h2>
+          <p class="section__subtitle">No te pierdas estas oportunidades</p>
+        </div>
+        <div class="grid grid--3">
+          @for (product of saleProducts(); track product.id) {
+            <app-product-card [product]="product"></app-product-card>
+          }
+        </div>
+      </div>
+    </section>
+  }
+</main>

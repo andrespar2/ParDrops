@@ -1,0 +1,119 @@
+<!-- 
+  @file src/app/pages/product-list/product-list.component.html
+  @description Plantilla HTML de la página de lista de productos.
+-->
+
+<main class="page">
+  <div class="container">
+    <!-- Encabezado -->
+    <header class="page__header">
+      <h1 class="page__title">Productos</h1>
+      <p class="page__subtitle">
+        Descubre nuestra colección completa de productos minimalistas.
+      </p>
+    </header>
+
+    <div class="product-list__layout">
+      <!-- Filtros laterales -->
+      <aside class="filters">
+        <div class="filters__section">
+          <h2 class="filters__heading">Búsqueda</h2>
+          <div class="search">
+            <input 
+              type="text" 
+              class="search__input"
+              placeholder="Buscar productos..."
+              [value]="searchQuery()"
+              (input)="setSearch($any($event.target).value)"
+              aria-label="Buscar productos"
+            >
+          </div>
+        </div>
+
+        <div class="filters__section">
+          <h2 class="filters__heading">Filtro</h2>
+          <div class="filter-group">
+            <button 
+              class="filter-button"
+              [class.filter-button--active]="activeFilter() === 'all'"
+              (click)="setFilter('all')"
+            >
+              Todos
+            </button>
+            <button 
+              class="filter-button"
+              [class.filter-button--active]="activeFilter() === 'nuevos'"
+              (click)="setFilter('nuevos')"
+            >
+              Nuevos
+            </button>
+            <button 
+              class="filter-button"
+              [class.filter-button--active]="activeFilter() === 'ofertas'"
+              (click)="setFilter('ofertas')"
+            >
+              Ofertas
+            </button>
+          </div>
+        </div>
+
+        <div class="filters__section">
+          <h2 class="filters__heading">Categorías</h2>
+          <div class="category-group">
+            <button 
+              class="category-button"
+              [class.category-button--active]="selectedCategory() === 'all'"
+              (click)="setCategory('all')"
+            >
+              Todas las categorías
+            </button>
+            @for (category of categories; track category) {
+              <button 
+                class="category-button"
+                [class.category-button--active]="selectedCategory().toLowerCase() === category.toLowerCase()"
+                (click)="setCategory(category)"
+              >
+                {{ category }}
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (searchQuery() || selectedCategory() !== 'all' || activeFilter() !== 'all') {
+          <div class="filters__section">
+            <button class="clear-button" (click)="clearFilters()">
+              Limpiar filtros
+            </button>
+          </div>
+        }
+      </aside>
+
+      <!-- Resultados -->
+      <section class="results">
+        <div class="results__header">
+          <p class="results__count">
+            Mostrando {{ filteredProducts().length }} producto{{ filteredProducts().length !== 1 ? 's' : '' }}
+          </p>
+        </div>
+
+        @if (filteredProducts().length > 0) {
+          <div class="grid grid--3">
+            @for (product of filteredProducts(); track product.id) {
+              <app-product-card [product]="product"></app-product-card>
+            }
+          </div>
+        } @else {
+          <div class="empty-state">
+            <h2 class="empty-state__title">No se encontraron productos</h2>
+            <p class="empty-state__description">
+              Prueba a cambiar los filtros o el término de búsqueda.
+            </p>
+            <button class="empty-state__button" (click)="clearFilters()">
+              Ver todos los productos
+            </button>
+          </div>
+        }
+      </section>
+    </div>
+  </div>
+</main>

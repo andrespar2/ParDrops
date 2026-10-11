@@ -1,1 +1,12 @@
-/* You can add global styles to this file, and also import other style files */
+/**
+ * @file src/styles.scss
+ * @description Estilos globales de la aplicación.
+ * 
+ * Punto de entrada para estilos globales. Importa los estilos base
+ * desde app.scss y añade configuraciones adicionales.
+ * 
+ * @author ParDrops E-commerce
+ * @version 1.0.0
+ */
+
+@use './app/app.scss';

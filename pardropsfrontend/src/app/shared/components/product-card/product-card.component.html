@@ -1,0 +1,70 @@
+<!-- 
+  @file src/app/shared/components/product-card/product-card.component.html
+  @description Plantilla HTML del componente product-card.
+  
+  Tarjeta minimalista con imagen, información y acciones.
+-->
+
+<article class="product-card">
+  <!-- Enlace a detalle del producto -->
+  <a 
+    [routerLink]="['/productos', product.slug]" 
+    class="product-card__link"
+    [attr.aria-label]="'Ver detalles de ' + product.name"
+  >
+    <!-- Imagen del producto -->
+    <div class="product-card__image-wrapper">
+      <img 
+        [src]="getPrimaryImage()" 
+        [alt]="product.name"
+        class="product-card__image"
+        loading="lazy"
+      >
+      
+      <!-- Etiquetas -->
+      <div class="product-card__badges">
+        @if (product.isNew) {
+          <span class="product-card__badge product-card__badge--new">Nuevo</span>
+        }
+        @if (product.onSale && product.originalPrice) {
+          <span class="product-card__badge product-card__badge--sale">Oferta</span>
+        }
+      </div>
+    </div>
+
+    <!-- Información del producto -->
+    <div class="product-card__info">
+      <h3 class="product-card__name">{{ product.name }}</h3>
+      <p class="product-card__description">{{ product.description }}</p>
+      
+      <!-- Precios -->
+      <div class="product-card__price">
+        @if (product.onSale && product.originalPrice) {
+          <span class="product-card__price--original">
+            {{ formatPrice(product.originalPrice) }}
+          </span>
+        }
+        <span class="product-card__price--current">
+          {{ formatPrice(product.price) }}
+        </span>
+      </div>
+    </div>
+  </a>
+
+  <!-- Acciones -->
+  <div class="product-card__actions">
+    <button 
+      type="button"
+      class="product-card__button"
+      (click)="addToCart()"
+      [disabled]="product.stock === 0"
+      [attr.aria-label]="'Añadir ' + product.name + ' al carrito'"
+    >
+      @if (product.stock > 0) {
+        Añadir al carrito
+      } @else {
+        Agotado
+      }
+    </button>
+  </div>
+</article>

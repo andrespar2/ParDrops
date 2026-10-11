@@ -1,0 +1,82 @@
+/**
+ * @file src/app/pages/not-found/not-found.component.scss
+ * @description Estilos para la página 404.
+ */
+
+.page {
+  padding: var(--space-16) 0;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+}
+
+.not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-4);
+}
+
+.not-found__code {
+  font-size: clamp(6rem, 15vw, 10rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text-primary);
+  letter-spacing: -0.05em;
+}
+
+.not-found__title {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.not-found__description {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+  max-width: 50ch;
+}
+
+.not-found__actions {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: var(--space-4);
+}
+
+.not-found__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  
+  &--primary {
+    color: white;
+    background-color: var(--color-text-primary);
+    border: 1px solid var(--color-text-primary);
+    
+    &:hover {
+      background-color: black;
+      border-color: black;
+    }
+  }
+  
+  &--secondary {
+    color: var(--color-text-primary);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    
+    &:hover {
+      background-color: var(--color-surface-secondary);
+    }
+  }
+}

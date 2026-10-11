@@ -1,0 +1,54 @@
+<!-- 
+  @file src/app/shared/components/footer/footer.component.html
+  @description Plantilla HTML del componente footer.
+-->
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__content">
+      <div class="footer__section">
+        <h3 class="footer__logo">ParDrops</h3>
+        <p class="footer__description">
+          Plataforma de e-commerce minimalista y elegante. 
+          Productos seleccionados con calidad premium.
+        </p>
+      </div>
+
+      <div class="footer__section">
+        <h4 class="footer__heading">Navegación</h4>
+        <ul class="footer__list">
+          <li class="footer__item">
+            <a routerLink="/" class="footer__link">Inicio</a>
+          </li>
+          <li class="footer__item">
+            <a routerLink="/productos" class="footer__link">Productos</a>
+          </li>
+          <li class="footer__item">
+            <a routerLink="/carrito" class="footer__link">Carrito</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="footer__section">
+        <h4 class="footer__heading">Categorías</h4>
+        <ul class="footer__list">
+          <li class="footer__item">
+            <a routerLink="/productos" [queryParams]="{ category: 'ropa' }" class="footer__link">Ropa</a>
+          </li>
+          <li class="footer__item">
+            <a routerLink="/productos" [queryParams]="{ category: 'calzado' }" class="footer__link">Calzado</a>
+          </li>
+          <li class="footer__item">
+            <a routerLink="/productos" [queryParams]="{ category: 'accesorios' }" class="footer__link">Accesorios</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <p class="footer__copyright">
+        © {{ currentYear }} ParDrops. Todos los derechos reservados.
+      </p>
+    </div>
+  </div>
+</footer>

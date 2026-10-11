@@ -1,0 +1,169 @@
+<!-- 
+  @file src/app/pages/product-detail/product-detail.component.html
+  @description Plantilla HTML de la página de detalle de producto.
+-->
+
+<main class="page">
+  <div class="container">
+    @if (product()) {
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/" class="breadcrumb__link">Inicio</a>
+        <span class="breadcrumb__separator">/</span>
+        <a routerLink="/productos" class="breadcrumb__link">Productos</a>
+        <span class="breadcrumb__separator">/</span>
+        <span class="breadcrumb__current">{{ product()!.name }}</span>
+      </nav>
+
+      <div class="product-detail">
+        <!-- Galería de imágenes -->
+        <div class="product-detail__gallery">
+          <div class="product-detail__main-image">
+            <img 
+              [src]="getImages()[selectedImageIndex()]?.url" 
+              [alt]="product()!.name"
+              class="main-image"
+            >
+          </div>
+          @if (getImages().length > 1) {
+            <div class="product-detail__thumbnails">
+              @for (image of getImages(); track $index) {
+                <button 
+                  class="thumbnail"
+                  [class.thumbnail--active]="selectedImageIndex() === $index"
+                  (click)="selectImage($index)"
+                  [attr.aria-label]="'Ver imagen ' + ($index + 1)"
+                >
+                  <img [src]="image.url" [alt]="image.alt" class="thumbnail__image">
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Información del producto -->
+        <div class="product-detail__info">
+          <div class="product-detail__header">
+            <h1 class="product-detail__title">{{ product()!.name }}</h1>
+            <div class="product-detail__badges">
+              @if (product()!.isNew) {
+                <span class="badge badge--new">Nuevo</span>
+              }
+              @if (product()!.onSale) {
+                <span class="badge badge--sale">Oferta</span>
+              }
+            </div>
+          </div>
+
+          <!-- Precios -->
+          <div class="product-detail__price">
+            @if (product()!.onSale && product()!.originalPrice) {
+              <span class="product-detail__price--original">
+                {{ formatPrice(product()!.originalPrice!) }}
+              </span>
+            }
+            <span class="product-detail__price--current">
+              {{ formatPrice(product()!.price) }}
+            </span>
+          </div>
+
+          <!-- Descripción corta -->
+          <p class="product-detail__description">
+            {{ product()!.description }}
+          </p>
+
+          <!-- Descripción larga -->
+          @if (product()!.longDescription) {
+            <div class="product-detail__long-description">
+              <h2 class="long-description__title">Descripción</h2>
+              <p class="long-description__text">{{ product()!.longDescription }}</p>
+            </div>
+          }
+
+          <!-- Categorías -->
+          <div class="product-detail__categories">
+            <span class="categories__label">Categorías:</span>
+            <div class="categories__list">
+              @for (category of product()!.categories; track category) {
+                <a 
+                  [routerLink]="['/productos']" 
+                  [queryParams]="{ category: category.toLowerCase() }"
+                  class="category-tag"
+                >
+                  {{ category }}
+                </a>
+              }
+            </div>
+          </div>
+
+          <!-- Stock -->
+          <div class="product-detail__stock">
+            @if (product()!.stock > 10) {
+              <span class="stock--available">✓ En stock ({{ product()!.stock }} unidades)</span>
+            } @else if (product()!.stock > 0 && product()!.stock <= 10) {
+              <span class="stock--limited">⚡ Últimas {{ product()!.stock }} unidades</span>
+            } @else {
+              <span class="stock--out">✗ Agotado</span>
+            }
+          </div>
+
+          <!-- Selector de cantidad y botón añadir -->
+          @if (product()!.stock > 0) {
+            <div class="product-detail__actions">
+              <div class="quantity-selector">
+                <button 
+                  type="button"
+                  class="quantity-btn"
+                  (click)="decreaseQuantity()"
+                  [disabled]="quantity() <= 1"
+                  aria-label="Disminuir cantidad"
+                >
+                  −
+                </button>
+                <span class="quantity-value" aria-label="Cantidad">{{ quantity() }}</span>
+                <button 
+                  type="button"
+                  class="quantity-btn"
+                  (click)="increaseQuantity()"
+                  [disabled]="quantity() >= product()!.stock"
+                  aria-label="Aumentar cantidad"
+                >
+                  +
+                </button>
+              </div>
+
+              <button 
+                type="button"
+                class="add-to-cart-btn"
+                (click)="addToCart()"
+                [class.add-to-cart-btn--added]="addedToCart()"
+              >
+                @if (addedToCart()) {
+                  ✓ Añadido al carrito
+                } @else {
+                  Añadir al carrito
+                }
+              </button>
+            </div>
+          } @else {
+            <button class="add-to-cart-btn add-to-cart-btn--disabled" disabled>
+              Producto agotado
+            </button>
+          }
+
+          <!-- Feedback -->
+          @if (addedToCart()) {
+            <div class="feedback-message">
+              Se ha añadido {{ quantity() }} unidad{{ quantity() !== 1 ? 'es' : '' }} al carrito.
+              <a routerLink="/carrito" class="feedback-link">Ver carrito</a>
+            </div>
+          }
+        </div>
+      </div>
+    } @else {
+      <!-- Estado de carga/error -->
+      <div class="loading">
+        <p>Cargando producto...</p>
+      </div>
+    }
+  </div>
+</main>

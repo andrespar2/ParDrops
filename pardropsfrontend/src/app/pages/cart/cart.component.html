@@ -1,0 +1,176 @@
+<!-- 
+  @file src/app/pages/cart/cart.component.html
+  @description Plantilla HTML de la página del carrito.
+-->
+
+<main class="page">
+  <div class="container">
+    <header class="page__header">
+      <h1 class="page__title">Carrito de compras</h1>
+      <p class="page__subtitle">
+        Gestiona los productos añadidos antes de finalizar tu compra.
+      </p>
+    </header>
+
+    @if (purchaseCompleted) {
+      <div class="success-message">
+        <div class="success-message__icon">✓</div>
+        <h2 class="success-message__title">¡Compra completada con éxito!</h2>
+        <p class="success-message__description">
+          Gracias por tu compra. Recibirás un email de confirmación en breve.
+        </p>
+        <a routerLink="/productos" class="success-message__button">
+          Seguir comprando
+        </a>
+      </div>
+    } @else if (cart().isEmpty) {
+      <div class="empty-cart">
+        <div class="empty-cart__icon">🛒</div>
+        <h2 class="empty-cart__title">Tu carrito está vacío</h2>
+        <p class="empty-cart__description">
+          No hay productos en tu carrito. Explora nuestro catálogo y añade productos.
+        </p>
+        <a routerLink="/productos" class="empty-cart__button">
+          Ver productos
+        </a>
+      </div>
+    } @else {
+      <div class="cart-layout">
+        <!-- Lista de ítems -->
+        <section class="cart-items">
+          <div class="cart-items__header">
+            <h2 class="cart-items__title">Productos ({{ cart().itemCount }} unidades)</h2>
+            <button type="button" class="clear-cart-btn" (click)="clearCart()">
+              Vaciar carrito
+            </button>
+          </div>
+
+          <div class="items-list">
+            @for (item of cart().items; track item.id) {
+              <article class="cart-item">
+                <!-- Imagen -->
+                <div class="cart-item__image">
+                  <img 
+                    [src]="item.product.images[0]?.url" 
+                    [alt]="item.product.name"
+                    class="cart-item__img"
+                  >
+                </div>
+
+                <!-- Información -->
+                <div class="cart-item__info">
+                  <div class="cart-item__header">
+                    <a 
+                      [routerLink]="['/productos', item.product.slug]" 
+                      class="cart-item__name"
+                    >
+                      {{ item.product.name }}
+                    </a>
+                    <button 
+                      type="button"
+                      class="cart-item__remove"
+                      (click)="removeItem(item.id)"
+                      aria-label="Eliminar producto"
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  @if (item.selectedVariant) {
+                    <p class="cart-item__variant">{{ item.selectedVariant.name }}</p>
+                  }
+
+                  <p class="cart-item__price">
+                    {{ formatPrice(item.selectedVariant?.price ?? item.product.price) }}
+                  </p>
+
+                  <!-- Cantidad y subtotal -->
+                  <div class="cart-item__controls">
+                    <div class="quantity-selector-small">
+                      <button 
+                        type="button"
+                        class="quantity-btn-small"
+                        (click)="decreaseQuantity(item.id)"
+                        aria-label="Disminuir cantidad"
+                      >
+                        −
+                      </button>
+                      <input 
+                        type="number"
+                        class="quantity-input-small"
+                        [value]="item.quantity"
+                        min="1"
+                        [max]="item.selectedVariant?.stock ?? item.product.stock"
+                        (change)="updateQuantity(item.id, $event)"
+                        aria-label="Cantidad"
+                      >
+                      <button 
+                        type="button"
+                        class="quantity-btn-small"
+                        (click)="increaseQuantity(item.id)"
+                        aria-label="Aumentar cantidad"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <p class="cart-item__subtotal">
+                      Subtotal: <strong>{{ formatPrice((item.selectedVariant?.price ?? item.product.price) * item.quantity) }}</strong>
+                    </p>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+
+        <!-- Resumen de compra -->
+        <aside class="cart-summary">
+          <h2 class="cart-summary__title">Resumen del pedido</h2>
+
+          <div class="summary-line">
+            <span>Subtotal</span>
+            <span>{{ formatPrice(cart().subtotal) }}</span>
+          </div>
+
+          <div class="summary-line">
+            <span>IVA (21%)</span>
+            <span>{{ formatPrice(cart().tax) }}</span>
+          </div>
+
+          <div class="summary-line">
+            <span>Envío</span>
+            <span>
+              @if (cart().shipping === 0) {
+                <span class="free-shipping">Gratis</span>
+              } @else {
+                {{ formatPrice(cart().shipping) }}
+              }
+            </span>
+          </div>
+
+          @if (cart().subtotal < 100 && cart().shipping > 0) {
+            <div class="shipping-note">
+              Añade {{ formatPrice(100 - cart().subtotal) }} más para envío gratis
+            </div>
+          }
+
+          <div class="summary-divider"></div>
+
+          <div class="summary-total">
+            <span>Total</span>
+            <span>{{ formatPrice(cart().total) }}</span>
+          </div>
+
+          <button type="button" class="checkout-btn" (click)="checkout()">
+            Finalizar compra
+          </button>
+
+          <div class="summary-note">
+            Al finalizar la compra aceptas nuestros términos y condiciones.
+          </div>
+        </aside>
+      </div>
+    }
+  </div>
+</main>

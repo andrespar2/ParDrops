@@ -6,19 +6,44 @@
 #
 # Uso:  .\dev.ps1
 #
-# Usa el JDK portátil incluido en .tools\jdk25, por lo que no hace falta
-# configurar JAVA_HOME manualmente. Para detener todo, cierra las ventanas.
+# Para detener todo, cierra las ventanas.
+#
+# Requisitos: Node.js 20+ y un JDK 25. El JDK se resuelve en este orden:
+#   1) .tools\jdk25  (JDK portátil, no versionado)
+#   2) variable de entorno JAVA_HOME
+#   3) `java` disponible en el PATH
+# Si no hay ninguno, se avisa y se detiene.
 # ============================================================================
 
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
-$javaHome = Join-Path $root '.tools\jdk25'
 $backendDir = Join-Path $root 'pardrops'
 $frontendDir = Join-Path $root 'pardropsfrontend'
 
-if (-not (Test-Path (Join-Path $javaHome 'bin\java.exe'))) {
-  throw "No se encontró el JDK en '$javaHome'. Descarga un JDK 25 y descomprímelo ahí."
+function Test-JavaHome([string]$path) {
+  return $path -and (Test-Path (Join-Path $path 'bin\java.exe'))
 }
+
+# 1) JDK portátil incluido
+$javaHome = Join-Path $root '.tools\jdk25'
+if (-not (Test-JavaHome $javaHome)) {
+  # 2) JAVA_HOME del sistema
+  $javaHome = $env:JAVA_HOME
+  if (-not (Test-JavaHome $javaHome)) {
+    # 3) `java` en el PATH: derivar el home desde la ruta del ejecutable
+    $javaCmd = Get-Command java -ErrorAction SilentlyContinue
+    if ($javaCmd -and $javaCmd.Source) {
+      $javaHome = Split-Path (Split-Path $javaCmd.Source -Parent) -Parent
+    }
+  }
+}
+
+if (-not (Test-JavaHome $javaHome)) {
+  throw "No se encontró ningún JDK 25. Instala un JDK 25 y define JAVA_HOME, o colócalo en .tools\jdk25."
+}
+Write-Host "Usando JDK: $javaHome"
+$env:JAVA_HOME = $javaHome
+
 if (-not (Test-Path (Join-Path $frontendDir 'node_modules'))) {
   Write-Host 'Instalando dependencias del frontend (solo la primera vez)...'
   npm install --prefix $frontendDir

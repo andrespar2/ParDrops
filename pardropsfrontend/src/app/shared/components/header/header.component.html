@@ -98,6 +98,9 @@
                 Mis pedidos
               </a>
               @if (isAdmin()) {
+                <a routerLink="/admin/pedidos" class="nav__user-link" (click)="toggleUserMenu()">
+                  Administrar pedidos
+                </a>
                 <a routerLink="/admin/productos" class="nav__user-link" (click)="toggleUserMenu()">
                   Administrar productos
                 </a>

@@ -65,6 +65,12 @@ export const routes: Routes = [
     title: 'ParDrops - Administración de productos'
   },
   {
+    path: 'admin/pedidos',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./pages/admin-orders/admin-orders.component').then(m => m.AdminOrdersComponent),
+    title: 'ParDrops - Administración de pedidos'
+  },
+  {
     path: '**',
     loadComponent: () => import('./pages/not-found/not-found.component').then(m => m.NotFoundComponent),
     title: 'ParDrops - Página no encontrada'

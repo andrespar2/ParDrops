@@ -6,8 +6,58 @@
  * @version 1.0.0
  */
 
-/** Estados posibles de un pedido. */
-export type OrderStatus = 'PENDING' | 'PAID' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+/**
+ * Estados posibles de un pedido.
+ *
+ * El flujo habitual es `PENDING` → `PAID` → `PREPARED` → `SHIPPED` →
+ * `DELIVERED`. `DELIVERED` y `CANCELLED` son estados finales.
+ */
+export type OrderStatus = 'PENDING' | 'PAID' | 'PREPARED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+
+/** Etiquetas legibles (en español) para cada estado de pedido. */
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  PENDING: 'Pendiente',
+  PAID: 'Pagado',
+  PREPARED: 'Preparado',
+  SHIPPED: 'Enviado',
+  DELIVERED: 'Entregado',
+  CANCELLED: 'Cancelado'
+};
+
+/**
+ * Estados a los que se puede pasar desde cada estado.
+ *
+ * Refleja las transiciones que valida el backend: solo se puede avanzar en el
+ * flujo de preparación o cancelar antes de la entrega.
+ */
+export const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ['PAID', 'PREPARED', 'SHIPPED', 'CANCELLED'],
+  PAID: ['PREPARED', 'SHIPPED', 'CANCELLED'],
+  PREPARED: ['SHIPPED', 'CANCELLED'],
+  SHIPPED: ['DELIVERED', 'CANCELLED'],
+  DELIVERED: [],
+  CANCELLED: []
+};
+
+/**
+ * Devuelve la etiqueta legible de un estado de pedido.
+ *
+ * @param status estado del pedido.
+ * @returns la etiqueta en español.
+ */
+export function orderStatusLabel(status: OrderStatus): string {
+  return ORDER_STATUS_LABELS[status];
+}
+
+/**
+ * Devuelve los estados a los que se puede pasar desde el estado indicado.
+ *
+ * @param status estado actual del pedido.
+ * @returns lista de estados destino permitidos.
+ */
+export function allowedOrderTransitions(status: OrderStatus): OrderStatus[] {
+  return ORDER_STATUS_TRANSITIONS[status];
+}
 
 /**
  * Línea de un pedido tal y como la devuelve la API.

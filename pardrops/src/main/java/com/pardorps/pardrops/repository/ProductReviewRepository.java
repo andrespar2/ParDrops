@@ -1,0 +1,58 @@
+package com.pardorps.pardrops.repository;
+
+import com.pardorps.pardrops.model.ProductReview;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+
+/**
+ * Repositorio de acceso a las reseñas de productos.
+ */
+public interface ProductReviewRepository extends JpaRepository<ProductReview, Long> {
+
+    /**
+     * Obtiene las reseñas de un producto, de la más reciente a la más antigua.
+     *
+     * @param productId identificador del producto.
+     * @return reseñas publicadas sobre el producto.
+     */
+    List<ProductReview> findByProductIdOrderByCreatedAtDesc(String productId);
+
+    /**
+     * Indica si un usuario ya ha reseñado un producto.
+     *
+     * @param productId identificador del producto.
+     * @param userId    identificador del usuario.
+     * @return {@code true} si ya existe una reseña de ese usuario.
+     */
+    boolean existsByProductIdAndUserId(String productId, Long userId);
+
+    /**
+     * Cuenta las reseñas publicadas sobre un producto.
+     *
+     * @param productId identificador del producto.
+     * @return número de reseñas del producto.
+     */
+    long countByProductId(String productId);
+
+    /**
+     * Calcula la calificación media de un producto.
+     *
+     * @param productId identificador del producto.
+     * @return la media de las calificaciones, o {@code null} si no hay reseñas.
+     */
+    @Query("select avg(r.rating) from ProductReview r where r.product.id = :productId")
+    Double averageRatingByProductId(@Param("productId") String productId);
+
+    /**
+     * Elimina todas las reseñas de un producto.
+     *
+     * <p>Se usa al borrar un producto del catálogo para no violar la clave
+     * extranjera de la tabla de reseñas.</p>
+     *
+     * @param productId identificador del producto.
+     */
+    void deleteByProductId(String productId);
+}

@@ -6,6 +6,7 @@ import com.pardorps.pardrops.model.Product;
 import com.pardorps.pardrops.model.ProductImage;
 import com.pardorps.pardrops.model.ProductVariant;
 import com.pardorps.pardrops.repository.ProductRepository;
+import com.pardorps.pardrops.repository.ProductReviewRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,12 +23,18 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final ProductReviewRepository productReviewRepository;
 
     /**
-     * @param productRepository acceso a los productos.
+     * @param productRepository      acceso a los productos.
+     * @param productReviewRepository acceso a las reseñas (se borran con el producto).
      */
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(
+            ProductRepository productRepository,
+            ProductReviewRepository productReviewRepository
+    ) {
         this.productRepository = productRepository;
+        this.productReviewRepository = productReviewRepository;
     }
 
     /**
@@ -103,6 +110,9 @@ public class ProductService {
         if (!productRepository.existsById(id)) {
             throw ApiException.notFound("Producto no encontrado: " + id);
         }
+        // Las reseñas referencian al producto; se eliminan antes para no
+        // violar la clave extranjera de la tabla de reseñas.
+        productReviewRepository.deleteByProductId(id);
         productRepository.deleteById(id);
     }
 

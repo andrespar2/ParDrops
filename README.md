@@ -76,6 +76,12 @@ sencilla, rápida y eficiente.
   contacto y la dirección de envío del cliente, y se avanza el estado del pedido
   (preparado, enviado, entregado o cancelado).
 
+* **★ Reseñas de productos**
+  Los clientes que han comprado y recibido un producto pueden calificarlo de 1 a
+  5 estrellas y dejar un comentario. Cada producto muestra su valoración media,
+  el número de reseñas y la lista de opiniones; solo se admite una reseña por
+  cliente y producto.
+
 * **◼ Diseño responsive**
   Adaptado para ofrecer una experiencia adecuada en diferentes dispositivos.
   Adaptado para ofrecer una experiencia adecuada en diferentes dispositivos.
@@ -147,7 +153,8 @@ También se puede comprar **como invitado** (sin crear cuenta).
 * **Invitado:** navega el catálogo, añade al carrito y compra indicando sus
   datos. El pedido se registra pero **no se guarda en ningún historial**.
 * **Cliente registrado**: inicia sesión, compra y puede consultar su historial
-  en **Mi cuenta** (`/cuenta`).
+  en **Mi cuenta** (`/cuenta`). Cuando un pedido suyo pasa a **entregado**, puede
+  valorar en la ficha del producto los artículos que recibió.
 * **Administrador**: además, accede al panel de administración para crear,
   editar y eliminar productos con imagen por URL (`/admin/productos`) y para
   gestionar los pedidos (`/admin/pedidos`), donde ve los datos del cliente, la
@@ -163,6 +170,9 @@ También se puede comprar **como invitado** (sin crear cuenta).
 | `GET` | `/api/products` | Público | Lista el catálogo. |
 | `GET` | `/api/products/{slug}` | Público | Detalle de un producto. |
 | `POST` `PUT` `DELETE` `/api/products/...` | Solo `ADMIN` | Crear, editar y eliminar productos. |
+| `GET` | `/api/products/{id}/reviews` | Público | Lista las reseñas de un producto. |
+| `GET` | `/api/products/{id}/reviews/eligibility` | Público | Indica si el usuario actual puede reseñar el producto. |
+| `POST` | `/api/products/{id}/reviews` | Autenticado | Publica una reseña (solo con compra entregada). |
 | `POST` `/api/orders` | Público (invitado o cliente) | Registra un pedido. |
 | `GET` `/api/orders/me` | Autenticado | Historial del usuario. |
 | `GET` `/api/orders` | Solo `ADMIN` | Todos los pedidos. |
@@ -172,6 +182,11 @@ Estados de un pedido: `PENDING` (pendiente) → `PAID` (pagado) →
 `PREPARED` (preparado) → `SHIPPED` (enviado) → `DELIVERED` (entregado), más
 `CANCELLED` (cancelado). Solo se permite avanzar por este flujo (o cancelar
 antes de la entrega); `DELIVERED` y `CANCELLED` son finales.
+
+Para publicar una reseña, el cliente debe tener al menos un pedido **entregado**
+(`DELIVERED`) que contenga el producto y no haberlo reseñado antes. La
+validación se repite en el backend y el autor se toma siempre de la sesión, de
+modo que nadie puede publicar reseñas en nombre de otra persona.
 
 > La sesión se transporta en la cabecera `Authorization: Bearer <token>` y el
 > backend responde **401** en JSON cuando falta o es inválida.

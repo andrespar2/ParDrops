@@ -1,0 +1,58 @@
+/**
+ * @file src/app/shared/components/star-rating/star-rating.component.scss
+ * @description Estilos del componente de estrellas de valoración.
+ */
+
+.star-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  line-height: 1;
+}
+
+.star-rating__star,
+.star-rating__button {
+  position: relative;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  font-size: var(--font-size-lg);
+  line-height: 1;
+}
+
+.star-rating--sm .star-rating__star,
+.star-rating--sm .star-rating__button {
+  font-size: var(--font-size-sm);
+}
+
+.star-rating__button {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+
+  &:hover {
+    transform: scale(1.12);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+/* Estrella vacía (fondo) y relleno superpuesto para admitir medias estrellas. */
+.star-rating__icon {
+  color: var(--color-border);
+}
+
+.star-rating__fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #f59e0b;
+}

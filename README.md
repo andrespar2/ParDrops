@@ -108,19 +108,32 @@ comunican por HTTP:
 
 ### Requisitos
 
-* **JDK 25** para el backend (se incluye un JDK portátil en `.tools/jdk25`, no
-  versionado).
+* **JDK 25** para el backend (opcionalmente un JDK portátil en `.tools/jdk25`,
+  no versionado; si no existe se usa `JAVA_HOME` o el `java` del `PATH`).
 * **Node.js 20+** y `npm` para el frontend.
 * No hace falta instalar base de datos: el backend usa **H2 en modo archivo**
   (`pardrops/data/pardropsdb.mv.db`, excluido del control de versiones).
 
 ### Cómo ejecutar
 
+**Arranque rápido** (recomendado): en la raíz, en PowerShell
+
+```powershell
+.\dev.ps1
+```
+
+El script resuelve el JDK (`.tools\jdk25` → `JAVA_HOME` → `java` del `PATH`),
+instala las dependencias del frontend la primera vez y abre backend
+(`http://localhost:8080`) y frontend (`http://localhost:4200`) en ventanas
+separadas. Así dejas el proyecto en marcha en cualquier PC recién clonado.
+
+Para ejecutar el proyecto a mano, sigue los pasos siguientes.
+
 **Backend** (queda escuchando en `http://localhost:8080`):
 
 ```powershell
-# Windows: usar el JDK portátil incluido
-$env:JAVA_HOME = "..\.tools\jdk25"
+# Backend: usa el JDK portátil incluido (o tu JAVA_HOME / java del PATH)
+$env:JAVA_HOME = ".\.tools\jdk25"
 cd pardrops
 ./mvnw.cmd spring-boot:run
 ```

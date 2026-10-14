@@ -98,6 +98,9 @@
                 Mis pedidos
               </a>
               @if (isAdmin()) {
+                <a routerLink="/admin/pedidos" class="nav__user-link" (click)="toggleUserMenu()">
+                  Administrar pedidos
+                </a>
                 <a routerLink="/admin/productos" class="nav__user-link" (click)="toggleUserMenu()">
                   Administrar productos
                 </a>
@@ -116,6 +119,35 @@
         <!-- Acceso para invitados -->
         <a routerLink="/login" class="nav__login" (click)="closeMobileMenu()">
           Iniciar sesión
+        </a>
+      }
+
+      <!-- Aviso de pedidos por gestionar (solo administradores) -->
+      @if (isAdmin()) {
+        <a
+          routerLink="/admin/pedidos"
+          class="nav__cart"
+          (click)="closeMobileMenu()"
+          aria-label="Pedidos recibidos"
+        >
+          <svg
+            class="nav__cart-icon"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          @if (pendingCount() > 0) {
+            <span class="nav__cart-badge nav__cart-badge--alert">{{ pendingCount() }}</span>
+          }
         </a>
       }
 

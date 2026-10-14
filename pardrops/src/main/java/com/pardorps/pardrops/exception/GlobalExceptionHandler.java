@@ -2,6 +2,7 @@ package com.pardorps.pardrops.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
@@ -50,6 +51,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse("Datos inválidos", errors));
+    }
+
+    /**
+     * Maneja los cuerpos de petición que no se pueden interpretar (JSON mal
+     * formado o un valor que no pertenece a un enumerado, entre otros).
+     *
+     * @param exception excepción de lectura del cuerpo.
+     * @return respuesta 400 indicando que los datos no son válidos.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadableBody(HttpMessageNotReadableException exception) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of("El cuerpo de la petición no es válido."));
     }
 
     /**

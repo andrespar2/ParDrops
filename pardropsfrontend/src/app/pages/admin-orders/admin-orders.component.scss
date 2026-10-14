@@ -1,0 +1,279 @@
+/**
+ * @file src/app/pages/admin-orders/admin-orders.component.scss
+ * @description Estilos del panel de administración de pedidos.
+ */
+
+.page {
+  padding: var(--space-12) 0;
+}
+
+.page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  flex-wrap: wrap;
+}
+
+.page__title {
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--space-2);
+}
+
+.page__subtitle {
+  color: var(--color-text-tertiary);
+}
+
+.alert {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+
+  &--error {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: var(--color-danger);
+  }
+
+  &--new {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    background-color: #fef3c7;
+    border: 1px solid #fde68a;
+    color: #92400e;
+  }
+}
+
+.alert__detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-1);
+  font-size: var(--font-size-sm);
+}
+
+.alert__item {
+  white-space: nowrap;
+}
+
+.btn-ghost,
+.btn-danger {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  border: 1px solid transparent;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-ghost {
+  background-color: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.btn-danger {
+  background-color: transparent;
+  border-color: #fecaca;
+  color: var(--color-danger);
+}
+
+.list__message {
+  color: var(--color-text-tertiary);
+}
+
+/* --- Listado de pedidos --- */
+.orders {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.order {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background-color: var(--color-surface);
+
+  &--new {
+    border-color: #fde68a;
+    box-shadow: 0 0 0 1px #fde68a;
+  }
+}
+
+.order__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background-color: var(--color-surface-secondary);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.order__badges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tag {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+
+  &--new {
+    background-color: #fde68a;
+    color: #92400e;
+  }
+}
+
+.order__heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.order__id {
+  font-weight: 700;
+}
+
+.order__date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.status {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  padding: var(--space-1) var(--space-3);
+  border-radius: 9999px;
+  background-color: var(--color-border-light);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+
+  &--pending { background-color: #fef3c7; color: #92400e; }
+  &--paid { background-color: #dbeafe; color: #1e40af; }
+  &--prepared { background-color: #cffafe; color: #155e75; }
+  &--shipped { background-color: #e0e7ff; color: #3730a3; }
+  &--delivered { background-color: #dcfce7; color: #166534; }
+  &--cancelled { background-color: #fee2e2; color: #991b1b; }
+}
+
+.order__body {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.block {
+  padding: var(--space-4);
+  border-right: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--color-border-light);
+
+  &:last-child { border-right: none; }
+}
+
+.block__title {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-3);
+}
+
+.block__row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-1);
+}
+
+.block__label {
+  color: var(--color-text-tertiary);
+}
+
+.block__link {
+  color: var(--color-primary);
+  overflow-wrap: anywhere;
+}
+
+.block__line {
+  font-size: var(--font-size-sm);
+}
+
+.block__notes {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.block__items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.block__item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.block__item-variant {
+  color: var(--color-text-tertiary);
+}
+
+.block__item-qty {
+  color: var(--color-text-tertiary);
+}
+
+.block__item-price {
+  font-weight: 600;
+  text-align: right;
+}
+
+.block__total {
+  margin-top: var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.order__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border-light);
+  flex-wrap: wrap;
+}
+
+.order__actions-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  margin-right: var(--space-1);
+}
+
+.order__final {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+}

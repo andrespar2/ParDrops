@@ -1,0 +1,148 @@
+<!--
+  @file src/app/pages/admin-orders/admin-orders.component.html
+  @description Plantilla del panel de administración de pedidos.
+-->
+
+<main class="page">
+  <div class="container">
+    <header class="page__header">
+      <div>
+        <h1 class="page__title">Administración de pedidos</h1>
+        <p class="page__subtitle">
+          Consulta los datos del cliente y actualiza el estado de cada pedido.
+        </p>
+      </div>
+      <button type="button" class="btn-ghost" (click)="refresh()" [disabled]="loading()">
+        {{ loading() ? 'Actualizando…' : 'Actualizar' }}
+      </button>
+    </header>
+
+    @if (newArrivals().length > 0) {
+      <div class="alert alert--new" role="status">
+        <div>
+          <strong>
+            {{ newArrivals().length === 1 ? 'Ha entrado 1 pedido nuevo' : 'Han entrado ' + newArrivals().length + ' pedidos nuevos' }}
+          </strong>
+          <p class="alert__detail">
+            @for (order of newArrivals(); track order.id) {
+              <span class="alert__item">#{{ order.id }} · {{ order.customerName }}</span>
+            }
+          </p>
+        </div>
+        <button type="button" class="btn-ghost" (click)="acknowledge()">
+          Marcar como vistos
+        </button>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
+    }
+
+    @if (loading() && orders().length === 0) {
+      <p class="list__message">Cargando pedidos…</p>
+    } @else if (orders().length === 0) {
+      <p class="list__message">Todavía no hay pedidos.</p>
+    } @else {
+      <div class="orders">
+        @for (order of orders(); track order.id) {
+          <article class="order" [class.order--new]="isNew(order)">
+            <header class="order__header">
+              <div class="order__heading">
+                <span class="order__id">Pedido #{{ order.id }}</span>
+                <span class="order__date">{{ formatDate(order.createdAt) }}</span>
+              </div>
+              <div class="order__badges">
+                @if (isNew(order)) {
+                  <span class="tag tag--new">Nuevo</span>
+                }
+                <span class="status status--{{ order.status.toLowerCase() }}">
+                  {{ statusLabel(order.status) }}
+                </span>
+              </div>
+            </header>
+
+            <div class="order__body">
+              <!-- Datos de contacto del cliente -->
+              <section class="block">
+                <h2 class="block__title">Cliente</h2>
+                <p class="block__row">
+                  <span class="block__label">Nombre</span>
+                  <span>{{ order.customerName }}</span>
+                </p>
+                <p class="block__row">
+                  <span class="block__label">Correo</span>
+                  <a class="block__link" [href]="'mailto:' + order.customerEmail">
+                    {{ order.customerEmail }}
+                  </a>
+                </p>
+                <p class="block__row">
+                  <span class="block__label">Teléfono</span>
+                  <a class="block__link" [href]="'tel:' + order.customerPhone">
+                    {{ order.customerPhone }}
+                  </a>
+                </p>
+                <p class="block__row">
+                  <span class="block__label">Cuenta</span>
+                  <span>{{ order.userEmail || 'Compra como invitado' }}</span>
+                </p>
+              </section>
+
+              <!-- Dirección de envío -->
+              <section class="block">
+                <h2 class="block__title">Dirección de envío</h2>
+                <p class="block__line">{{ order.addressStreet }}</p>
+                <p class="block__line">{{ order.addressPostalCode }} {{ order.addressCity }}</p>
+                <p class="block__line">{{ order.addressCountry }}</p>
+                @if (order.notes) {
+                  <p class="block__notes">Nota del cliente: {{ order.notes }}</p>
+                }
+              </section>
+
+              <!-- Productos del pedido -->
+              <section class="block">
+                <h2 class="block__title">Productos</h2>
+                <ul class="block__items">
+                  @for (item of order.items; track item.productId + (item.variantName ?? '')) {
+                    <li class="block__item">
+                      <span class="block__item-name">
+                        {{ item.productName }}
+                        @if (item.variantName) {
+                          <span class="block__item-variant">({{ item.variantName }})</span>
+                        }
+                      </span>
+                      <span class="block__item-qty">×{{ item.quantity }}</span>
+                      <span class="block__item-price">{{ formatPrice(item.subtotal) }}</span>
+                    </li>
+                  }
+                </ul>
+                <p class="block__total">
+                  {{ orderItemCount(order) }} artículo(s) · Total: {{ formatPrice(order.total) }}
+                </p>
+              </section>
+            </div>
+
+            <footer class="order__actions">
+              @if (allowedTransitions(order.status).length === 0) {
+                <span class="order__final">Pedido finalizado</span>
+              } @else {
+                <span class="order__actions-label">Cambiar estado a:</span>
+                @for (status of allowedTransitions(order.status); track status) {
+                  <button
+                    type="button"
+                    class="btn-ghost"
+                    [class.btn-danger]="status === 'CANCELLED'"
+                    [disabled]="savingId() === order.id"
+                    (click)="changeStatus(order, status)"
+                  >
+                    {{ statusLabel(status) }}
+                  </button>
+                }
+              }
+            </footer>
+          </article>
+        }
+      </div>
+    }
+  </div>
+</main>

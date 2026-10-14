@@ -72,6 +72,9 @@ sencilla, rápida y eficiente.
 
 * **⚙️ Panel de administración**
   Permite al administrador crear, editar y eliminar los productos del catálogo.
+  Además avisa de las compras nuevas y desde él se consultan los datos de
+  contacto y la dirección de envío del cliente, y se avanza el estado del pedido
+  (preparado, enviado, entregado o cancelado).
 
 * **◼ Diseño responsive**
   Adaptado para ofrecer una experiencia adecuada en diferentes dispositivos.
@@ -145,8 +148,10 @@ También se puede comprar **como invitado** (sin crear cuenta).
   datos. El pedido se registra pero **no se guarda en ningún historial**.
 * **Cliente registrado**: inicia sesión, compra y puede consultar su historial
   en **Mi cuenta** (`/cuenta`).
-* **Administrador**: además, accede al panel de administración
-  (`/admin/productos`) para crear, editar y eliminar productos con imagen por URL.
+* **Administrador**: además, accede al panel de administración para crear,
+  editar y eliminar productos con imagen por URL (`/admin/productos`) y para
+  gestionar los pedidos (`/admin/pedidos`), donde ve los datos del cliente, la
+  dirección de envío y puede cambiar el estado de cada pedido.
 
 ### Resumen de la API
 
@@ -161,6 +166,12 @@ También se puede comprar **como invitado** (sin crear cuenta).
 | `POST` `/api/orders` | Público (invitado o cliente) | Registra un pedido. |
 | `GET` `/api/orders/me` | Autenticado | Historial del usuario. |
 | `GET` `/api/orders` | Solo `ADMIN` | Todos los pedidos. |
+| `PATCH` `/api/orders/{id}/status` | Solo `ADMIN` | Cambia el estado de un pedido. |
+
+Estados de un pedido: `PENDING` (pendiente) → `PAID` (pagado) →
+`PREPARED` (preparado) → `SHIPPED` (enviado) → `DELIVERED` (entregado), más
+`CANCELLED` (cancelado). Solo se permite avanzar por este flujo (o cancelar
+antes de la entrega); `DELIVERED` y `CANCELLED` son finales.
 
 > La sesión se transporta en la cabecera `Authorization: Bearer <token>` y el
 > backend responde **401** en JSON cuando falta o es inválida.

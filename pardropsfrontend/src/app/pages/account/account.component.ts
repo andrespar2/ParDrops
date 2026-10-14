@@ -14,7 +14,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { OrderService } from '../../core/services/order.service';
-import { Order, OrderStatus } from '../../core/models/order.model';
+import { Order, OrderStatus, orderStatusLabel } from '../../core/models/order.model';
 
 @Component({
   selector: 'app-account',
@@ -70,14 +70,7 @@ export class AccountComponent {
    * @returns etiqueta en español.
    */
   public statusLabel(status: OrderStatus): string {
-    const labels: Record<OrderStatus, string> = {
-      PENDING: 'Pendiente',
-      PAID: 'Pagado',
-      SHIPPED: 'Enviado',
-      DELIVERED: 'Entregado',
-      CANCELLED: 'Cancelado'
-    };
-    return labels[status];
+    return orderStatusLabel(status);
   }
 
   /**

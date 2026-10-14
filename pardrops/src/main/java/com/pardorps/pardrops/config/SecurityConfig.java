@@ -100,6 +100,9 @@ public class SecurityConfig {
                         // --- Todos los pedidos: solo administración. ---
                         .requestMatchers(HttpMethod.GET, "/api/orders").hasRole("ADMIN")
 
+                        // --- Cambio de estado de un pedido: solo administración. ---
+                        .requestMatchers(HttpMethod.PATCH, "/api/orders/*/status").hasRole("ADMIN")
+
                         // La consola H2 y cualquier otra ruta quedan abiertas en desarrollo.
                         .anyRequest().permitAll()
                 )
@@ -121,7 +124,7 @@ public class SecurityConfig {
                 .map(String::trim)
                 .filter(origin -> !origin.isEmpty())
                 .toList());
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 

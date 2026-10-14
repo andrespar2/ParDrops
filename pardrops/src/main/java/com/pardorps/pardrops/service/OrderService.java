@@ -132,6 +132,35 @@ public class OrderService {
     }
 
     /**
+     * Cambia el estado de un pedido (uso exclusivo del administrador).
+     *
+     * <p>Solo se admiten los avances definidos por
+     * {@link OrderStatus#canTransitionTo(OrderStatus)}: se puede avanzar por el
+     * flujo de preparación o cancelar antes de la entrega, pero nunca
+     * retroceder ni modificar un pedido ya entregado o cancelado.</p>
+     *
+     * @param orderId   identificador del pedido.
+     * @param newStatus nuevo estado solicitado.
+     * @return el pedido actualizado.
+     * @throws ApiException si el pedido no existe (404) o el cambio no es válido (409).
+     */
+    @Transactional
+    public OrderResponse updateStatus(Long orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> ApiException.notFound("Pedido no encontrado: " + orderId));
+
+        OrderStatus currentStatus = order.getStatus();
+        if (!currentStatus.canTransitionTo(newStatus)) {
+            throw ApiException.conflict(
+                    "No se puede cambiar el pedido del estado " + currentStatus
+                            + " a " + newStatus + ".");
+        }
+
+        order.setStatus(newStatus);
+        return toResponse(orderRepository.save(order));
+    }
+
+    /**
      * Determina el precio unitario de una línea.
      *
      * <p>Si se indica una variante que existe en el producto y tiene precio

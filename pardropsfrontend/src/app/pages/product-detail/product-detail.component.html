@@ -54,6 +54,17 @@
             </div>
           </div>
 
+          <!-- Valoración media -->
+          <div class="product-detail__rating">
+            <app-star-rating [rating]="averageRating()" size="sm" />
+            <span class="product-detail__rating-value">
+              {{ averageRating() | number: '1.1-1' }}
+            </span>
+            <a href="#reviews" class="product-detail__rating-count">
+              {{ reviewCount() }} {{ reviewCount() === 1 ? 'reseña' : 'reseñas' }}
+            </a>
+          </div>
+
           <!-- Precios -->
           <div class="product-detail__price">
             @if (product()!.onSale && product()!.originalPrice) {
@@ -159,6 +170,117 @@
           }
         </div>
       </div>
+
+      <!-- Reseñas de clientes -->
+      <section class="product-reviews" id="reviews">
+        <header class="product-reviews__header">
+          <h2 class="product-reviews__title">Reseñas de clientes</h2>
+          <div class="product-reviews__summary">
+            <app-star-rating [rating]="averageRating()" />
+            <span class="product-reviews__average">
+              {{ averageRating() | number: '1.1-1' }} de 5
+            </span>
+            <span class="product-reviews__count">
+              · {{ reviewCount() }} {{ reviewCount() === 1 ? 'reseña' : 'reseñas' }}
+            </span>
+          </div>
+        </header>
+
+        <!-- Listado de reseñas -->
+        @if (reviewsLoading()) {
+          <p class="product-reviews__status">Cargando reseñas…</p>
+        } @else if (reviews().length === 0) {
+          <p class="product-reviews__empty">
+            Todavía no hay reseñas de este producto.
+          </p>
+        } @else {
+          <ul class="product-reviews__list">
+            @for (review of reviews(); track review.id) {
+              <li class="review">
+                <div class="review__header">
+                  <span class="review__author">{{ review.customerName }}</span>
+                  <span class="review__date">{{ review.createdAt | date: 'd MMM y' }}</span>
+                </div>
+                <app-star-rating [rating]="review.rating" size="sm" />
+                <p class="review__comment">{{ review.comment }}</p>
+              </li>
+            }
+          </ul>
+        }
+
+        <!-- Avisos y formulario de publicación -->
+        <div class="product-reviews__actions">
+          @if (successMessage()) {
+            <p class="product-reviews__message product-reviews__message--success" role="status">
+              {{ successMessage() }}
+            </p>
+          }
+          @if (errorMessage()) {
+            <p class="product-reviews__message product-reviews__message--error" role="alert">
+              {{ errorMessage() }}
+            </p>
+          }
+
+          @if (!isAuthenticated()) {
+            <p class="product-reviews__notice">
+              ¿Has comprado este producto?
+              <a
+                routerLink="/login"
+                [queryParams]="{ redirect: '/productos/' + product()!.slug }"
+                class="product-reviews__link"
+              >Inicia sesión</a>
+              para dejar tu valoración.
+            </p>
+          } @else if (hasReviewed()) {
+            <p class="product-reviews__notice">
+              Ya has valorado este producto. ¡Gracias por tu opinión!
+            </p>
+          } @else if (canReview()) {
+            <form class="review-form" [formGroup]="reviewForm" (ngSubmit)="submitReview()">
+              <h3 class="review-form__title">Deja tu valoración</h3>
+
+              <div class="field">
+                <span class="field__label">Tu calificación</span>
+                <app-star-rating
+                  [interactive]="true"
+                  [rating]="formRating()"
+                  label="Tu calificación"
+                  (ratingChange)="setRating($event)"
+                />
+                @if (submitted() && reviewForm.controls.rating.invalid) {
+                  <span class="field__error">Selecciona entre 1 y 5 estrellas.</span>
+                }
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="review-comment">Tu comentario</label>
+                <textarea
+                  id="review-comment"
+                  class="field__input field__textarea"
+                  formControlName="comment"
+                  rows="4"
+                  maxlength="2000"
+                  placeholder="Cuéntanos tu experiencia con el producto"
+                ></textarea>
+                @if (
+                  (submitted() || reviewForm.controls.comment.touched) &&
+                  reviewForm.controls.comment.invalid
+                ) {
+                  <span class="field__error">Escribe un comentario sobre el producto.</span>
+                }
+              </div>
+
+              <button type="submit" class="review-form__submit" [disabled]="submitting()">
+                {{ submitting() ? 'Publicando…' : 'Publicar reseña' }}
+              </button>
+            </form>
+          } @else {
+            <p class="product-reviews__notice">
+              Solo los clientes que han comprado y recibido este producto pueden dejar una reseña.
+            </p>
+          }
+        </div>
+      </section>
     } @else {
       <!-- Estado de carga/error -->
       <div class="loading">

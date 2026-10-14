@@ -1,6 +1,7 @@
 package com.pardorps.pardrops.repository;
 
 import com.pardorps.pardrops.model.Order;
+import com.pardorps.pardrops.model.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -25,4 +26,18 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * @return listado completo de pedidos.
      */
     List<Order> findAllByOrderByCreatedAtDesc();
+
+    /**
+     * Indica si un usuario tiene al menos un pedido en el estado indicado que
+     * contenga el producto dado.
+     *
+     * <p>Se usa para validar que solo quien ha recibido el producto puede
+     * dejar una reseña.</p>
+     *
+     * @param userId    identificador del usuario.
+     * @param productId identificador del producto comprado.
+     * @param status    estado que debe tener el pedido.
+     * @return {@code true} si existe una compra en ese estado.
+     */
+    boolean existsByUserIdAndItemsProductIdAndStatus(Long userId, String productId, OrderStatus status);
 }

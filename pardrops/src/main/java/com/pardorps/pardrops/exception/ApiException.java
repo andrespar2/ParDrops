@@ -67,4 +67,15 @@ public class ApiException extends RuntimeException {
     public static ApiException unauthorized(String message) {
         return new ApiException(HttpStatus.UNAUTHORIZED, message);
     }
+
+    /**
+     * Atajo para una operación que el usuario autenticado no puede realizar
+     * (403), como reseñar un producto que no ha comprado.
+     *
+     * @param message mensaje del error.
+     * @return la excepción lista para lanzar.
+     */
+    public static ApiException forbidden(String message) {
+        return new ApiException(HttpStatus.FORBIDDEN, message);
+    }
 }

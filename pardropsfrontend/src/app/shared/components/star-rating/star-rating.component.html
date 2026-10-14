@@ -1,0 +1,40 @@
+<!--
+  @file src/app/shared/components/star-rating/star-rating.component.html
+  @description Plantilla del componente de estrellas de valoración.
+-->
+
+<div
+  class="star-rating"
+  [class.star-rating--sm]="size() === 'sm'"
+  [class.star-rating--interactive]="interactive()"
+  [attr.role]="interactive() ? 'group' : 'img'"
+  [attr.aria-label]="interactive() ? label() : displayLabel()"
+>
+  @for (star of stars(); track star) {
+    @if (interactive()) {
+      <button
+        type="button"
+        class="star-rating__button"
+        [attr.aria-label]="star + ' de ' + max() + ' estrellas'"
+        [attr.aria-pressed]="rating() === star"
+        (mouseenter)="hover(star)"
+        (focus)="hover(star)"
+        (mouseleave)="clearHover()"
+        (blur)="clearHover()"
+        (click)="select(star)"
+      >
+        <span class="star-rating__icon" aria-hidden="true">★</span>
+        <span
+          class="star-rating__fill"
+          aria-hidden="true"
+          [style.width.%]="fillPercentage(star)"
+        >★</span>
+      </button>
+    } @else {
+      <span class="star-rating__star" aria-hidden="true">
+        <span class="star-rating__icon">★</span>
+        <span class="star-rating__fill" [style.width.%]="fillPercentage(star)">★</span>
+      </span>
+    }
+  }
+</div>

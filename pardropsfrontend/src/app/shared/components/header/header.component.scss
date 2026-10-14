@@ -186,6 +186,10 @@
   align-items: center;
   justify-content: center;
   line-height: 1;
+
+  &--alert {
+    background-color: var(--color-accent);
+  }
 }
 
 .nav__login {

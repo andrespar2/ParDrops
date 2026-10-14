@@ -4,17 +4,18 @@
  *
  * Muestra la marca/logo, el menú de navegación, el buscador, el acceso a la
  * cuenta del usuario y el indicador del carrito de compras con el contador de
- * ítems.
+ * ítems. Para el administrador incluye además el aviso de pedidos por gestionar.
  *
  * @author ParDrops E-commerce
  * @version 1.0.0
  */
 
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CartService } from '../../../core/services/cart.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { OrderService } from '../../../core/services/order.service';
 
 @Component({
   selector: 'app-header',
@@ -30,11 +31,20 @@ export class HeaderComponent {
   /** Servicio de autenticación para conocer el estado de la sesión. */
   private readonly authService = inject(AuthService);
 
+  /** Servicio de pedidos para avisar de las compras nuevas. */
+  private readonly orderService = inject(OrderService);
+
   /** Router para redirigir tras cerrar sesión. */
   private readonly router = inject(Router);
 
+  /** Referencia de destrucción para detener el sondeo de pedidos. */
+  private readonly destroyRef = inject(DestroyRef);
+
   /** Contador computado de ítems en el carrito. */
   public readonly itemCount = computed(() => this.cartService.itemCount());
+
+  /** Pedidos pendientes de gestión (aviso para el administrador). */
+  public readonly pendingCount = this.orderService.pendingCount;
 
   /** Usuario autenticado (o nulo). */
   public readonly user = this.authService.user;
@@ -50,6 +60,19 @@ export class HeaderComponent {
 
   /** Estado del desplegable de usuario. */
   public readonly isUserMenuOpen = signal<boolean>(false);
+
+  constructor() {
+    // Mientras haya una sesión de administrador, se vigilan los pedidos nuevos.
+    effect(() => {
+      if (this.authService.isAdmin()) {
+        this.orderService.startNotificationPolling();
+      } else {
+        this.orderService.stopNotificationPolling();
+      }
+    });
+
+    this.destroyRef.onDestroy(() => this.orderService.stopNotificationPolling());
+  }
 
   /**
    * Alterna el estado del menú móvil.

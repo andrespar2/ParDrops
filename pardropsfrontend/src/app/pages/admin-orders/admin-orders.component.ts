@@ -35,6 +35,9 @@ export class AdminOrdersComponent {
   /** Todos los pedidos (signal del servicio). */
   public readonly orders = this.orderService.allOrders;
 
+  /** Pedidos nuevos detectados por el sondeo de notificaciones. */
+  public readonly newArrivals = this.orderService.newArrivals;
+
   /** Indica si los pedidos están cargándose. */
   public readonly loading = signal<boolean>(true);
 
@@ -86,6 +89,25 @@ export class AdminOrdersComponent {
         this.savingId.set(null);
       }
     });
+  }
+
+  /**
+   * Indica si un pedido acaba de llegar y todavía no se ha revisado.
+   *
+   * @param order pedido a comprobar.
+   * @returns `true` si el pedido es un aviso pendiente.
+   */
+  public isNew(order: Order): boolean {
+    return this.newArrivals().some(newOrder => newOrder.id === order.id);
+  }
+
+  /**
+   * Descarta el aviso de pedidos nuevos (el administrador ya los ha visto).
+   *
+   * @returns {void}
+   */
+  public acknowledge(): void {
+    this.orderService.acknowledgeNewOrders();
   }
 
   /**

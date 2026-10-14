@@ -17,6 +17,24 @@
       </button>
     </header>
 
+    @if (newArrivals().length > 0) {
+      <div class="alert alert--new" role="status">
+        <div>
+          <strong>
+            {{ newArrivals().length === 1 ? 'Ha entrado 1 pedido nuevo' : 'Han entrado ' + newArrivals().length + ' pedidos nuevos' }}
+          </strong>
+          <p class="alert__detail">
+            @for (order of newArrivals(); track order.id) {
+              <span class="alert__item">#{{ order.id }} · {{ order.customerName }}</span>
+            }
+          </p>
+        </div>
+        <button type="button" class="btn-ghost" (click)="acknowledge()">
+          Marcar como vistos
+        </button>
+      </div>
+    }
+
     @if (errorMessage()) {
       <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
     }
@@ -28,15 +46,20 @@
     } @else {
       <div class="orders">
         @for (order of orders(); track order.id) {
-          <article class="order">
+          <article class="order" [class.order--new]="isNew(order)">
             <header class="order__header">
               <div class="order__heading">
                 <span class="order__id">Pedido #{{ order.id }}</span>
                 <span class="order__date">{{ formatDate(order.createdAt) }}</span>
               </div>
-              <span class="status status--{{ order.status.toLowerCase() }}">
-                {{ statusLabel(order.status) }}
-              </span>
+              <div class="order__badges">
+                @if (isNew(order)) {
+                  <span class="tag tag--new">Nuevo</span>
+                }
+                <span class="status status--{{ order.status.toLowerCase() }}">
+                  {{ statusLabel(order.status) }}
+                </span>
+              </div>
             </header>
 
             <div class="order__body">

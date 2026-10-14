@@ -86,6 +86,10 @@ public class SecurityConfig {
 
                         // --- Catálogo: lectura pública, gestión solo para admin. ---
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+
+                        // --- Reseñas: publicar requiere sesión (la compra se valida en el servicio). ---
+                        .requestMatchers(HttpMethod.POST, "/api/products/*/reviews").authenticated()
+
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")

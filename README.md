@@ -1,13 +1,16 @@
 
 <!-- ========================================================= -->
-<!--                  P A R D R O P S                          -->
-<!--              DIGITAL COMMERCE PLATFORM                    -->
-<!--             README · PREMIUM EDITION                      -->
+<!--                                                           -->
+<!--                     P A R D R O P S                       -->
+<!--                                                           -->
+<!--                DIGITAL COMMERCE PLATFORM                  -->
+<!--                   PREMIUM README                          -->
+<!--                                                           -->
 <!-- ========================================================= -->
 
 <div align="center">
 
-<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,45:0E7490,100:22D3EE&height=240&section=header&text=ParDrops&fontSize=78&fontColor=FFFFFF&animation=fadeIn&fontAlignY=38&desc=EXPLORE%20%7C%20DISCOVER%20%7C%20SHOP&descAlignY=62&descSize=20" alt="ParDrops"/>
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,45:0E7490,100:22D3EE&height=240&section=header&text=ParDrops&fontSize=78&fontColor=FFFFFF&animation=fadeIn&fontAlignY=38&desc=EXPLORE%20%7C%20DISCOVER%20%7C%20SHOP&descAlignY=62&descSize=20" alt="ParDrops Banner"/>
 
 ### ✦ E X P L O R A · D E S C U B R E · C O M P R A ✦
 
@@ -42,25 +45,21 @@ Una plataforma e-commerce moderna, intuitiva y construida con tecnologías de ú
 ## 💠 Identidad digital
 
 ```text
-╔══════════════════════════════════════════════════════════╗
-║                                                          ║
-║   ██████╗  █████╗ ██████╗ ██████╗  ██████╗ ██████╗ ███████╗
-║   ██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔════╝
-║   ██████╔╝███████║██████╔╝██║  ██║██████╔╝██║  ██║███████╗
-║   ██╔═══╝ ██╔══██║██╔══██╗██║  ██║██╔══██╗██║  ██║╚════██║
-║   ██║     ██║  ██║██║  ██║██████╔╝██║  ██║██████╔╝███████║
-║   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚══════╝
-║                                                          ║
-║                  DIGITAL COMMERCE                        ║
-║                                                          ║
-║            EXPLORE  •  DISCOVER  •  SHOP                 ║
-║                                                          ║
-╚══════════════════════════════════════════════════════════╝
+██████╗  █████╗ ██████╗ ██████╗ ██████╗  ██████╗ ██████╗ ███████╗
+██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔═══██╗██╔══██╗██╔════╝
+██████╔╝███████║██████╔╝██║  ██║██████╔╝██║   ██║██████╔╝███████╗
+██╔═══╝ ██╔══██║██╔══██╗██║  ██║██╔══██╗██║   ██║██╔═══╝ ╚════██║
+██║     ██║  ██║██║  ██║██████╔╝██║  ██║╚██████╔╝██║     ███████║
+╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚═╝     ╚══════╝
 ```
 
 <div align="center">
 
-> **Más que una tienda online: una experiencia digital completa.**
+### ✦ PARDROPS · DIGITAL COMMERCE ✦
+
+**E X P L O R A · D E S C U B R E · C O M P R A**
+
+> Más que una tienda online: una experiencia digital completa.
 
 </div>
 
@@ -107,7 +106,7 @@ Permite a los usuarios:
 - 🛍️ Descubrir productos.
 - 📄 Consultar información detallada.
 - 🛒 Agregar artículos al carrito.
-- 💳 Registrar pedidos.
+- 🧾 Registrar pedidos.
 - 👤 Crear cuentas personales.
 - 📦 Consultar su historial de compras.
 - ⭐ Publicar reseñas de productos recibidos.
@@ -146,7 +145,7 @@ Desarrollar una plataforma de comercio electrónico moderna que facilite la expl
 <tr>
 <td width="50%" valign="top">
 
-### 🛍️ Catálogo inteligente
+### 🛍️ Catálogo digital
 
 Exploración de productos con precios, imágenes y descripciones detalladas.
 
@@ -284,38 +283,34 @@ flowchart TB
 <summary><b>🖥️ Ver arquitectura en arte ASCII</b></summary>
 
 ```text
-                    ┌───────────────────┐
-                    │      USUARIO      │
-                    │     NAVEGADOR     │
-                    └─────────┬─────────┘
-                              │
-                              ▼
-               ╔════════════════════════╗
-               ║        FRONTEND        ║
-               ║                        ║
-               ║       ANGULAR 22       ║
-               ║                        ║
-               ║    localhost:4200      ║
-               ╚════════════╤═══════════╝
-                            │
-                         HTTP/JSON
-                            │
-                            ▼
-               ╔════════════════════════╗
-               ║         BACKEND        ║
-               ║                        ║
-               ║     SPRING BOOT 4      ║
-               ║                        ║
-               ║    localhost:8080      ║
-               ╚════════════╤═══════════╝
-                            │
-                ┌───────────┴──────────┐
-                │                      │
-                ▼                      ▼
-       ┌────────────────┐    ┌────────────────┐
-       │      JWT       │    │   H2 DATABASE  │
-       │   SEGURIDAD    │    │  PERSISTENCIA  │
-       └────────────────┘    └────────────────┘
+                 +--------------------+
+                 |       USUARIO      |
+                 |      NAVEGADOR     |
+                 +---------+----------+
+                           |
+                           v
+                 +--------------------+
+                 |      FRONTEND      |
+                 |      ANGULAR 22    |
+                 |   localhost:4200   |
+                 +---------+----------+
+                           |
+                        HTTP/JSON
+                           |
+                           v
+                 +--------------------+
+                 |       BACKEND      |
+                 |    SPRING BOOT 4   |
+                 |   localhost:8080   |
+                 +---------+----------+
+                           |
+                +----------+----------+
+                |                     |
+                v                     v
+        +---------------+     +---------------+
+        |      JWT      |     |  H2 DATABASE  |
+        |   SEGURIDAD   |     | PERSISTENCIA  |
+        +---------------+     +---------------+
 ```
 
 </details>
@@ -399,11 +394,11 @@ El script:
 
 ```text
 .tools/jdk25
-     │
-     ▼
+     |
+     v
   JAVA_HOME
-     │
-     ▼
+     |
+     v
   JAVA en PATH
 ```
 
@@ -544,21 +539,21 @@ flowchart TD
 ### Fórmulas comerciales
 
 ```text
-┌─────────────────────────────────────────┐
-│           CÁLCULO DEL PEDIDO            │
-├─────────────────────────────────────────┤
-│                                         │
-│  SUBTOTAL = Σ productos                 │
-│                                         │
-│  IVA = SUBTOTAL × 0.19                  │
-│                                         │
-│  ENVÍO =                                │
-│    0       si subtotal >= 400.000       │
-│    25.900  si subtotal <  400.000       │
-│                                         │
-│  TOTAL = SUBTOTAL + IVA + ENVÍO         │
-│                                         │
-└─────────────────────────────────────────┘
++-----------------------------------------+
+|           CALCULO DEL PEDIDO            |
++-----------------------------------------+
+|                                         |
+|  SUBTOTAL = Suma de productos           |
+|                                         |
+|  IVA = SUBTOTAL * 0.19                  |
+|                                         |
+|  ENVIO =                                |
+|    0       si subtotal >= 400.000       |
+|    25.900  si subtotal <  400.000       |
+|                                         |
+|  TOTAL = SUBTOTAL + IVA + ENVIO         |
+|                                         |
++-----------------------------------------+
 ```
 
 ### Productos de ejemplo
@@ -1023,15 +1018,15 @@ Si estás trabajando únicamente con datos locales de prueba:
 <br/>
 
 ```text
-┌──────────────────────────────────────────────┐
-│                                              │
-│                  PARDROPS                    │
-│                                              │
-│           EXPLORE • DISCOVER • SHOP          │
-│                                              │
-│              BUILT FOR THE WEB               │
-│                                              │
-└──────────────────────────────────────────────┘
++------------------------------------------+
+|                                          |
+|               P A R D R O P S            |
+|                                          |
+|         EXPLORE - DISCOVER - SHOP        |
+|                                          |
+|             BUILT FOR THE WEB            |
+|                                          |
++------------------------------------------+
 ```
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:22D3EE,50:0E7490,100:020617&height=125&section=footer" width="100%" alt="Footer"/>

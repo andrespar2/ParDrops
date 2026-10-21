@@ -137,7 +137,7 @@ export class AdminOrdersComponent {
    * @returns la fecha formateada en español.
    */
   public formatDate(isoDate: string): string {
-    return new Date(isoDate).toLocaleDateString('es-ES', {
+    return new Date(isoDate).toLocaleDateString('es-CO', {
       day: '2-digit',
       month: 'long',
       year: 'numeric'
@@ -148,12 +148,12 @@ export class AdminOrdersComponent {
    * Formatea un importe como moneda.
    *
    * @param price importe a formatear.
-   * @returns el importe formateado en euros.
+   * @returns el importe formateado en pesos colombianos.
    */
   public formatPrice(price: number): string {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-CO', {
       style: 'currency',
-      currency: 'EUR',
+      currency: 'COP',
       minimumFractionDigits: 2
     }).format(price);
   }

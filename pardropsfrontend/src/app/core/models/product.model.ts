@@ -64,7 +64,7 @@ export interface ProductVariant {
  * @property {string} [longDescription] - Descripción detallada del producto.
  * @property {number} price - Precio actual del producto.
  * @property {number} [originalPrice] - Precio original antes de descuento.
- * @property {string} currency - Moneda del precio (por defecto 'EUR').
+ * @property {string} currency - Moneda del precio (por defecto 'COP').
  * @property {ProductImage[]} images - Array con las imágenes del producto.
  * @property {string[]} categories - Categorías a las que pertenece el producto.
  * @property {string[]} [tags] - Etiquetas para filtrado y búsqueda.
@@ -93,7 +93,7 @@ export interface Product {
   price: number;
   /** Precio original antes de descuentos (opcional) */
   originalPrice?: number;
-  /** Código de moneda (default: 'EUR') */
+  /** Código de moneda (default: 'COP') */
   currency: string;
   /** Lista de imágenes del producto */
   images: ProductImage[];

@@ -52,7 +52,7 @@ export class ProductCardComponent {
    * @returns {string} Precio formateado.
    */
   public formatPrice(price: number): string {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: this.product.currency,
       minimumFractionDigits: 2

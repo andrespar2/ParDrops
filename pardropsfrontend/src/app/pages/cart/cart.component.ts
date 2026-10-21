@@ -91,9 +91,9 @@ export class CartComponent {
    * @param price - Precio a formatear.
    */
   public formatPrice(price: number): string {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-CO', {
       style: 'currency',
-      currency: 'EUR',
+      currency: 'COP',
       minimumFractionDigits: 2
     }).format(price);
   }

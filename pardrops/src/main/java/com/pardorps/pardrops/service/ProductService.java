@@ -133,7 +133,7 @@ public class ProductService {
         product.setPrice(request.price());
         product.setOriginalPrice(request.originalPrice());
         product.setCurrency(request.currency() == null || request.currency().isBlank()
-                ? "EUR" : request.currency());
+                ? "COP" : request.currency());
         product.setStock(request.stock());
         product.setRating(request.rating());
         product.setReviewCount(request.reviewCount());

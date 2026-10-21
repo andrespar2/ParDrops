@@ -28,14 +28,14 @@ import java.util.List;
 @Service
 public class OrderService {
 
-    /** Porcentaje de IVA aplicado (21%). */
-    private static final double TAX_RATE = 0.21;
+    /** Porcentaje de IVA aplicado (19%). */
+    private static final double TAX_RATE = 0.19;
 
-    /** Importe a partir del cual el envío es gratuito. */
-    private static final double FREE_SHIPPING_THRESHOLD = 100.0;
+    /** Importe a partir del cual el envío es gratuito (en COP). */
+    private static final double FREE_SHIPPING_THRESHOLD = 400000.0;
 
-    /** Coste de envío cuando no se alcanza el mínimo. */
-    private static final double SHIPPING_COST = 5.99;
+    /** Coste de envío cuando no se alcanza el mínimo (en COP). */
+    private static final double SHIPPING_COST = 25900.0;
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;

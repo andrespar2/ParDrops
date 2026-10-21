@@ -63,19 +63,19 @@ export class CartService {
   );
 
   /**
-   * Signal computado con los costes de envío (gratis a partir de 100€).
+   * Signal computado con los costes de envío (gratis a partir de 400.000 COP).
    * @returns {number} Coste de envío.
    */
   public readonly shipping = computed(() => {
     const subtotal = this.subtotal();
-    return subtotal >= 100 ? 0 : 5.99;
+    return subtotal >= 400000 ? 0 : 25900;
   });
 
   /**
-   * Signal computado con los impuestos (IVA 21%).
+   * Signal computado con los impuestos (IVA 19%).
    * @returns {number} Importe de impuestos.
    */
-  public readonly tax = computed(() => this.subtotal() * 0.21);
+  public readonly tax = computed(() => this.subtotal() * 0.19);
 
   /**
    * Signal computado con el total final.
@@ -95,7 +95,7 @@ export class CartService {
     tax: this.tax(),
     shipping: this.shipping(),
     total: this.total(),
-    currency: 'EUR',
+    currency: 'COP',
     itemCount: this.itemCount(),
     isEmpty: this.isEmpty()
   }));

@@ -93,7 +93,7 @@ public class Order {
     @Column(nullable = false)
     private Double subtotal;
 
-    /** Impuestos aplicados (IVA 21%). */
+    /** Impuestos aplicados (IVA 19%). */
     @Column(nullable = false)
     private Double tax;
 

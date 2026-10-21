@@ -123,7 +123,7 @@
           </div>
 
           <div class="summary-line">
-            <span>IVA (21%)</span>
+            <span>IVA (19%)</span>
             <span>{{ formatPrice(cart().tax) }}</span>
           </div>
 
@@ -138,9 +138,9 @@
             </span>
           </div>
 
-          @if (cart().subtotal < 100 && cart().shipping > 0) {
+          @if (cart().subtotal < 400000 && cart().shipping > 0) {
             <div class="shipping-note">
-              Añade {{ formatPrice(100 - cart().subtotal) }} más para envío gratis
+              Añade {{ formatPrice(400000 - cart().subtotal) }} más para envío gratis
             </div>
           }
 

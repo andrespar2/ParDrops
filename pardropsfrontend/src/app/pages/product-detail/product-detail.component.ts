@@ -216,7 +216,7 @@ export class ProductDetailComponent {
   public formatPrice(price: number): string {
     const prod = this.product();
     if (!prod) return price.toString();
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: prod.currency,
       minimumFractionDigits: 2

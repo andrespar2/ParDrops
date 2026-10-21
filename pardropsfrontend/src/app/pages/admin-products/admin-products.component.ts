@@ -58,7 +58,7 @@ export class AdminProductsComponent {
     longDescription: [''],
     price: [0, [Validators.required, Validators.min(0)]],
     originalPrice: [null as number | null],
-    currency: ['EUR'],
+    currency: ['COP'],
     stock: [0, [Validators.required, Validators.min(0)]],
     rating: [null as number | null],
     reviewCount: [null as number | null],
@@ -79,7 +79,7 @@ export class AdminProductsComponent {
     this.images.set([{ url: '', alt: '', isPrimary: true }]);
     this.form.reset({
       name: '', slug: '', description: '', longDescription: '',
-      price: 0, originalPrice: null, currency: 'EUR', stock: 0,
+      price: 0, originalPrice: null, currency: 'COP', stock: 0,
       rating: null, reviewCount: null, categoriesText: '', tagsText: '',
       isNew: false, isFeatured: false, onSale: false
     });
@@ -208,7 +208,7 @@ export class AdminProductsComponent {
       longDescription: raw.longDescription?.trim() || null,
       price: Number(raw.price),
       originalPrice: raw.originalPrice === null ? null : Number(raw.originalPrice),
-      currency: raw.currency || 'EUR',
+      currency: raw.currency || 'COP',
       stock: Number(raw.stock),
       rating: raw.rating === null ? null : Number(raw.rating),
       reviewCount: raw.reviewCount === null ? null : Number(raw.reviewCount),
@@ -279,12 +279,12 @@ export class AdminProductsComponent {
    * Formatea un importe como moneda.
    *
    * @param price importe a formatear.
-   * @returns el importe formateado en euros.
+   * @returns el importe formateado en pesos colombianos.
    */
   public formatPrice(price: number): string {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-CO', {
       style: 'currency',
-      currency: 'EUR',
+      currency: 'COP',
       minimumFractionDigits: 2
     }).format(price);
   }

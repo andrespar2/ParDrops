@@ -25,7 +25,7 @@ import java.util.List;
  * @param longDescription descripción detallada (opcional).
  * @param price           precio actual.
  * @param originalPrice   precio anterior, si está en oferta (opcional).
- * @param currency        código de moneda (por defecto EUR).
+ * @param currency        código de moneda (por defecto COP).
  * @param images          imágenes del producto.
  * @param categories      categorías del producto.
  * @param tags            etiquetas de búsqueda.

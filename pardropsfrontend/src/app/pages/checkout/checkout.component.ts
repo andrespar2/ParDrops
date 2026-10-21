@@ -63,7 +63,7 @@ export class CheckoutComponent {
     addressStreet: ['', [Validators.required, Validators.maxLength(250)]],
     addressCity: ['', [Validators.required, Validators.maxLength(120)]],
     addressPostalCode: ['', [Validators.required, Validators.maxLength(20)]],
-    addressCountry: ['España', [Validators.required, Validators.maxLength(120)]],
+    addressCountry: ['Colombia', [Validators.required, Validators.maxLength(120)]],
     notes: ['', [Validators.maxLength(500)]]
   });
 
@@ -112,12 +112,12 @@ export class CheckoutComponent {
    * Formatea un importe como moneda.
    *
    * @param price importe a formatear.
-   * @returns el importe formateado en euros.
+   * @returns el importe formateado en pesos colombianos.
    */
   public formatPrice(price: number): string {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-CO', {
       style: 'currency',
-      currency: 'EUR',
+      currency: 'COP',
       minimumFractionDigits: 2
     }).format(price);
   }

@@ -30,7 +30,7 @@ export interface ProductRequest {
   price: number;
   /** Precio anterior, si está en oferta (opcional). */
   originalPrice?: number | null;
-  /** Código de moneda (por defecto EUR). */
+  /** Código de moneda (por defecto COP). */
   currency?: string;
   /** Imágenes del producto. */
   images?: ProductImage[];

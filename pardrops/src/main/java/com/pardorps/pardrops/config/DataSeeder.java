@@ -68,7 +68,7 @@ public class DataSeeder implements CommandLineRunner {
                 .email(ADMIN_EMAIL)
                 .password(passwordEncoder.encode(ADMIN_PASSWORD))
                 .fullName("Administrador ParDrops")
-                .phone("+34 600 000 000")
+                .phone("+57 300 000 0000")
                 .role(Role.ADMIN)
                 .createdAt(Instant.now())
                 .build();
@@ -87,7 +87,7 @@ public class DataSeeder implements CommandLineRunner {
                         "camiseta-minimalista-negra",
                         "Camiseta básica de algodón orgánico con diseño minimalista.",
                         "Camiseta confeccionada en algodón orgánico de alta calidad. Diseño minimalista con corte moderno y unisex. Ideal para looks casuales o sofisticados.",
-                        29.99, null, 50, 4.8, 124, true, true, false,
+                        129000, null, 50, 4.8, 124, true, true, false,
                         List.of("Ropa", "Camisetas"),
                         List.of("minimalista", "negra", "algodón"),
                         List.of(image("https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&h=800&fit=crop", "Camiseta minimalista negra", true),
@@ -99,7 +99,7 @@ public class DataSeeder implements CommandLineRunner {
                         "pantalon-cargo-slim",
                         "Pantalón cargo de corte slim con múltiples bolsillos.",
                         "Pantalón cargo moderno con corte slim fit. Confeccionado en mezcla de algodón y elastano para mayor comodidad. Múltiples bolsillos funcionales con diseño minimalista.",
-                        59.99, 79.99, 30, 4.6, 89, false, true, true,
+                        258000, 344000.0, 30, 4.6, 89, false, true, true,
                         List.of("Ropa", "Pantalones"),
                         List.of("cargo", "slim", "negro"),
                         List.of(image("https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&h=800&fit=crop", "Pantalón cargo slim", true))
@@ -110,7 +110,7 @@ public class DataSeeder implements CommandLineRunner {
                         "zapatillas-urbanas-blancas",
                         "Zapatillas urbanas minimalistas en color blanco.",
                         "Zapatillas de estilo urbano minimalista. Suela de goma resistente y exterior de lona premium. Diseño versátil que combina con cualquier look.",
-                        79.99, null, 40, 4.9, 256, true, true, false,
+                        344000, null, 40, 4.9, 256, true, true, false,
                         List.of("Calzado", "Zapatillas"),
                         List.of("zapatillas", "urbanas", "blancas"),
                         List.of(image("https://images.unsplash.com/photo-1549298916-b41d501d3772?w=800&h=800&fit=crop", "Zapatillas urbanas blancas", true),
@@ -122,7 +122,7 @@ public class DataSeeder implements CommandLineRunner {
                         "mochila-minimalista",
                         "Mochila minimalista con compartimento para portátil.",
                         "Mochila de diseño minimalista con capacidad para portátil de 15\". Fabricada en nylon resistente al agua con acolchado ergonómico en espalda y correas.",
-                        49.99, null, 25, 4.7, 78, false, false, false,
+                        215000, null, 25, 4.7, 78, false, false, false,
                         List.of("Accesorios", "Mochilas"),
                         List.of("mochila", "minimalista", "portátil"),
                         List.of(image("https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&h=800&fit=crop", "Mochila minimalista", true))
@@ -133,7 +133,7 @@ public class DataSeeder implements CommandLineRunner {
                         "bufanda-de-lana",
                         "Bufanda de lana merino suave al tacto.",
                         "Bufanda confeccionada en 100% lana merino. Suave, cálida y ligera. Diseño minimalista unisex disponible en varios colores.",
-                        24.99, null, 60, 4.5, 45, true, false, false,
+                        107500, null, 60, 4.5, 45, true, false, false,
                         List.of("Accesorios", "Bufandas"),
                         List.of("bufanda", "lana", "invierno"),
                         List.of(image("https://images.unsplash.com/photo-1605236453806-6ff36851218e?w=800&h=800&fit=crop", "Bufanda de lana", true))
@@ -144,7 +144,7 @@ public class DataSeeder implements CommandLineRunner {
                         "cazadora-bomber-negra",
                         "Cazadora bomber minimalista con forro interior.",
                         "Cazadora bomber de diseño minimalista. Exterior resistente al viento con forro acolchado. Bolsillos frontales y ribetes elásticos en puños y cintura.",
-                        89.99, 109.99, 15, 4.8, 112, false, true, true,
+                        387000, 473000.0, 15, 4.8, 112, false, true, true,
                         List.of("Ropa", "Chaquetas"),
                         List.of("bomber", "negra", "minimalista"),
                         List.of(image("https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&h=800&fit=crop", "Cazadora bomber negra", true))
@@ -183,7 +183,7 @@ public class DataSeeder implements CommandLineRunner {
         product.setLongDescription(longDescription);
         product.setPrice(price);
         product.setOriginalPrice(originalPrice);
-        product.setCurrency("EUR");
+        product.setCurrency("COP");
         product.setStock(stock);
         product.setRating(rating);
         product.setReviewCount(reviewCount);

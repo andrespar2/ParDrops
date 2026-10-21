@@ -65,9 +65,9 @@ public class Product {
     /** Precio antes de la rebaja; si es nulo no hay descuento. */
     private Double originalPrice;
 
-    /** Código de moneda ISO 4217 (por defecto EUR). */
+    /** Código de moneda ISO 4217 (por defecto COP). */
     @Column(nullable = false, length = 3)
-    private String currency = "EUR";
+    private String currency = "COP";
 
     /** Imágenes del producto. */
     @ElementCollection(fetch = FetchType.EAGER)

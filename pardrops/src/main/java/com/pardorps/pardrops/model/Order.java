@@ -40,6 +40,10 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Moneda de los importes del pedido (COP para pedidos nuevos). */
+    @Column(length = 3)
+    private String currency = "COP";
+
     /**
      * Usuario que realizó el pedido.
      * Es nulo para los pedidos hechos como invitado (sin cuenta).
@@ -93,7 +97,7 @@ public class Order {
     @Column(nullable = false)
     private Double subtotal;
 
-    /** Impuestos aplicados (IVA 21%). */
+    /** Impuestos aplicados (IVA 19%). */
     @Column(nullable = false)
     private Double tax;
 

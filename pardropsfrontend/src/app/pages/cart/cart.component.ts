@@ -15,6 +15,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { CartService } from '../../core/services/cart.service';
+import { formatCurrency } from '../../core/config/commerce.config';
 
 @Component({
   selector: 'app-cart',
@@ -32,6 +33,9 @@ export class CartComponent {
 
   /** Referencia al carrito computado. */
   public readonly cart = this.cartService.cart;
+
+  /** Subtotal a partir del cual el envío es gratuito. */
+  public readonly freeShippingThreshold = this.cartService.freeShippingThreshold;
 
   /**
    * Incrementa la cantidad de un ítem.
@@ -91,10 +95,6 @@ export class CartComponent {
    * @param price - Precio a formatear.
    */
   public formatPrice(price: number): string {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 2
-    }).format(price);
+    return formatCurrency(price);
   }
 }

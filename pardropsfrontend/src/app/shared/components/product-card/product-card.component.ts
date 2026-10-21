@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Product } from '../../../core/models/product.model';
 import { CartService } from '../../../core/services/cart.service';
+import { formatCurrency } from '../../../core/config/commerce.config';
 
 @Component({
   selector: 'app-product-card',
@@ -52,10 +53,6 @@ export class ProductCardComponent {
    * @returns {string} Precio formateado.
    */
   public formatPrice(price: number): string {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: this.product.currency,
-      minimumFractionDigits: 2
-    }).format(price);
+    return formatCurrency(price);
   }
 }

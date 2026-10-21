@@ -22,6 +22,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { formatCurrency } from '../../core/config/commerce.config';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart.service';
 import { ReviewService } from '../../core/services/review.service';
@@ -214,13 +215,7 @@ export class ProductDetailComponent {
    * @param price - Precio a formatear.
    */
   public formatPrice(price: number): string {
-    const prod = this.product();
-    if (!prod) return price.toString();
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: prod.currency,
-      minimumFractionDigits: 2
-    }).format(price);
+    return formatCurrency(price);
   }
 
   /**

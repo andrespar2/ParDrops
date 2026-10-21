@@ -77,7 +77,7 @@ export interface OrderItem {
   unitPrice: number;
   /** Unidades compradas. */
   quantity: number;
-  /** Importe de la línea. */
+  /** Importe de la línea (COP). */
   subtotal: number;
 }
 
@@ -107,13 +107,13 @@ export interface Order {
   notes?: string | null;
   /** Líneas del pedido. */
   items: OrderItem[];
-  /** Suma de las líneas. */
+  /** Suma de las líneas (COP). */
   subtotal: number;
-  /** Impuestos aplicados. */
+  /** Impuestos aplicados (IVA 19 %, en COP). */
   tax: number;
-  /** Gastos de envío. */
+  /** Gastos de envío (COP; gratis a partir de 400.000). */
   shipping: number;
-  /** Importe total. */
+  /** Importe total (COP). */
   total: number;
   /** Estado actual. */
   status: OrderStatus;

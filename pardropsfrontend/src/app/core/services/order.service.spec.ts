@@ -31,10 +31,10 @@ function buildOrder(id: number, status: OrderStatus = 'PENDING'): Order {
     addressCountry: 'Colombia',
     notes: null,
     items: [],
-    subtotal: 10,
-    tax: 1.9,
+    subtotal: 239900,
+    tax: 45581,
     shipping: 25900,
-    total: 25911.9,
+    total: 311381,
     status,
     createdAt: '2026-01-01T10:00:00Z',
     userEmail: null

@@ -46,26 +46,26 @@ export interface CartItem {
  * 
  * @interface Cart
  * @property {CartItem[]} items - Array de ítems en el carrito.
- * @property {number} subtotal - Subtotal total (suma de subtotales de ítems).
- * @property {number} tax - Impuestos aplicables.
- * @property {number} shipping - Costes de envío.
- * @property {number} total - Total final (subtotal + tax + shipping).
- * @property {string} currency - Moneda de los totales.
+ * @property {number} subtotal - Subtotal total (suma de subtotales de ítems, en COP).
+ * @property {number} tax - Impuestos aplicables (IVA 19 %, en COP).
+ * @property {number} shipping - Costes de envío (en COP; gratis desde 400.000).
+ * @property {number} total - Total final (subtotal + tax + shipping, en COP).
+ * @property {string} currency - Moneda de los totales (por defecto 'COP').
  * @property {number} itemCount - Número total de unidades.
  * @property {boolean} isEmpty - Indica si el carrito está vacío.
  */
 export interface Cart {
   /** Lista de ítems en el carrito */
   items: CartItem[];
-  /** Subtotal antes de impuestos y envío */
+  /** Subtotal antes de impuestos y envío (COP) */
   subtotal: number;
-  /** Impuestos aplicados */
+  /** Impuestos aplicados (IVA 19 %, COP) */
   tax: number;
-  /** Coste de envío */
+  /** Coste de envío (COP; gratis a partir de 400.000) */
   shipping: number;
-  /** Total a pagar */
+  /** Total a pagar (COP) */
   total: number;
-  /** Moneda */
+  /** Moneda (siempre 'COP': la plataforma opera en Colombia) */
   currency: string;
   /** Número total de ítems (unidades) */
   itemCount: number;

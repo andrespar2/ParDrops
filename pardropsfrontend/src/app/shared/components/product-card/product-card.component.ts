@@ -47,15 +47,20 @@ export class ProductCardComponent {
   }
 
   /**
-   * Formatea el precio con moneda.
+   * Formatea el precio en pesos colombianos (COP).
+   *
+   * Si el producto no trae moneda, se asume COP: la plataforma opera en
+   * Colombia y ningún precio debe mostrarse en otra divisa.
+   *
    * @param {number} price - Precio a formatear.
-   * @returns {string} Precio formateado.
+   * @returns {string} Precio formateado (ej. "$ 119.900,00").
    */
   public formatPrice(price: number): string {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
-      currency: this.product.currency,
-      minimumFractionDigits: 2
+      currency: this.product.currency || 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(price);
   }
 }

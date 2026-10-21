@@ -210,7 +210,11 @@ export class ProductDetailComponent {
   }
 
   /**
-   * Formatea el precio con moneda.
+   * Formatea el precio en pesos colombianos (COP).
+   *
+   * Si el producto no trae moneda, se asume COP: la plataforma opera en
+   * Colombia y ningún precio debe mostrarse en otra divisa.
+   *
    * @param price - Precio a formatear.
    */
   public formatPrice(price: number): string {
@@ -218,8 +222,9 @@ export class ProductDetailComponent {
     if (!prod) return price.toString();
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
-      currency: prod.currency,
-      minimumFractionDigits: 2
+      currency: prod.currency || 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(price);
   }
 

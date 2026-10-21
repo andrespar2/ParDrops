@@ -1,237 +1,1039 @@
+
+<!-- ========================================================= -->
+<!--                  P A R D R O P S                          -->
+<!--              DIGITAL COMMERCE PLATFORM                    -->
+<!--             README · PREMIUM EDITION                      -->
+<!-- ========================================================= -->
+
 <div align="center">
 
-<h1 style="font-family: Georgia, 'Times New Roman', serif; font-size: 48px;">
-  ParDrops
-</h1>
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,45:0E7490,100:22D3EE&height=240&section=header&text=ParDrops&fontSize=78&fontColor=FFFFFF&animation=fadeIn&fontAlignY=38&desc=EXPLORE%20%7C%20DISCOVER%20%7C%20SHOP&descAlignY=62&descSize=20" alt="ParDrops"/>
 
-<h3>Plataforma de Comercio Digital</h3>
+### ✦ E X P L O R A · D E S C U B R E · C O M P R A ✦
 
-<p>
-  Una plataforma de comercio electrónico diseñada para ofrecer una experiencia
-  de compra moderna, rápida e intuitiva.
-</p>
+**El comercio digital, reinventado para una experiencia más simple.**
 
-<p>
-  <a href="#objetivo">Objetivo</a> •
-  <a href="#características">Características</a>
-</p>
+Una plataforma e-commerce moderna, intuitiva y construida con tecnologías de última generación.
+
+<br/>
+
+[![Repository](https://img.shields.io/badge/REPOSITORY-ParDrops-0F172A?style=for-the-badge&logo=github&logoColor=white)](https://github.com/andrespar2/ParDrops)
+![Java](https://img.shields.io/badge/JAVA-25-F97316?style=for-the-badge&logo=openjdk&logoColor=white)
+![Angular](https://img.shields.io/badge/ANGULAR-22-DD0031?style=for-the-badge&logo=angular&logoColor=white)
+![Spring](https://img.shields.io/badge/SPRING_BOOT-4-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
+
+<br/>
+
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-Authentication-111827?style=flat-square&logo=jsonwebtokens)
+![H2](https://img.shields.io/badge/H2-Database-2563EB?style=flat-square)
+![REST](https://img.shields.io/badge/REST-API-06B6D4?style=flat-square)
+![COP](https://img.shields.io/badge/Currency-COP-16A34A?style=flat-square)
+![Responsive](https://img.shields.io/badge/Design-Responsive-8B5CF6?style=flat-square)
+
+<br/>
+
+**[Explorar proyecto](#-sobre-el-proyecto) · [Instalación](#-instalación) · [Arquitectura](#-arquitectura) · [API](#-api-rest)**
 
 </div>
 
 ---
 
-## Sobre el proyecto
+## 💠 Identidad digital
 
-**ParDrops** es una plataforma web de comercio electrónico que permite a los
-usuarios explorar y descubrir productos, consultar información detallada y
-gestionar su proceso de compra desde una interfaz atractiva y fácil de usar.
+```text
+╔══════════════════════════════════════════════════════════╗
+║                                                          ║
+║   ██████╗  █████╗ ██████╗ ██████╗  ██████╗ ██████╗ ███████╗
+║   ██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔════╝
+║   ██████╔╝███████║██████╔╝██║  ██║██████╔╝██║  ██║███████╗
+║   ██╔═══╝ ██╔══██║██╔══██╗██║  ██║██╔══██╗██║  ██║╚════██║
+║   ██║     ██║  ██║██║  ██║██████╔╝██║  ██║██████╔╝███████║
+║   ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚══════╝
+║                                                          ║
+║                  DIGITAL COMMERCE                        ║
+║                                                          ║
+║            EXPLORE  •  DISCOVER  •  SHOP                 ║
+║                                                          ║
+╚══════════════════════════════════════════════════════════╝
+```
 
-El proyecto está enfocado en proporcionar una experiencia fluida y organizada,
-combinando **diseño responsive**, **navegación intuitiva** y funcionalidades
-orientadas al comercio digital.
+<div align="center">
+
+> **Más que una tienda online: una experiencia digital completa.**
+
+</div>
 
 ---
 
-<details>
-<summary><strong>✦ Objetivo</strong></summary>
-
-<br>
-
-Desarrollar una solución de comercio electrónico que conecte
-**tecnología, diseño y accesibilidad** para simplificar la experiencia
-de compra en línea.
-
-ParDrops busca proporcionar un entorno donde los usuarios puedan descubrir
-productos, consultar su información y realizar sus compras de manera
-sencilla, rápida y eficiente.
-
-</details>
-
-<br>
+## 📑 Navegación
 
 <details>
-<summary><strong>✦ Características</strong></summary>
+<summary><b>📂 Abrir índice de documentación</b></summary>
 
-<br>
+<br/>
 
-* **◼ Exploración de productos**
-  Permite descubrir y consultar los diferentes productos disponibles.
-
-* **◻ Información detallada**
-  Presenta información relevante de cada producto para facilitar la decisión de compra.
-
-* **🛍 Carrito de compras**
-  Permite gestionar los productos seleccionados antes de completar la compra.
-
-* **✦ Proceso de compra**
-  Ofrece un flujo organizado para gestionar el proceso de adquisición.
-
-* **🔐 Cuentas de usuario**
-  Registro e inicio de sesión con autenticación JWT. Los usuarios registrados
-  conservan su historial de pedidos; los invitados pueden comprar sin historial.
-
-* **⚙️ Panel de administración**
-  Permite al administrador crear, editar y eliminar los productos del catálogo.
-  Además avisa de las compras nuevas y desde él se consultan los datos de
-  contacto y la dirección de envío del cliente, y se avanza el estado del pedido
-  (preparado, enviado, entregado o cancelado).
-
-* **★ Reseñas de productos**
-  Los clientes que han comprado y recibido un producto pueden calificarlo de 1 a
-  5 estrellas y dejar un comentario. Cada producto muestra su valoración media,
-  el número de reseñas y la lista de opiniones; solo se admite una reseña por
-  cliente y producto.
-
-* **◼ Diseño responsive**
-  Adaptado para ofrecer una experiencia adecuada en diferentes dispositivos.
-  Adaptado para ofrecer una experiencia adecuada en diferentes dispositivos.
-
-* **◻ Navegación intuitiva**
-  Interfaz organizada para facilitar el acceso a las diferentes funcionalidades.
-
-* **✦ Experiencia de usuario**
-  Diseño moderno y minimalista enfocado en una interacción clara y eficiente.
+| Sección | Descripción |
+|---|---|
+| [🌐 Sobre el proyecto](#-sobre-el-proyecto) | ¿Qué es ParDrops? |
+| [🎯 Objetivos](#-objetivos) | Propósito del sistema |
+| [✨ Características](#-características) | Funcionalidades principales |
+| [🧩 Tecnologías](#-tecnologías) | Stack tecnológico |
+| [🏗 Arquitectura](#-arquitectura) | Funcionamiento interno |
+| [📁 Estructura](#-estructura-del-repositorio) | Organización del código |
+| [🚀 Instalación](#-instalación) | Cómo ejecutar ParDrops |
+| [👥 Usuarios](#-roles-de-usuario) | Roles y permisos |
+| [💰 Comercio](#-configuración-comercial) | IVA, precios y envíos |
+| [📡 API](#-api-rest) | Endpoints disponibles |
+| [🔐 Seguridad](#-seguridad) | Autenticación JWT |
+| [📦 Pedidos](#-gestión-de-pedidos) | Estados y seguimiento |
+| [⭐ Reseñas](#-sistema-de-reseñas) | Valoraciones verificadas |
+| [🗄 Base de datos](#-base-de-datos) | Persistencia local |
+| [⚙️ GCS](#-gestión-de-configuración-del-software) | Control de cambios |
+| [🛡️ Riesgos](#-gestión-de-riesgos) | Riesgos técnicos |
+| [👨‍💻 Desarrollo](#-desarrollo) | Información del proyecto |
 
 </details>
 
 ---
 
-## Documentación técnica
+# 🌐 Sobre el proyecto
 
-El repositorio es un **monorepo** con dos aplicaciones independientes que se
-comunican por HTTP:
+**ParDrops** es una plataforma web de comercio electrónico desarrollada para proporcionar una experiencia de compra moderna, rápida, intuitiva y organizada.
 
-| Carpeta | Tecnología | Descripción |
+Permite a los usuarios:
+
+- 🔎 Explorar un catálogo digital.
+- 🛍️ Descubrir productos.
+- 📄 Consultar información detallada.
+- 🛒 Agregar artículos al carrito.
+- 💳 Registrar pedidos.
+- 👤 Crear cuentas personales.
+- 📦 Consultar su historial de compras.
+- ⭐ Publicar reseñas de productos recibidos.
+
+El proyecto utiliza una arquitectura separada entre frontend y backend, comunicados mediante una API REST.
+
+> [!IMPORTANT]
+> ParDrops está configurado para operar en Colombia, utilizando pesos colombianos (COP), IVA del 19 % y reglas de envío específicas.
+
+---
+
+# 🎯 Objetivos
+
+### Objetivo general
+
+Desarrollar una plataforma de comercio electrónico moderna que facilite la exploración de productos, la gestión de compras y la administración de pedidos mediante una interfaz intuitiva y una arquitectura de software organizada.
+
+### Objetivos específicos
+
+| Objetivo | Descripción |
+|---|---|
+| 🎨 Diseño | Crear una interfaz atractiva y responsive |
+| 🛍️ Catálogo | Presentar productos de manera organizada |
+| 🔐 Seguridad | Implementar autenticación JWT |
+| 🛒 Compras | Facilitar la gestión del carrito |
+| 📦 Pedidos | Registrar y administrar compras |
+| 👤 Usuarios | Permitir registro y autenticación |
+| ⭐ Reseñas | Validar opiniones mediante compras entregadas |
+| ⚙️ Administración | Gestionar productos y pedidos |
+
+---
+
+# ✨ Características
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🛍️ Catálogo inteligente
+
+Exploración de productos con precios, imágenes y descripciones detalladas.
+
+</td>
+<td width="50%" valign="top">
+
+### 🛒 Carrito de compras
+
+Cálculo de subtotal, IVA, envío y total.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### 🔐 Autenticación
+
+Registro e inicio de sesión con JWT.
+
+</td>
+<td valign="top">
+
+### 📦 Pedidos
+
+Registro de compras y administración de estados.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### ⭐ Reseñas verificadas
+
+Valoraciones disponibles después de recibir el producto.
+
+</td>
+<td valign="top">
+
+### 🛠️ Administración
+
+Creación, edición y eliminación de productos, además de gestión de pedidos.
+
+</td>
+</tr>
+</table>
+
+---
+
+# 🧩 Tecnologías
+
+<div align="center">
+
+### FRONTEND
+
+<img src="https://skillicons.dev/icons?i=angular,typescript,html,css,nodejs,npm&theme=dark" alt="Frontend"/>
+
+**Angular 22 · TypeScript · HTML · CSS**
+
+<br/>
+
+### BACKEND
+
+<img src="https://skillicons.dev/icons?i=java,spring,maven&theme=dark" alt="Backend"/>
+
+**Java 25 · Spring Boot 4 · Maven**
+
+<br/>
+
+### DEVELOPMENT
+
+<img src="https://skillicons.dev/icons?i=git,github,vscode,idea&theme=dark" alt="Development"/>
+
+</div>
+
+<br/>
+
+| Tecnología | Función |
+|---|---|
+| Angular 22 | Interfaz web SPA |
+| Angular Signals | Gestión reactiva del estado |
+| Standalone Components | Organización de componentes |
+| TypeScript | Lógica del frontend |
+| Java 25 | Lenguaje del backend |
+| Spring Boot 4 | API REST |
+| JWT | Autenticación |
+| H2 Database | Persistencia local |
+| Maven | Construcción del backend |
+| Git | Control de versiones |
+| GitHub | Repositorio del proyecto |
+
+---
+
+# 🏗 Arquitectura
+
+ParDrops utiliza una arquitectura **cliente-servidor**, con dos aplicaciones independientes que se comunican mediante HTTP y JSON.
+
+```mermaid
+flowchart TB
+    U["👤 USUARIO"]
+
+    subgraph CLIENT["FRONTEND"]
+        A["Angular 22"]
+        B["Componentes standalone"]
+        C["Signals y servicios"]
+        A --> B --> C
+    end
+
+    subgraph SERVER["BACKEND"]
+        D["Spring Boot 4"]
+        E["API REST"]
+        F["Servicios de negocio"]
+        G["Autenticación JWT"]
+        D --> E --> F
+        E --> G
+    end
+
+    DB[("H2 DATABASE")]
+
+    U --> A
+    C <-->|HTTP / JSON| E
+    F <--> DB
+
+    style U fill:#0F172A,color:#FFFFFF,stroke:#22D3EE
+    style A fill:#0E7490,color:#FFFFFF
+    style B fill:#155E75,color:#FFFFFF
+    style C fill:#164E63,color:#FFFFFF
+    style D fill:#15803D,color:#FFFFFF
+    style E fill:#166534,color:#FFFFFF
+    style F fill:#14532D,color:#FFFFFF
+    style G fill:#0F766E,color:#FFFFFF
+    style DB fill:#1D4ED8,color:#FFFFFF
+```
+
+<details>
+<summary><b>🖥️ Ver arquitectura en arte ASCII</b></summary>
+
+```text
+                    ┌───────────────────┐
+                    │      USUARIO      │
+                    │     NAVEGADOR     │
+                    └─────────┬─────────┘
+                              │
+                              ▼
+               ╔════════════════════════╗
+               ║        FRONTEND        ║
+               ║                        ║
+               ║       ANGULAR 22       ║
+               ║                        ║
+               ║    localhost:4200      ║
+               ╚════════════╤═══════════╝
+                            │
+                         HTTP/JSON
+                            │
+                            ▼
+               ╔════════════════════════╗
+               ║         BACKEND        ║
+               ║                        ║
+               ║     SPRING BOOT 4      ║
+               ║                        ║
+               ║    localhost:8080      ║
+               ╚════════════╤═══════════╝
+                            │
+                ┌───────────┴──────────┐
+                │                      │
+                ▼                      ▼
+       ┌────────────────┐    ┌────────────────┐
+       │      JWT       │    │   H2 DATABASE  │
+       │   SEGURIDAD    │    │  PERSISTENCIA  │
+       └────────────────┘    └────────────────┘
+```
+
+</details>
+
+---
+
+# 📁 Estructura del repositorio
+
+```text
+ParDrops/
+│
+├── pardrops/
+│   ├── src/
+│   ├── data/
+│   │   └── pardropsdb.mv.db
+│   └── mvnw.cmd
+│
+├── pardropsfrontend/
+│   ├── src/
+│   │   └── app/
+│   │       └── core/
+│   │           └── config/
+│   │               └── api.config.ts
+│   └── package.json
+│
+├── .tools/
+│   └── jdk25/          # Opcional, no versionado
+│
+├── dev.ps1
+│
+└── README.md
+```
+
+| Carpeta | Tecnología | Responsabilidad |
 |---|---|---|
-| `pardrops/` | Spring Boot 4 · Java 25 · H2 · JWT | API REST (catálogo, cuentas y pedidos). |
-| `pardropsfrontend/` | Angular 22 (standalone + signals) | Interfaz de usuario (SPA). |
+| `pardrops/` | Spring Boot 4 | Backend y API REST |
+| `pardropsfrontend/` | Angular 22 | Interfaz de usuario |
+| `pardrops/data/` | H2 | Base de datos local |
+| `.tools/jdk25/` | JDK 25 | Java portátil opcional |
 
-### Configuración comercial (Colombia)
+---
 
-La plataforma opera íntegramente en **pesos colombianos (COP)**:
+# 🚀 Instalación
 
-* **Moneda**: todos los importes se guardan y muestran en COP con formato
-  `es-CO` (ej. `$ 119.900`, sin decimales). Los productos nacen con
-  `currency = "COP"` y, si un producto no trajera moneda, la interfaz asume
-  COP en lugar de mostrar otra divisa.
-* **IVA**: 19 % sobre el subtotal (`OrderService.TAX_RATE` en el backend y
-  `cart.service.ts` en el frontend).
-* **Envío**: 25.900 COP, **gratis** a partir de 400.000 COP de subtotal. Los
-  mismos umbrales están definidos en el backend (`OrderService`) y replicados
-  en el carrito del frontend.
-* **Catálogo de ejemplo**: `DataSeeder` siembra los productos con precios COP
-  (ej. camiseta 119.900, zapatillas 319.900).
-* **Base de datos local**: `pardrops/data/` es prescindible (no está versionada).
-  Si contiene datos antiguos en otra moneda, bórrala y el siguiente arranque la
-  regenera íntegramente en COP.
+## 01 — Requisitos
 
+| Herramienta | Versión |
+|---|---|
+| Java JDK | 25 |
+| Node.js | 20+ |
+| npm | Compatible con Node.js |
+| PowerShell | Windows |
+| Git | Para clonar el repositorio |
 
-### Requisitos
+No necesitas instalar una base de datos externa.
 
-* **JDK 25** para el backend (opcionalmente un JDK portátil en `.tools/jdk25`,
-  no versionado; si no existe se usa `JAVA_HOME` o el `java` del `PATH`).
-* **Node.js 20+** y `npm` para el frontend.
-* No hace falta instalar base de datos: el backend usa **H2 en modo archivo**
-  (`pardrops/data/pardropsdb.mv.db`, excluido del control de versiones).
+## 02 — Clonar repositorio
 
-### Cómo ejecutar
+```bash
+git clone https://github.com/andrespar2/ParDrops.git
+cd ParDrops
+```
 
-**Arranque rápido** (recomendado): en la raíz, en PowerShell
+## 03 — Arranque rápido
+
+Desde PowerShell:
 
 ```powershell
 .\dev.ps1
 ```
 
-El script resuelve el JDK (`.tools\jdk25` → `JAVA_HOME` → `java` del `PATH`),
-instala las dependencias del frontend la primera vez y abre backend
-(`http://localhost:8080`) y frontend (`http://localhost:4200`) en ventanas
-separadas. Así dejas el proyecto en marcha en cualquier PC recién clonado.
+El script:
 
-Para ejecutar el proyecto a mano, sigue los pasos siguientes.
+1. Busca el JDK 25 disponible.
+2. Instala dependencias del frontend si es necesario.
+3. Inicia el backend.
+4. Inicia el frontend.
+5. Abre ambos servicios en ventanas separadas.
 
-**Backend** (queda escuchando en `http://localhost:8080`):
+### Orden de búsqueda de Java
 
-```powershell
-# Backend: usa el JDK portátil incluido (o tu JAVA_HOME / java del PATH)
-$env:JAVA_HOME = ".\.tools\jdk25"
-cd pardrops
-./mvnw.cmd spring-boot:run
+```text
+.tools/jdk25
+     │
+     ▼
+  JAVA_HOME
+     │
+     ▼
+  JAVA en PATH
 ```
 
-**Frontend** (queda en `http://localhost:4200`):
+## 04 — Acceder al proyecto
 
-```bash
+| Servicio | Dirección |
+|---|---|
+| 🛍️ Frontend | http://localhost:4200 |
+| ⚙️ Backend | http://localhost:8080 |
+| 📡 API REST | http://localhost:8080/api |
+
+> [!TIP]
+> Para utilizar la plataforma, abre `http://localhost:4200` después de iniciar ambos servicios.
+
+<details>
+<summary><b>⚙️ Ejecución manual del backend</b></summary>
+
+Si tienes el JDK portátil:
+
+```powershell
+$env:JAVA_HOME = (Resolve-Path ".\.tools\jdk25").Path
+```
+
+Si Java 25 ya está configurado en el sistema, omite el paso anterior.
+
+```powershell
+cd pardrops
+.\mvnw.cmd spring-boot:run
+```
+
+Backend:
+
+```text
+http://localhost:8080
+```
+
+</details>
+
+<details>
+<summary><b>🅰️ Ejecución manual del frontend</b></summary>
+
+Desde la raíz del repositorio:
+
+```powershell
 cd pardropsfrontend
 npm install
 npm start
 ```
 
-La URL base de la API se configura en
-`pardropsfrontend/src/app/core/config/api.config.ts` (`http://localhost:8080/api`).
+Frontend:
 
-### Cuentas de prueba
+```text
+http://localhost:4200
+```
 
-La primera vez que arranca el backend, `DataSeeder` crea automáticamente un
-usuario administrador y un catálogo de ejemplo:
+</details>
+
+---
+
+# 👥 Roles de usuario
+
+| Funcionalidad | Invitado | Cliente | Admin |
+|---|:---:|:---:|:---:|
+| Explorar productos | ✅ | ✅ | ✅ |
+| Consultar detalles | ✅ | ✅ | ✅ |
+| Agregar al carrito | ✅ | ✅ | ✅ |
+| Realizar pedidos | ✅ | ✅ | ✅ |
+| Historial personal | ❌ | ✅ | ✅ |
+| Reseñas elegibles | ❌ | ✅ | ✅ |
+| Gestionar productos | ❌ | ❌ | ✅ |
+| Gestionar pedidos | ❌ | ❌ | ✅ |
+
+### 👤 Invitado
+
+Puede comprar sin registrarse. Su pedido queda almacenado, pero no se vincula a un historial de cuenta.
+
+### 🧑 Cliente
+
+Puede iniciar sesión, consultar sus pedidos y publicar reseñas cuando haya recibido los productos correspondientes.
+
+### 🛠️ Administrador
+
+Puede administrar productos, gestionar pedidos y actualizar sus estados.
+
+---
+
+# 🛒 Experiencia de compra
+
+```mermaid
+flowchart TD
+    A["🏠 Inicio"]
+    B["🔎 Explorar catálogo"]
+    C["📄 Consultar producto"]
+    D["🛒 Agregar al carrito"]
+    E["💰 Revisar total"]
+    F{"¿Usuario registrado?"}
+    G["👤 Compra con cuenta"]
+    H["🧾 Compra como invitado"]
+    I["📦 Pedido registrado"]
+
+    A --> B --> C --> D --> E --> F
+    F -->|Sí| G
+    F -->|No| H
+    G --> I
+    H --> I
+
+    style A fill:#0F172A,color:#FFFFFF
+    style B fill:#164E63,color:#FFFFFF
+    style C fill:#155E75,color:#FFFFFF
+    style D fill:#0E7490,color:#FFFFFF
+    style E fill:#0891B2,color:#FFFFFF
+    style I fill:#15803D,color:#FFFFFF
+```
+
+---
+
+# 💰 Configuración comercial
+
+<div align="center">
+
+### 🇨🇴 COMERCIO DIGITAL EN COLOMBIA
+
+![Currency](https://img.shields.io/badge/MONEDA-COP-16A34A?style=for-the-badge)
+![IVA](https://img.shields.io/badge/IVA-19%25-0284C7?style=for-the-badge)
+![Shipping](https://img.shields.io/badge/ENVÍO-$25.900-7C3AED?style=for-the-badge)
+
+</div>
+
+| Concepto | Valor |
+|---|---|
+| Moneda | COP |
+| Formato | `es-CO` |
+| IVA | 19 % |
+| Envío estándar | $ 25.900 |
+| Envío gratis | Subtotal desde $ 400.000 |
+| Decimales | 0 |
+
+### Fórmulas comerciales
+
+```text
+┌─────────────────────────────────────────┐
+│           CÁLCULO DEL PEDIDO            │
+├─────────────────────────────────────────┤
+│                                         │
+│  SUBTOTAL = Σ productos                 │
+│                                         │
+│  IVA = SUBTOTAL × 0.19                  │
+│                                         │
+│  ENVÍO =                                │
+│    0       si subtotal >= 400.000       │
+│    25.900  si subtotal <  400.000       │
+│                                         │
+│  TOTAL = SUBTOTAL + IVA + ENVÍO         │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+### Productos de ejemplo
+
+| Producto | Precio COP |
+|---|---:|
+| 👕 Camiseta | $ 119.900 |
+| 👟 Zapatillas | $ 319.900 |
+
+Los productos iniciales son creados por `DataSeeder`.
+
+Las reglas comerciales se definen en:
+
+- Backend: `OrderService`
+- Frontend: `cart.service.ts`
+
+---
+
+# 📡 API REST
+
+**Base URL**
+
+```text
+http://localhost:8080/api
+```
+
+## 🔐 Autenticación
+
+| Método | Endpoint | Acceso |
+|---|---|---|
+| `POST` | `/auth/register` | Público |
+| `POST` | `/auth/login` | Público |
+| `GET` | `/auth/me` | Autenticado |
+
+## 🛍️ Productos
+
+| Método | Endpoint | Acceso |
+|---|---|---|
+| `GET` | `/products` | Público |
+| `GET` | `/products/{slug}` | Público |
+| `POST` | `/products/...` | ADMIN |
+| `PUT` | `/products/...` | ADMIN |
+| `DELETE` | `/products/...` | ADMIN |
+
+## ⭐ Reseñas
+
+| Método | Endpoint | Acceso |
+|---|---|---|
+| `GET` | `/products/{id}/reviews` | Público |
+| `GET` | `/products/{id}/reviews/eligibility` | Público |
+| `POST` | `/products/{id}/reviews` | Autenticado y elegible |
+
+## 📦 Pedidos
+
+| Método | Endpoint | Acceso |
+|---|---|---|
+| `POST` | `/orders` | Público |
+| `GET` | `/orders/me` | Autenticado |
+| `GET` | `/orders` | ADMIN |
+| `PATCH` | `/orders/{id}/status` | ADMIN |
+
+<details>
+<summary><b>🧪 Ejemplos de peticiones HTTP</b></summary>
+
+### Consultar productos
+
+```bash
+curl http://localhost:8080/api/products
+```
+
+### Consultar usuario autenticado
+
+```bash
+curl http://localhost:8080/api/auth/me \
+  -H "Authorization: Bearer TU_TOKEN"
+```
+
+</details>
+
+---
+
+# 🔐 Seguridad
+
+ParDrops utiliza JWT para identificar usuarios autenticados y controlar el acceso a los recursos protegidos.
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant F as Angular
+    participant B as Spring Boot
+    participant D as H2
+
+    U->>F: Ingresa credenciales
+    F->>B: POST /api/auth/login
+    B->>D: Verificar credenciales
+    D-->>B: Datos de usuario
+    B-->>F: Token JWT
+    F-->>U: Sesión iniciada
+    F->>B: Solicitud con Bearer Token
+    B-->>F: Recurso autorizado
+```
+
+### Cabecera de autenticación
+
+```http
+Authorization: Bearer <token>
+```
+
+Cuando el token falta o es inválido, el backend responde:
+
+```http
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+```
+
+### Medidas implementadas
+
+- Autenticación mediante JWT.
+- Control de acceso por roles.
+- Operaciones administrativas restringidas.
+- Validación de elegibilidad para reseñas.
+- Identificación del autor de reseñas desde la sesión.
+
+---
+
+# 📦 Gestión de pedidos
+
+Los pedidos siguen una secuencia controlada de estados.
+
+```mermaid
+flowchart LR
+    A["PENDING"]
+    B["PAID"]
+    C["PREPARED"]
+    D["SHIPPED"]
+    E["DELIVERED"]
+    F["CANCELLED"]
+
+    A --> B --> C --> D --> E
+
+    A -.-> F
+    B -.-> F
+    C -.-> F
+    D -.-> F
+
+    style A fill:#64748B,color:#FFFFFF
+    style B fill:#0284C7,color:#FFFFFF
+    style C fill:#7C3AED,color:#FFFFFF
+    style D fill:#EA580C,color:#FFFFFF
+    style E fill:#15803D,color:#FFFFFF
+    style F fill:#B91C1C,color:#FFFFFF
+```
+
+| Estado | Significado |
+|---|---|
+| `PENDING` | Pendiente |
+| `PAID` | Pagado |
+| `PREPARED` | Preparado |
+| `SHIPPED` | Enviado |
+| `DELIVERED` | Entregado |
+| `CANCELLED` | Cancelado |
+
+> [!IMPORTANT]
+> Los pedidos solo pueden avanzar siguiendo el flujo permitido. `DELIVERED` y `CANCELLED` son estados finales.
+
+El administrador gestiona los pedidos desde:
+
+```text
+/admin/pedidos
+```
+
+---
+
+# ⭐ Sistema de reseñas
+
+ParDrops incorpora un sistema de valoraciones vinculado a compras reales.
+
+### Requisitos para publicar
+
+1. El usuario debe estar autenticado.
+2. Debe haber comprado el producto.
+3. El pedido debe estar entregado.
+4. No debe haber reseñado anteriormente ese producto.
+
+```mermaid
+flowchart TD
+    A["Usuario solicita reseñar"]
+    B{"¿Autenticado?"}
+    C{"¿Producto comprado?"}
+    D{"¿Pedido entregado?"}
+    E{"¿Ya publicó reseña?"}
+    F["⭐ Publicar reseña"]
+    G["⛔ No autorizado"]
+
+    A --> B
+    B -->|Sí| C
+    B -->|No| G
+    C -->|Sí| D
+    C -->|No| G
+    D -->|Sí| E
+    D -->|No| G
+    E -->|No| F
+    E -->|Sí| G
+
+    style F fill:#15803D,color:#FFFFFF
+    style G fill:#B91C1C,color:#FFFFFF
+```
+
+La validación se realiza también en el backend.
+
+El autor de la reseña se obtiene desde la sesión autenticada.
+
+---
+
+# 🗄 Base de datos
+
+ParDrops utiliza **H2 Database** en modo archivo.
+
+Ruta local:
+
+```text
+pardrops/data/pardropsdb.mv.db
+```
+
+### Inicialización
+
+Durante el primer arranque, `DataSeeder` crea:
+
+- Un usuario administrador.
+- Un catálogo de productos de ejemplo.
+- Precios configurados en COP.
+
+### Reinicio de datos locales
+
+Si existen datos antiguos en otra moneda, detén el backend y elimina la carpeta local:
+
+```text
+pardrops/data/
+```
+
+Al iniciar nuevamente, la base de datos se regenera.
+
+> [!WARNING]
+> Eliminar esta carpeta borra los datos locales almacenados. Haz una copia de seguridad si necesitas conservar pedidos, usuarios o productos.
+
+---
+
+# 🧪 Cuentas de prueba
 
 | Rol | Correo | Contraseña |
 |---|---|---|
 | Administrador | `admin@pardrops.com` | `admin123` |
 
-Los clientes pueden **registrarse** libremente desde la pantalla de login.
-También se puede comprar **como invitado** (sin crear cuenta).
+### Accesos administrativos
 
-### Flujos principales
+**Productos**
 
-* **Invitado:** navega el catálogo, añade al carrito y compra indicando sus
-  datos. El pedido se registra pero **no se guarda en ningún historial**.
-* **Cliente registrado**: inicia sesión, compra y puede consultar su historial
-  en **Mi cuenta** (`/cuenta`). Cuando un pedido suyo pasa a **entregado**, puede
-  valorar en la ficha del producto los artículos que recibió.
-* **Administrador**: además, accede al panel de administración para crear,
-  editar y eliminar productos con imagen por URL (`/admin/productos`) y para
-  gestionar los pedidos (`/admin/pedidos`), donde ve los datos del cliente, la
-  dirección de envío y puede cambiar el estado de cada pedido.
+```text
+http://localhost:4200/admin/productos
+```
 
-### Resumen de la API
+**Pedidos**
 
-| Método | Ruta | Acceso | Descripción |
-|---|---|---|---|
-| `POST` | `/api/auth/register` | Público | Crea una cuenta y devuelve el JWT. |
-| `POST` | `/api/auth/login` | Público | Inicia sesión y devuelve el JWT. |
-| `GET` | `/api/auth/me` | Autenticado | Datos del usuario actual. |
-| `GET` | `/api/products` | Público | Lista el catálogo. |
-| `GET` | `/api/products/{slug}` | Público | Detalle de un producto. |
-| `POST` `PUT` `DELETE` `/api/products/...` | Solo `ADMIN` | Crear, editar y eliminar productos. |
-| `GET` | `/api/products/{id}/reviews` | Público | Lista las reseñas de un producto. |
-| `GET` | `/api/products/{id}/reviews/eligibility` | Público | Indica si el usuario actual puede reseñar el producto. |
-| `POST` | `/api/products/{id}/reviews` | Autenticado | Publica una reseña (solo con compra entregada). |
-| `POST` `/api/orders` | Público (invitado o cliente) | Registra un pedido. |
-| `GET` `/api/orders/me` | Autenticado | Historial del usuario. |
-| `GET` `/api/orders` | Solo `ADMIN` | Todos los pedidos. |
-| `PATCH` `/api/orders/{id}/status` | Solo `ADMIN` | Cambia el estado de un pedido. |
+```text
+http://localhost:4200/admin/pedidos
+```
 
-Estados de un pedido: `PENDING` (pendiente) → `PAID` (pagado) →
-`PREPARED` (preparado) → `SHIPPED` (enviado) → `DELIVERED` (entregado), más
-`CANCELLED` (cancelado). Solo se permite avanzar por este flujo (o cancelar
-antes de la entrega); `DELIVERED` y `CANCELLED` son finales.
+**Cuenta personal**
 
-Para publicar una reseña, el cliente debe tener al menos un pedido **entregado**
-(`DELIVERED`) que contenga el producto y no haberlo reseñado antes. La
-validación se repite en el backend y el autor se toma siempre de la sesión, de
-modo que nadie puede publicar reseñas en nombre de otra persona.
+```text
+http://localhost:4200/cuenta
+```
 
-> La sesión se transporta en la cabecera `Authorization: Bearer <token>` y el
-> backend responde **401** en JSON cuando falta o es inválida.
+> [!CAUTION]
+> Estas credenciales son exclusivamente para desarrollo y demostraciones locales. No deben utilizarse en un despliegue público.
 
 ---
 
+# ⚙️ Gestión de configuración del software
+
+La **Gestión de Configuración del Software (GCS / SCM)** permite mantener el control sobre los cambios realizados durante el desarrollo de ParDrops.
+
+### Objetivos
+
+- Mantener un historial de cambios.
+- Identificar versiones del proyecto.
+- Facilitar el trabajo colaborativo.
+- Controlar modificaciones en frontend y backend.
+- Reducir errores durante la integración.
+
+### Herramientas
+
+| Herramienta | Propósito |
+|---|---|
+| Git | Registro de cambios |
+| GitHub | Repositorio remoto |
+| Commits | Historial del desarrollo |
+| Branches | Separación de trabajo |
+| Pull Requests | Revisión e integración de cambios |
+
+### Flujo de trabajo recomendado
+
+```mermaid
+gitGraph
+    commit id: "Inicio"
+    branch develop
+    checkout develop
+    commit id: "Base del proyecto"
+    branch feature
+    checkout feature
+    commit id: "Nueva funcionalidad"
+    checkout develop
+    merge feature
+    commit id: "Integración"
+    checkout main
+    merge develop
+    commit id: "Versión estable"
+```
+
+> Este diagrama representa un flujo de trabajo recomendado, no necesariamente el historial real del repositorio.
+
+### Convención sugerida de commits
+
+```bash
+git commit -m "feat: agregar funcionalidad"
+git commit -m "fix: corregir error"
+git commit -m "docs: actualizar documentación"
+git commit -m "refactor: reorganizar código"
+git commit -m "style: mejorar interfaz"
+```
+
+---
+
+# 🛡️ Gestión de riesgos
+
+La gestión de riesgos ayuda a identificar situaciones que podrían afectar el desarrollo o funcionamiento de ParDrops.
+
+| Riesgo | Impacto | Mitigación propuesta |
+|---|---|---|
+| Fallos de autenticación | Alto | Validar tokens y permisos |
+| Pérdida de datos locales | Alto | Copias de seguridad |
+| Errores de cálculo comercial | Alto | Pruebas de IVA y envío |
+| Fallos de conexión HTTP | Medio | Manejo de errores |
+| Dependencias incompatibles | Medio | Control de versiones |
+| Cambios sin revisión | Medio | Uso de Git y Pull Requests |
+| Exposición de credenciales | Alto | Configuración segura |
+
+### Ciclo recomendado
+
+```mermaid
+flowchart LR
+    A["Identificar"]
+    B["Analizar"]
+    C["Priorizar"]
+    D["Mitigar"]
+    E["Revisar"]
+
+    A --> B --> C --> D --> E
+    E --> A
+
+    style A fill:#0E7490,color:#FFFFFF
+    style B fill:#155E75,color:#FFFFFF
+    style C fill:#7C3AED,color:#FFFFFF
+    style D fill:#15803D,color:#FFFFFF
+    style E fill:#0369A1,color:#FFFFFF
+```
+
+---
+
+# 🔧 Solución de problemas
+
+<details>
+<summary><b>❓ El backend no inicia</b></summary>
+
+Comprueba que Java 25 esté disponible:
+
+```powershell
+java -version
+```
+
+Revisa `JAVA_HOME` y la configuración del JDK portátil.
+
+</details>
+
+<details>
+<summary><b>❓ El frontend no inicia</b></summary>
+
+Comprueba las versiones:
+
+```bash
+node -v
+npm -v
+```
+
+Instala las dependencias:
+
+```bash
+npm install
+```
+
+Luego inicia:
+
+```bash
+npm start
+```
+
+</details>
+
+<details>
+<summary><b>❓ El frontend no se comunica con el backend</b></summary>
+
+Verifica que el backend esté activo en:
+
+```text
+http://localhost:8080
+```
+
+Comprueba la configuración de:
+
+```text
+pardropsfrontend/src/app/core/config/api.config.ts
+```
+
+La URL base esperada es:
+
+```text
+http://localhost:8080/api
+```
+
+</details>
+
+<details>
+<summary><b>❓ Los productos muestran una moneda antigua</b></summary>
+
+Si estás trabajando únicamente con datos locales de prueba:
+
+1. Detén el backend.
+2. Haz una copia si necesitas conservar datos.
+3. Elimina `pardrops/data/`.
+4. Reinicia el backend.
+
+`DataSeeder` regenerará los datos iniciales en COP.
+
+</details>
+
+---
+
+# 👨‍💻 Desarrollo
+
 <div align="center">
 
-<h3 style="font-family: Georgia, 'Times New Roman', serif; font-size: 28px;">
-  ParDrops
-</h3>
+### PARDROPS · DIGITAL COMMERCE
 
-<p><i>Explora · Descubre · Compra</i></p>
+**Desarrollado con tecnologías modernas para el comercio digital.**
+
+[![GitHub](https://img.shields.io/badge/VER_REPOSITORIO-GITHUB-0F172A?style=for-the-badge&logo=github&logoColor=white)](https://github.com/andrespar2/ParDrops)
+
+<br/>
+
+**Java 25 · Spring Boot 4 · Angular 22 · H2 · JWT**
+
+<br/>
+
+```text
+┌──────────────────────────────────────────────┐
+│                                              │
+│                  PARDROPS                    │
+│                                              │
+│           EXPLORE • DISCOVER • SHOP          │
+│                                              │
+│              BUILT FOR THE WEB               │
+│                                              │
+└──────────────────────────────────────────────┘
+```
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:22D3EE,50:0E7490,100:020617&height=125&section=footer" width="100%" alt="Footer"/>
 
 </div>

@@ -106,6 +106,26 @@ comunican por HTTP:
 | `pardrops/` | Spring Boot 4 · Java 25 · H2 · JWT | API REST (catálogo, cuentas y pedidos). |
 | `pardropsfrontend/` | Angular 22 (standalone + signals) | Interfaz de usuario (SPA). |
 
+### Configuración comercial (Colombia)
+
+La plataforma opera íntegramente en **pesos colombianos (COP)**:
+
+* **Moneda**: todos los importes se guardan y muestran en COP con formato
+  `es-CO` (ej. `$ 119.900`, sin decimales). Los productos nacen con
+  `currency = "COP"` y, si un producto no trajera moneda, la interfaz asume
+  COP en lugar de mostrar otra divisa.
+* **IVA**: 19 % sobre el subtotal (`OrderService.TAX_RATE` en el backend y
+  `cart.service.ts` en el frontend).
+* **Envío**: 25.900 COP, **gratis** a partir de 400.000 COP de subtotal. Los
+  mismos umbrales están definidos en el backend (`OrderService`) y replicados
+  en el carrito del frontend.
+* **Catálogo de ejemplo**: `DataSeeder` siembra los productos con precios COP
+  (ej. camiseta 119.900, zapatillas 319.900).
+* **Base de datos local**: `pardrops/data/` es prescindible (no está versionada).
+  Si contiene datos antiguos en otra moneda, bórrala y el siguiente arranque la
+  regenera íntegramente en COP.
+
+
 ### Requisitos
 
 * **JDK 25** para el backend (opcionalmente un JDK portátil en `.tools/jdk25`,

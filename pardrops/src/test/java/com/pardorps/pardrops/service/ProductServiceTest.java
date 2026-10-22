@@ -2,6 +2,8 @@ package com.pardorps.pardrops.service;
 
 import com.pardorps.pardrops.dto.ProductRequest;
 import com.pardorps.pardrops.exception.ApiException;
+import com.pardorps.pardrops.model.AuditAction;
+import com.pardorps.pardrops.model.NotificationType;
 import com.pardorps.pardrops.model.Product;
 import com.pardorps.pardrops.model.Role;
 import com.pardorps.pardrops.model.Store;
@@ -20,6 +22,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -36,9 +40,17 @@ class ProductServiceTest {
     private final ProductRepository productRepository = mock(ProductRepository.class);
     private final ProductReviewRepository productReviewRepository = mock(ProductReviewRepository.class);
     private final StoreRepository storeRepository = mock(StoreRepository.class);
+    private final CategoryService categoryService = mock(CategoryService.class);
+    private final AuditLogService auditLogService = mock(AuditLogService.class);
+    private final NotificationService notificationService = mock(NotificationService.class);
 
-    private final ProductService productService =
-            new ProductService(productRepository, productReviewRepository, storeRepository);
+    private final ProductService productService = new ProductService(
+            productRepository,
+            productReviewRepository,
+            storeRepository,
+            categoryService,
+            auditLogService,
+            notificationService);
 
     @Test
     @DisplayName("Permite que el vendedor propietario edite su producto")
@@ -173,6 +185,58 @@ class ProductServiceTest {
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatus());
         verify(productRepository, never()).findPublishedBySellerId(any());
+    }
+
+    @Test
+    @DisplayName("Valida las categorías al crear un producto")
+    void validatesCategoriesOnCreate() {
+        when(productRepository.existsBySlug("gorra-urbana")).thenReturn(false);
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        productService.create(request("Gorra Urbana", "gorra-urbana"), null);
+
+        verify(categoryService).validateAssignable(List.of("Accesorios"));
+    }
+
+    @Test
+    @DisplayName("Avisa al vendedor y audita cuando el administrador oculta su producto")
+    void notifiesSellerWhenProductIsHidden() {
+        User admin = user(9L, Role.ADMIN);
+        User seller = user(1L, Role.SELLER);
+        Product product = product("prod-1", seller);
+        product.setActive(true);
+
+        when(productRepository.findById("prod-1")).thenReturn(Optional.of(product));
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(storeRepository.findAll()).thenReturn(List.of());
+
+        productService.setActive("prod-1", false, admin);
+
+        assertEquals(false, product.isActive());
+        verify(notificationService).notify(
+                eq(seller), eq(NotificationType.PRODUCT), anyString(), anyString(), anyString());
+        verify(auditLogService).record(
+                eq(admin), eq(AuditAction.PRODUCT_MODERATED), eq("PRODUCT"), eq("prod-1"), anyString());
+    }
+
+    @Test
+    @DisplayName("No avisa si la visibilidad no cambia")
+    void doesNotNotifyWhenVisibilityIsUnchanged() {
+        User admin = user(9L, Role.ADMIN);
+        Product product = product("prod-1", user(1L, Role.SELLER));
+        product.setActive(true);
+
+        when(productRepository.findById("prod-1")).thenReturn(Optional.of(product));
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(storeRepository.findAll()).thenReturn(List.of());
+
+        productService.setActive("prod-1", true, admin);
+
+        verify(notificationService, never()).notify(any(), any(), anyString(), anyString(), anyString());
+        verify(auditLogService, never()).record(any(), any(), anyString(), anyString(), anyString());
     }
 
     /**

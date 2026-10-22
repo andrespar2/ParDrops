@@ -1,0 +1,76 @@
+<!--
+  @file src/app/pages/admin-settings/admin-settings.component.html
+  @description Plantilla de la sección "Configuración" del panel.
+-->
+
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <h1 class="admin-page__title">Configuración</h1>
+      <p class="admin-page__subtitle">
+        Opciones generales de la plataforma y estado actual del catálogo.
+      </p>
+    </div>
+    <button type="button" class="admin-btn" (click)="load()" [disabled]="loading()">
+      {{ loading() ? 'Actualizando…' : 'Actualizar' }}
+    </button>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</div>
+  }
+
+  <h2 class="admin-page__title">Parámetros de la tienda</h2>
+  <p class="admin-page__subtitle admin-page__subtitle--spaced">
+    Estos valores se aplican de forma uniforme en el catálogo, el carrito y el
+    pago. Para cambiarlos hay que editar la configuración de la plataforma.
+  </p>
+
+  <section class="admin-cards">
+    <article class="admin-card">
+      <p class="admin-card__label">Moneda</p>
+      <p class="admin-card__value">{{ currencyCode }}</p>
+      <p class="admin-card__hint">{{ country }}</p>
+    </article>
+    <article class="admin-card">
+      <p class="admin-card__label">IVA</p>
+      <p class="admin-card__value">{{ formatRate(taxRate) }}</p>
+      <p class="admin-card__hint">Aplicado al total del pedido</p>
+    </article>
+    <article class="admin-card">
+      <p class="admin-card__label">Envío</p>
+      <p class="admin-card__value">{{ formatPrice(shippingCost) }}</p>
+      <p class="admin-card__hint">
+        Gratis desde {{ formatPrice(freeShippingThreshold) }}
+      </p>
+    </article>
+  </section>
+
+  <h2 class="admin-page__title">Estado del catálogo</h2>
+  @if (loading() && !dashboard()) {
+    <p class="admin-message">Cargando el estado del catálogo…</p>
+  } @else if (dashboard(); as data) {
+    <section class="admin-cards">
+      <article class="admin-card">
+        <p class="admin-card__label">Productos publicados</p>
+        <p class="admin-card__value">{{ data.publishedProductCount }}</p>
+        <p class="admin-card__hint">de {{ data.productCount }} en total</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Sin existencias</p>
+        <p class="admin-card__value">{{ data.outOfStockCount }}</p>
+        <p class="admin-card__hint">Productos agotados</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Tiendas activas</p>
+        <p class="admin-card__value">{{ data.activeStoreCount }}</p>
+        <p class="admin-card__hint">de {{ data.storeCount }} registradas</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Cuentas suspendidas</p>
+        <p class="admin-card__value">{{ data.suspendedUserCount }}</p>
+        <p class="admin-card__hint">Acceso bloqueado</p>
+      </article>
+    </section>
+  }
+</div>

@@ -1,0 +1,56 @@
+<!--
+  @file src/app/pages/notifications/notifications.component.html
+  @description Plantilla de la página de notificaciones.
+-->
+
+<main class="page">
+  <div class="container">
+    <header class="page__header">
+      <h1 class="page__title">Notificaciones</h1>
+      <p class="page__subtitle">
+        Avisos de ParDrops sobre tus pedidos, tu cuenta y tus ventas.
+      </p>
+    </header>
+
+    <div class="toolbar">
+      <span class="toolbar__count">
+        @if (unreadCount() > 0) {
+          {{ unreadCount() }} sin leer
+        } @else {
+          No tienes avisos pendientes
+        }
+      </span>
+      @if (unreadCount() > 0) {
+        <button type="button" class="toolbar__action" (click)="markAllAsRead()">
+          Marcar todas como leídas
+        </button>
+      }
+    </div>
+
+    @if (loading()) {
+      <p class="message">Cargando tus notificaciones…</p>
+    } @else if (errorMessage()) {
+      <p class="message message--error">{{ errorMessage() }}</p>
+    } @else if (notifications().length === 0) {
+      <div class="empty">
+        <p class="empty__text">Todavía no tienes notificaciones.</p>
+      </div>
+    } @else {
+      <ul class="list">
+        @for (notification of notifications(); track notification.id) {
+          <li class="item" [class.item--unread]="!notification.read">
+            <button
+              type="button"
+              class="item__button"
+              (click)="openNotification(notification.id, notification.link)"
+            >
+              <span class="item__title">{{ notification.title }}</span>
+              <span class="item__message">{{ notification.message }}</span>
+              <span class="item__date">{{ formatDate(notification.createdAt) }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</main>

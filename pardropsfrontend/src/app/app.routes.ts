@@ -59,6 +59,12 @@ export const routes: Routes = [
     title: 'ParDrops - Mi cuenta'
   },
   {
+    path: 'notificaciones',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/notifications/notifications.component').then(m => m.NotificationsComponent),
+    title: 'ParDrops - Notificaciones'
+  },
+  {
     path: 'admin/productos',
     canActivate: [adminGuard],
     loadComponent: () => import('./pages/admin-products/admin-products.component').then(m => m.AdminProductsComponent),

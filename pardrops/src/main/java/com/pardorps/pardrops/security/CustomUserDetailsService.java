@@ -29,6 +29,10 @@ public class CustomUserDetailsService implements UserDetailsService {
     /**
      * Carga un usuario por su correo electrónico.
      *
+     * <p>Las cuentas suspendidas se cargan deshabilitadas: Spring Security
+     * impide entonces tanto el inicio de sesión como la autenticación por
+     * token, de modo que una cuenta suspendida pierde el acceso de inmediato.</p>
+     *
      * @param email correo del usuario.
      * @return los datos del usuario entendidos por Spring Security.
      * @throws UsernameNotFoundException si no existe ninguna cuenta con ese correo.
@@ -42,6 +46,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .withUsername(user.getEmail())
                 .password(user.getPassword())
                 .roles(user.getRole().name())
+                .disabled(!user.isActive())
                 .build();
     }
 }

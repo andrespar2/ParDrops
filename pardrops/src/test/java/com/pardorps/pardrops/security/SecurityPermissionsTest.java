@@ -112,7 +112,7 @@ class SecurityPermissionsTest {
 
         HttpStatus status = exchange(
                 restClient.post()
-                        .uri("/api/seller/applications")
+                        .uri("/api/seller-applications")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body("""
@@ -134,7 +134,7 @@ class SecurityPermissionsTest {
 
         String respuesta = exchangeConCuerpo(
                 restClient.post()
-                        .uri("/api/seller/applications")
+                        .uri("/api/seller-applications")
                         .header("Authorization", "Bearer " + tokenCliente)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body("""
@@ -149,7 +149,7 @@ class SecurityPermissionsTest {
 
         String revisada = exchangeConCuerpo(
                 restClient.patch()
-                        .uri("/api/admin/seller-applications/" + idSolicitud)
+                        .uri("/api/seller-applications/" + idSolicitud + "/decision")
                         .header("Authorization", "Bearer " + tokenAdmin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body("""
@@ -171,6 +171,17 @@ class SecurityPermissionsTest {
                 restClient.get().uri("/api/stores/mine").header("Authorization", "Bearer " + tokenCliente));
         assertEquals("estilo-urbano-de-prueba",
                 objectMapper.readTree(tienda).get("slug").asText());
+    }
+
+    @Test
+    @DisplayName("Impide que un cliente liste las solicitudes de los demás")
+    void preventsCustomerFromListingAllApplications() throws Exception {
+        String token = registrar("cliente-listado@ejemplo.com", "Cliente Listado");
+
+        HttpStatus status = exchange(
+                restClient.get().uri("/api/seller-applications").header("Authorization", "Bearer " + token));
+
+        assertEquals(HttpStatus.FORBIDDEN, status);
     }
 
     @Test

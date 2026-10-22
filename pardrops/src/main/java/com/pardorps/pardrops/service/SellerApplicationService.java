@@ -15,9 +15,11 @@ import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.repository.SellerApplicationRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
 import com.pardorps.pardrops.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
@@ -36,6 +38,9 @@ public class SellerApplicationService {
     /** Tipo de entidad que se registra en la bitácora de auditoría. */
     private static final String ENTITY_TYPE = "SELLER_APPLICATION";
 
+    /** Días que deben pasar desde un rechazo para poder volver a solicitar. */
+    private final int retryDays;
+
     private final SellerApplicationRepository sellerApplicationRepository;
     private final UserRepository userRepository;
     private final StoreRepository storeRepository;
@@ -50,6 +55,7 @@ public class SellerApplicationService {
      * @param storeService                 servicio de tiendas (generación de slug).
      * @param auditLogService              bitácora de auditoría.
      * @param notificationService          avisos dentro de la aplicación.
+     * @param retryDays                    días de espera tras un rechazo.
      */
     public SellerApplicationService(
             SellerApplicationRepository sellerApplicationRepository,
@@ -57,7 +63,8 @@ public class SellerApplicationService {
             StoreRepository storeRepository,
             StoreService storeService,
             AuditLogService auditLogService,
-            NotificationService notificationService
+            NotificationService notificationService,
+            @Value("${app.seller-application.retry-days:7}") int retryDays
     ) {
         this.sellerApplicationRepository = sellerApplicationRepository;
         this.userRepository = userRepository;
@@ -65,6 +72,7 @@ public class SellerApplicationService {
         this.storeService = storeService;
         this.auditLogService = auditLogService;
         this.notificationService = notificationService;
+        this.retryDays = retryDays;
     }
 
     /**
@@ -74,7 +82,7 @@ public class SellerApplicationService {
      * @param request   datos del negocio.
      * @return la solicitud registrada, en estado pendiente.
      * @throws ApiException si el usuario ya es vendedor (409) o si tiene una
-     *                     solicitud pendiente (409).
+     *                     solicitud pendiente (409) o un rechazo reciente (409).
      */
     @Transactional
     public SellerApplicationResponse submit(User applicant, SellerApplicationRequest request) {
@@ -82,13 +90,20 @@ public class SellerApplicationService {
             throw ApiException.conflict("Ya eres vendedor en ParDrops");
         }
 
-        SellerApplication pending = sellerApplicationRepository
+        SellerApplication previous = sellerApplicationRepository
                 .findFirstByUserIdOrderByCreatedAtDesc(applicant.getId())
                 .orElse(null);
 
-        if (pending != null && pending.getStatus() == SellerApplicationStatus.PENDING) {
+        if (previous != null && previous.getStatus() == SellerApplicationStatus.PENDING) {
             throw ApiException.conflict(
                     "Ya tienes una solicitud en revisión. Espera a que el administrador la revise");
+        }
+
+        if (previous != null && previous.getStatus() == SellerApplicationStatus.REJECTED
+                && !canRetry(previous)) {
+            throw ApiException.conflict(
+                    "Tu última solicitud fue rechazada. Puedes volver a enviarla en "
+                            + retryDays + " días");
         }
 
         SellerApplication application = new SellerApplication();
@@ -108,7 +123,43 @@ public class SellerApplicationService {
                 "Solicitud registrada",
                 "Recibimos tu solicitud para vender en ParDrops. Te avisaremos cuando sea revisada.",
                 "/vender");
+        notifyAdministrators(saved);
         return toResponse(saved);
+    }
+
+    /**
+     * Indica si ya pasó el plazo de espera para volver a solicitar.
+     *
+     * <p>Tras un rechazo el cliente puede presentar una solicitud nueva, pero
+     * no de inmediato: se deja un margen para que corrija lo que motivó la
+     * decisión.</p>
+     *
+     * @param previous última solicitud del cliente.
+     * @return {@code true} si puede volver a solicitar.
+     */
+    private boolean canRetry(SellerApplication previous) {
+        Instant rejectedAt = previous.getReviewedAt();
+        if (rejectedAt == null) {
+            return true;
+        }
+        return rejectedAt.plus(Duration.ofDays(retryDays)).isBefore(Instant.now());
+    }
+
+    /**
+     * Avisa a los administradores de que hay una solicitud por revisar.
+     *
+     * @param application solicitud recién registrada.
+     */
+    private void notifyAdministrators(SellerApplication application) {
+        for (User admin : userRepository.findByRole(Role.ADMIN)) {
+            notificationService.notify(
+                    admin,
+                    NotificationType.SELLER_APPLICATION,
+                    "Nueva solicitud de vendedor",
+                    application.getUser().getFullName() + " quiere vender en ParDrops: "
+                            + application.getBusinessName(),
+                    "/admin/solicitudes");
+        }
     }
 
     /**
@@ -125,14 +176,18 @@ public class SellerApplicationService {
     }
 
     /**
-     * Devuelve todas las solicitudes registradas.
+     * Devuelve las solicitudes registradas, con filtro opcional por estado.
      *
+     * @param status estado por el que se filtra; si es nulo se devuelven todas.
      * @return listado de solicitudes, de la más reciente a la más antigua.
      */
     @Transactional(readOnly = true)
-    public List<SellerApplicationResponse> findAll() {
-        return sellerApplicationRepository.findAllByOrderByCreatedAtDesc()
-                .stream()
+    public List<SellerApplicationResponse> findAll(SellerApplicationStatus status) {
+        List<SellerApplication> applications = status == null
+                ? sellerApplicationRepository.findAllByOrderByCreatedAtDesc()
+                : sellerApplicationRepository.findByStatusOrderByCreatedAtDesc(status);
+
+        return applications.stream()
                 .map(this::toResponse)
                 .toList();
     }

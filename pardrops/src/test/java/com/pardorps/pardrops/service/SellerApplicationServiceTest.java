@@ -20,6 +20,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -54,7 +57,8 @@ class SellerApplicationServiceTest {
             storeRepository,
             storeService,
             auditLogService,
-            notificationService);
+            notificationService,
+            7);
 
     @Test
     @DisplayName("Registra la solicitud en estado pendiente y avisa al solicitante")
@@ -224,6 +228,77 @@ class SellerApplicationServiceTest {
                 () -> service.review(7L, user(9L, Role.ADMIN), new SellerApplicationReviewRequest(Boolean.TRUE, null)));
 
         assertEquals(HttpStatus.CONFLICT, exception.getStatus());
+    }
+
+    @Test
+    @DisplayName("Avisa a los administradores cuando entra una solicitud nueva")
+    void notifiesAdministratorsAboutNewApplication() {
+        User applicant = user(1L, Role.CUSTOMER);
+        User admin = user(9L, Role.ADMIN);
+
+        when(sellerApplicationRepository.findFirstByUserIdOrderByCreatedAtDesc(1L))
+                .thenReturn(Optional.empty());
+        when(sellerApplicationRepository.save(any(SellerApplication.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
+
+        service.submit(applicant, new SellerApplicationRequest("Estilo Urbano", null, null, null, null));
+
+        verify(notificationService).notify(
+                eq(admin),
+                eq(NotificationType.SELLER_APPLICATION),
+                anyString(),
+                anyString(),
+                any());
+    }
+
+    @Test
+    @DisplayName("Tras un rechazo espera el plazo definido antes de volver a solicitar")
+    void waitsCooldownAfterRejection() {
+        User applicant = user(1L, Role.CUSTOMER);
+        SellerApplication rejected = application(7L, applicant, SellerApplicationStatus.REJECTED);
+        rejected.setReviewedAt(Instant.now().minus(Duration.ofDays(2)));
+
+        when(sellerApplicationRepository.findFirstByUserIdOrderByCreatedAtDesc(1L))
+                .thenReturn(Optional.of(rejected));
+
+        ApiException exception = assertThrows(
+                ApiException.class,
+                () -> service.submit(applicant, new SellerApplicationRequest("Estilo Urbano", null, null, null, null)));
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatus());
+        verify(sellerApplicationRepository, never()).save(any(SellerApplication.class));
+    }
+
+    @Test
+    @DisplayName("Pasado el plazo vuelve a admitir una solicitud rechazada")
+    void allowsNewApplicationAfterCooldown() {
+        User applicant = user(1L, Role.CUSTOMER);
+        SellerApplication rejected = application(7L, applicant, SellerApplicationStatus.REJECTED);
+        rejected.setReviewedAt(Instant.now().minus(Duration.ofDays(10)));
+
+        when(sellerApplicationRepository.findFirstByUserIdOrderByCreatedAtDesc(1L))
+                .thenReturn(Optional.of(rejected));
+        when(sellerApplicationRepository.save(any(SellerApplication.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        SellerApplicationResponse response = service.submit(
+                applicant, new SellerApplicationRequest("Estilo Urbano", null, null, null, null));
+
+        assertEquals(SellerApplicationStatus.PENDING, response.status());
+    }
+
+    @Test
+    @DisplayName("Filtra el listado de solicitudes por estado")
+    void filtersApplicationsByStatus() {
+        User applicant = user(1L, Role.CUSTOMER);
+        SellerApplication pending = application(7L, applicant, SellerApplicationStatus.PENDING);
+
+        when(sellerApplicationRepository.findByStatusOrderByCreatedAtDesc(SellerApplicationStatus.PENDING))
+                .thenReturn(List.of(pending));
+
+        assertEquals(1, service.findAll(SellerApplicationStatus.PENDING).size());
+        assertTrue(service.findAll(null).isEmpty());
     }
 
     @Test

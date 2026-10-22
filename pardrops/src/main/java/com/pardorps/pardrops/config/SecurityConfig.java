@@ -124,8 +124,11 @@ public class SecurityConfig {
                         // --- Panel de vendedor: solo SELLER. ---
                         // La solicitud para vender la envía un cliente (todavía no
                         // es vendedor), así que se declara antes que el panel.
-                        .requestMatchers(HttpMethod.POST, "/api/seller/applications").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/seller/applications/me").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/seller-applications").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/seller-applications/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/seller-applications").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/seller-applications/*/decision")
+                        .hasRole("ADMIN")
                         .requestMatchers("/api/seller/**").hasRole("SELLER")
 
                         // --- Todos los pedidos: solo administración. ---

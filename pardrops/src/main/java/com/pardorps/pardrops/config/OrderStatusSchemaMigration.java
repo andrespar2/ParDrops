@@ -4,6 +4,8 @@ import com.pardorps.pardrops.model.OrderStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
  * si la base de datos no usa el tipo {@code ENUM}.</p>
  */
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class OrderStatusSchemaMigration implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(OrderStatusSchemaMigration.class);

@@ -18,11 +18,12 @@ import { ProductService } from '../../core/services/product.service';
 import { ProductRequest } from '../../core/models/product-request.model';
 import { Product, ProductImage } from '../../core/models/product.model';
 import { CURRENCY_CODE, formatCurrency } from '../../core/config/commerce.config';
+import { ImageUploaderComponent } from '../../shared/components/image-uploader/image-uploader.component';
 
 @Component({
   selector: 'app-admin-products',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ImageUploaderComponent],
   templateUrl: './admin-products.component.html',
   styleUrls: ['./admin-products.component.scss']
 })
@@ -142,6 +143,39 @@ export class AdminProductsComponent {
   /** Añade una imagen vacía a la lista de imágenes. */
   public addImage(): void {
     this.images.update(list => [...list, { url: '', alt: '', isPrimary: list.length === 0 }]);
+  }
+
+  /**
+   * Añade a la lista una imagen subida al servidor.
+   *
+   * @param url URL pública devuelta por el servicio de multimedia.
+   * @returns {void}
+   */
+  public addUploadedImage(url: string): void {
+    const cleanUrl = url.trim();
+    if (!cleanUrl) {
+      return;
+    }
+
+    this.images.update(list => {
+      // Si solo había un hueco vacío, la imagen subida lo ocupa.
+      if (list.length === 1 && list[0].url.trim() === '') {
+        return [{
+          url: cleanUrl,
+          alt: (this.form.controls.name.value ?? '').trim(),
+          isPrimary: true
+        }];
+      }
+
+      return [
+        ...list,
+        {
+          url: cleanUrl,
+          alt: (this.form.controls.name.value ?? '').trim(),
+          isPrimary: list.length === 0
+        }
+      ];
+    });
   }
 
   /**

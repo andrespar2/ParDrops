@@ -4,7 +4,7 @@
  */
 
 .page {
-  padding: var(--space-12) 0;
+  padding: 0;
 }
 
 .page__header {
@@ -242,6 +242,23 @@
   &--new { background-color: #dcfce7; color: #166534; }
   &--feat { background-color: #e0e7ff; color: #3730a3; }
   &--sale { background-color: #fee2e2; color: #991b1b; }
+}
+
+.list__filters {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.list__pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  flex-wrap: wrap;
 }
 
 .list__message {

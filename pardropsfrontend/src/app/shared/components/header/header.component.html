@@ -98,11 +98,8 @@
                 Mis pedidos
               </a>
               @if (isAdmin()) {
-                <a routerLink="/admin/pedidos" class="nav__user-link" (click)="toggleUserMenu()">
-                  Administrar pedidos
-                </a>
-                <a routerLink="/admin/productos" class="nav__user-link" (click)="toggleUserMenu()">
-                  Administrar productos
+                <a routerLink="/admin" class="nav__user-link" (click)="toggleUserMenu()">
+                  Panel de administración
                 </a>
               }
               <button
@@ -149,6 +146,11 @@
             <span class="nav__cart-badge nav__cart-badge--alert">{{ pendingCount() }}</span>
           }
         </a>
+      }
+
+      <!-- Campanilla de notificaciones (solo usuarios con sesión) -->
+      @if (isAuthenticated()) {
+        <app-notification-bell />
       }
 
       <!-- Carrito -->

@@ -39,6 +39,25 @@ public class OrderItem {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
+    /**
+     * Parte del pedido a la que pertenece la línea.
+     *
+     * <p>Es nula en los pedidos anteriores a la división por vendedores: el
+     * historial antiguo se conserva tal cual.</p>
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sub_order_id")
+    private OrderSubOrder subOrder;
+
+    /**
+     * Vendedor del producto en el momento de la compra.
+     *
+     * <p>Es nulo cuando el producto pertenece al catálogo de la plataforma.</p>
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id")
+    private User seller;
+
     /** Referencia al producto original. */
     @Column(nullable = false, length = 36)
     private String productId;

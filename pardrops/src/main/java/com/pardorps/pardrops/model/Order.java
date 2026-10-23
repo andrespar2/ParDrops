@@ -93,6 +93,27 @@ public class Order {
     )
     private List<OrderItem> items = new ArrayList<>();
 
+    /**
+     * Partes del pedido, una por tienda.
+     *
+     * <p>Los pedidos anteriores a la evolución a marketplace no tienen partes:
+     * su historial se conserva tal cual y su estado se gestiona como hasta
+     * ahora.</p>
+     *
+     * <p>La colección es perezosa a propósito: {@link #items} ya es eagerly y
+     * las dos son bolsas, así que cargarlas juntas en la misma consulta
+     * provocaría un error de Hibernate. Todos los accesos ocurren dentro de
+     * una transacción, de modo que no hay inicialización diferida fuera del
+     * servicio.</p>
+     */
+    @OneToMany(
+            mappedBy = "order",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private List<OrderSubOrder> subOrders = new ArrayList<>();
+
     /** Suma de las líneas antes de impuestos y envío. */
     @Column(nullable = false)
     private Double subtotal;
@@ -130,5 +151,15 @@ public class Order {
     public void addItem(OrderItem item) {
         items.add(item);
         item.setOrder(this);
+    }
+
+    /**
+     * Añade una parte (subpedido) al pedido manteniendo la relación bidireccional.
+     *
+     * @param subOrder parte a añadir.
+     */
+    public void addSubOrder(OrderSubOrder subOrder) {
+        subOrders.add(subOrder);
+        subOrder.setOrder(this);
     }
 }

@@ -1,0 +1,191 @@
+<!--
+  @file src/app/pages/admin-users/admin-users.component.html
+  @description Plantilla de la sección "Usuarios" del panel.
+-->
+
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <h1 class="admin-page__title">Usuarios</h1>
+      <p class="admin-page__subtitle">
+        Busca cuentas, consulta su ficha y suspende o reactiva su acceso.
+      </p>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</div>
+  }
+  @if (okMessage()) {
+    <div class="admin-alert admin-alert--ok" role="status">{{ okMessage() }}</div>
+  }
+
+  <form class="admin-filters" (submit)="$event.preventDefault(); reload()">
+    <div class="admin-field admin-field--grow">
+      <label for="user-search">Buscar</label>
+      <input
+        id="user-search"
+        class="admin-input"
+        type="search"
+        name="search"
+        placeholder="Correo, nombre o teléfono"
+        [(ngModel)]="search"
+      />
+    </div>
+    <div class="admin-field">
+      <label for="user-role">Rol</label>
+      <select id="user-role" class="admin-select" name="role" [(ngModel)]="roleFilter">
+        <option value="">Todos</option>
+        <option value="CUSTOMER">Cliente</option>
+        <option value="SELLER">Vendedor</option>
+        <option value="ADMIN">Administrador</option>
+      </select>
+    </div>
+    <div class="admin-field">
+      <label for="user-status">Estado</label>
+      <select id="user-status" class="admin-select" name="status" [(ngModel)]="statusFilter">
+        <option value="">Todos</option>
+        <option value="ACTIVE">Activa</option>
+        <option value="SUSPENDED">Suspendida</option>
+      </select>
+    </div>
+    <button type="submit" class="admin-btn admin-btn--primary">Buscar</button>
+  </form>
+
+  @if (loading()) {
+    <p class="admin-message">Cargando cuentas…</p>
+  } @else if (page(); as data) {
+    @if (data.content.length === 0) {
+      <p class="admin-message">No hay cuentas que coincidan con el filtro.</p>
+    } @else {
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Cuenta</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Tienda</th>
+            <th>Alta</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of data.content; track user.id) {
+            <tr>
+              <td>
+                <strong>{{ user.fullName }}</strong><br />
+                <span class="admin-message">{{ user.email }}</span>
+              </td>
+              <td>
+                <span class="admin-badge admin-badge--role">{{ roleLabel(user.role) }}</span>
+              </td>
+              <td>
+                <span class="admin-badge admin-badge--{{ user.status.toLowerCase() }}">
+                  {{ statusLabel(user.status) }}
+                </span>
+              </td>
+              <td>{{ user.storeName || '—' }}</td>
+              <td>{{ formatDate(user.createdAt) }}</td>
+              <td>
+                <div class="admin-table__actions">
+                  <button type="button" class="admin-btn" (click)="openDetail(user)">
+                    Ver ficha
+                  </button>
+                  <button
+                    type="button"
+                    class="admin-btn"
+                    [class.admin-btn--danger]="user.status === 'ACTIVE'"
+                    [disabled]="savingId() === user.id || user.role === 'ADMIN'"
+                    (click)="toggleStatus(user)"
+                  >
+                    {{ user.status === 'ACTIVE' ? 'Suspender' : 'Reactivar' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <div class="admin-pagination">
+        <span class="admin-pagination__info">
+          {{ data.totalElements }} cuenta(s) · página {{ data.page + 1 }} de
+          {{ data.totalPages === 0 ? 1 : data.totalPages }}
+        </span>
+        <div class="admin-pagination__controls">
+          <button
+            type="button"
+            class="admin-btn"
+            [disabled]="data.page === 0"
+            (click)="changePage(-1)"
+          >
+            Anterior
+          </button>
+          <button
+            type="button"
+            class="admin-btn"
+            [disabled]="data.page + 1 >= data.totalPages"
+            (click)="changePage(1)"
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
+    }
+  }
+
+  @if (loadingDetail()) {
+    <p class="admin-message">Cargando ficha…</p>
+  } @else if (detail(); as item) {
+    <section class="admin-detail">
+      <header class="admin-page__header">
+        <div>
+          <h2 class="admin-page__title">Ficha de {{ item.fullName }}</h2>
+          <p class="admin-page__subtitle">{{ item.email }}</p>
+        </div>
+        <button type="button" class="admin-btn" (click)="closeDetail()">Cerrar</button>
+      </header>
+
+      <div class="admin-detail__grid">
+        <div class="admin-detail__row">
+          <span class="admin-detail__label">Rol</span>
+          <span>{{ roleLabel(item.role) }}</span>
+        </div>
+        <div class="admin-detail__row">
+          <span class="admin-detail__label">Estado de la cuenta</span>
+          <span class="admin-badge admin-badge--{{ item.status.toLowerCase() }}">
+            {{ statusLabel(item.status) }}
+          </span>
+        </div>
+        <div class="admin-detail__row">
+          <span class="admin-detail__label">Teléfono</span>
+          <span>{{ item.phone || '—' }}</span>
+        </div>
+        <div class="admin-detail__row">
+          <span class="admin-detail__label">Alta</span>
+          <span>{{ formatDate(item.createdAt) }}</span>
+        </div>
+        @if (item.storeId) {
+          <div class="admin-detail__row">
+            <span class="admin-detail__label">Tienda</span>
+            <span>{{ item.storeName }} ({{ item.storeSlug }})</span>
+          </div>
+          <div class="admin-detail__row">
+            <span class="admin-detail__label">Estado de la tienda</span>
+            <span class="admin-badge admin-badge--{{ (item.storeStatus || '').toLowerCase() }}">
+              {{ item.storeStatus }}
+            </span>
+          </div>
+          <div class="admin-detail__row">
+            <span class="admin-detail__label">Productos</span>
+            <span>{{ item.productCount }}</span>
+          </div>
+          <div class="admin-detail__row">
+            <span class="admin-detail__label">Ventas</span>
+            <span>{{ item.salesCount }} · {{ formatPrice(item.salesTotal) }}</span>
+          </div>
+        }
+      </div>
+    </section>
+  }
+</div>

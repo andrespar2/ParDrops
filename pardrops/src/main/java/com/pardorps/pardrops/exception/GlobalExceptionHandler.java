@@ -4,11 +4,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -68,6 +70,24 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Maneja el intento de acceso de una cuenta suspendida.
+     *
+     * <p>Se distingue del error de credenciales porque la respuesta correcta no
+     * es "inténtalo de nuevo con otras credenciales", sino que el usuario debe
+     * contactar con el administrador.</p>
+     *
+     * @param exception excepción de cuenta deshabilitada.
+     * @return respuesta 403 con un mensaje explicativo.
+     */
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErrorResponse> handleDisabled(DisabledException exception) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(
+                        "Tu cuenta está suspendida. Contacta con el administrador para reactivarla."));
+    }
+
+    /**
      * Maneja credenciales incorrectas durante el login.
      *
      * @param exception excepción de autenticación.
@@ -78,6 +98,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.of("Correo o contraseña incorrectos"));
+    }
+
+    /**
+     * Maneja las peticiones a un fichero que no existe o está fuera del
+     * almacén de recursos estáticos.
+     *
+     * <p>Se responde 404 y no un error del servidor: una imagen borrada (o una
+     * URL inventada) es sencillamente un recurso que ya no está.</p>
+     *
+     * @param exception excepción de recurso estático no encontrado.
+     * @return respuesta 404 con un mensaje claro.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMissingResource(NoResourceFoundException exception) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of("El recurso solicitado no existe."));
     }
 
     /**

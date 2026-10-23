@@ -1,0 +1,50 @@
+<!--
+  @file src/app/shared/components/image-uploader/image-uploader.component.html
+  @description Plantilla del selector de imagenes locales con previsualizacion.
+-->
+
+<div class="uploader">
+  <p class="uploader__hint">{{ allowedHint }}</p>
+
+  <div class="uploader__actions">
+    <label class="uploader__select">
+      <input
+        type="file"
+        class="uploader__input"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        (change)="onFileSelected($event)"
+      />
+      Seleccionar imagen
+    </label>
+
+    @if (selectedFile() && !uploading()) {
+      <button type="button" class="uploader__upload" (click)="upload()">
+        Subir al servidor
+      </button>
+    }
+
+    @if (preview()) {
+      <button type="button" class="uploader__cancel" (click)="clear()">
+        Cancelar
+      </button>
+    }
+  </div>
+
+  @if (selectedFile()) {
+    <p class="uploader__name">{{ selectedFile()?.name }}</p>
+  }
+
+  @if (preview()) {
+    <div class="uploader__preview">
+      <img [src]="preview()" alt="Vista previa de la imagen a subir" />
+    </div>
+  }
+
+  @if (uploading()) {
+    <p class="uploader__status">Subiendo imagen...</p>
+  }
+
+  @if (errorMessage()) {
+    <p class="uploader__error">{{ errorMessage() }}</p>
+  }
+</div>

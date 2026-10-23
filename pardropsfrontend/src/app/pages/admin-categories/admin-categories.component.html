@@ -1,0 +1,134 @@
+<!--
+  @file src/app/pages/admin-categories/admin-categories.component.html
+  @description Plantilla de la sección "Categorías" del panel.
+-->
+
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <h1 class="admin-page__title">Categorías</h1>
+      <p class="admin-page__subtitle">
+        Crea, edita y desactiva las categorías del catálogo. Una categoría en uso
+        no se puede borrar.
+      </p>
+    </div>
+    <button type="button" class="admin-btn admin-btn--primary" (click)="openCreate()">
+      Nueva categoría
+    </button>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</div>
+  }
+  @if (okMessage()) {
+    <div class="admin-alert admin-alert--ok" role="status">{{ okMessage() }}</div>
+  }
+
+  @if (formOpen()) {
+    <form class="admin-form" [formGroup]="form" (submit)="$event.preventDefault(); save()">
+      <h2 class="admin-page__title">
+        {{ editingId() ? 'Editar categoría' : 'Nueva categoría' }}
+      </h2>
+
+      <div class="admin-field">
+        <label for="cat-name">Nombre</label>
+        <input id="cat-name" class="admin-input" type="text" formControlName="name" />
+        @if (form.controls.name.touched && form.controls.name.invalid) {
+          <span class="admin-alert admin-alert--error">El nombre es obligatorio.</span>
+        }
+      </div>
+
+      <div class="admin-field">
+        <label for="cat-slug">Slug</label>
+        <div class="admin-field__row">
+          <input id="cat-slug" class="admin-input" type="text" formControlName="slug" />
+          <button type="button" class="admin-btn" (click)="generateSlug()">
+            Generar
+          </button>
+        </div>
+      </div>
+
+      <div class="admin-field">
+        <label for="cat-desc">Descripción</label>
+        <textarea id="cat-desc" class="admin-textarea" formControlName="description"></textarea>
+      </div>
+
+      <label class="admin-form__check">
+        <input type="checkbox" formControlName="active" />
+        <span>Disponible para asignarla a productos</span>
+      </label>
+
+      <label class="admin-form__check">
+        <input type="checkbox" formControlName="featured" />
+        <span>Destacada en el menú del catálogo</span>
+      </label>
+
+      <div class="admin-form__actions">
+        <button type="submit" class="admin-btn admin-btn--primary" [disabled]="saving()">
+          {{ saving() ? 'Guardando…' : 'Guardar' }}
+        </button>
+        <button type="button" class="admin-btn" (click)="cancel()">Cancelar</button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <p class="admin-message">Cargando categorías…</p>
+  } @else if (categories().length === 0) {
+    <p class="admin-message">Todavía no hay categorías.</p>
+  } @else {
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Categoría</th>
+          <th>Slug</th>
+          <th>Productos</th>
+          <th>Estado</th>
+          <th>Destacada</th>
+          <th>Creada</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (category of categories(); track category.id) {
+          <tr>
+            <td>
+              <strong>{{ category.name }}</strong>
+              @if (category.description) {
+                <br /><span class="admin-message">{{ category.description }}</span>
+              }
+            </td>
+            <td>{{ category.slug }}</td>
+            <td>{{ category.productCount }}</td>
+            <td>
+              <span class="admin-badge admin-badge--{{ category.active ? 'active' : 'hidden' }}">
+                {{ category.active ? 'Activa' : 'Inactiva' }}
+              </span>
+            </td>
+            <td>{{ category.featured ? 'Sí' : 'No' }}</td>
+            <td>{{ formatDate(category.createdAt) }}</td>
+            <td>
+              <div class="admin-table__actions">
+                <button type="button" class="admin-btn" (click)="openEdit(category)">
+                  Editar
+                </button>
+                <button type="button" class="admin-btn" (click)="toggleActive(category)">
+                  {{ category.active ? 'Desactivar' : 'Activar' }}
+                </button>
+                <button
+                  type="button"
+                  class="admin-btn admin-btn--danger"
+                  [disabled]="category.productCount > 0"
+                  [title]="category.productCount > 0 ? 'Está en uso por productos' : 'Eliminar'"
+                  (click)="remove(category)"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

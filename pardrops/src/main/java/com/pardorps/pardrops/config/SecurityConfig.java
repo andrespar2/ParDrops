@@ -118,6 +118,12 @@ public class SecurityConfig {
                         // --- Notificaciones: siempre las del usuario autenticado. ---
                         .requestMatchers("/api/notifications/**").authenticated()
 
+                        // --- Multimedia: subir y gestionar imagenes exige sesion. ---
+                        .requestMatchers("/api/media/**").authenticated()
+
+                        // --- Imagenes ya publicadas: se sirven de forma publica. ---
+                        .requestMatchers("/media/**").permitAll()
+
                         // --- Panel de administración: solo ADMIN. ---
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 

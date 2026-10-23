@@ -1,6 +1,8 @@
 package com.pardorps.pardrops.repository;
 
 import com.pardorps.pardrops.model.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -97,4 +99,71 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     @Query("select count(p) from Product p "
             + "where p.seller.id = :sellerId and p.active = true")
     long countPublishedBySellerId(@Param("sellerId") Long sellerId);
+
+    /**
+     * Cuenta todos los productos de un vendedor, publicados u ocultos.
+     *
+     * @param sellerId identificador del vendedor.
+     * @return número de productos del vendedor.
+     */
+    @Query("select count(p) from Product p where p.seller.id = :sellerId")
+    long countBySellerId(@Param("sellerId") Long sellerId);
+
+    /**
+     * Cuenta los productos sin existencias.
+     *
+     * @return número de productos con stock cero.
+     */
+    @Query("select count(p) from Product p where p.stock = 0")
+    long countOutOfStock();
+
+    /**
+     * Busca productos aplicando filtros de panel de administración.
+     *
+     * <p>Todos los filtros son opcionales: si llegan nulos o vacíos no se
+     * aplican. La búsqueda por texto recorre nombre, slug y descripción.</p>
+     *
+     * @param search    texto de búsqueda (puede ser nulo).
+     * @param sellerId  filtra por vendedor propietario (puede ser nulo).
+     * @param category  filtra por categoría (puede ser nulo).
+     * @param active    filtra por visibilidad (puede ser nulo).
+     * @param pageable  paginación y orden.
+     * @return página de productos que cumplen los filtros.
+     */
+    @Query("select distinct p from Product p left join fetch p.seller "
+            + "where (:search is null "
+            + "       or lower(p.name) like lower(concat('%', :search, '%')) "
+            + "       or lower(p.slug) like lower(concat('%', :search, '%')) "
+            + "       or lower(p.description) like lower(concat('%', :search, '%'))) "
+            + "  and (:sellerId is null or p.seller.id = :sellerId) "
+            + "  and (:active is null or p.active = :active) "
+            + "  and (:category is null or exists ("
+            + "        select 1 from Product p2 join p2.categories c "
+            + "        where p2.id = p.id and lower(c) = lower(:category)))")
+    Page<Product> searchForAdmin(
+            @Param("search") String search,
+            @Param("sellerId") Long sellerId,
+            @Param("category") String category,
+            @Param("active") Boolean active,
+            Pageable pageable);
+
+    /**
+     * Cuenta los productos publicados que pertenecen a una categoría.
+     *
+     * @param name nombre de la categoría.
+     * @return número de productos publicados.
+     */
+    @Query("select count(distinct p) from Product p join p.categories c "
+            + "where p.active = true and lower(c) = lower(:name)")
+    long countPublishedByCategory(@Param("name") String name);
+
+    /**
+     * Cuenta todos los productos que pertenecen a una categoría.
+     *
+     * @param name nombre de la categoría.
+     * @return número de productos.
+     */
+    @Query("select count(distinct p) from Product p join p.categories c "
+            + "where lower(c) = lower(:name)")
+    long countByCategory(@Param("name") String name);
 }

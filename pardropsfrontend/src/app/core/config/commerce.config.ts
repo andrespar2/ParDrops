@@ -55,3 +55,19 @@ export function formatDate(isoDate: string): string {
     year: 'numeric'
   });
 }
+
+/**
+ * Formatea una fecha ISO con hora en español de Colombia.
+ *
+ * @param isoDate fecha en formato ISO.
+ * @returns la fecha con día, mes, año y hora.
+ */
+export function formatDateTime(isoDate: string): string {
+  return new Date(isoDate).toLocaleString(APP_LOCALE, {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}

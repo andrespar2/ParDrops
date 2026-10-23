@@ -1,0 +1,155 @@
+/*
+ * @file src/app/shared/components/notification-bell/notification-bell.component.scss
+ * @description Estilos de la campanilla de notificaciones.
+ */
+
+.bell {
+  position: relative;
+}
+
+.bell__button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  color: var(--color-text-primary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-full);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+
+  &:hover {
+    background-color: var(--color-surface-secondary);
+    border-color: var(--color-border);
+  }
+}
+
+.bell__icon {
+  width: 1.375rem;
+  height: 1.375rem;
+}
+
+.bell__badge {
+  position: absolute;
+  top: 0.125rem;
+  right: 0.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.25rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: #ffffff;
+  background-color: var(--color-accent);
+  border-radius: var(--radius-full);
+}
+
+.bell__panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  width: min(22rem, calc(100vw - 2rem));
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.bell__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.bell__title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+}
+
+.bell__action {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+
+  &:hover {
+    color: var(--color-accent);
+  }
+}
+
+.bell__list {
+  max-height: 20rem;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.bell__item {
+  border-bottom: 1px solid var(--color-border-light);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.bell__item--unread {
+  background-color: var(--color-surface-secondary);
+}
+
+.bell__item-button {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  background: transparent;
+  border: none;
+
+  &:hover {
+    background-color: var(--color-border-light);
+  }
+}
+
+.bell__item-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.bell__item-message {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.bell__empty {
+  padding: var(--space-6) var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+
+.bell__footer {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  text-align: center;
+  text-decoration: none;
+  border-top: 1px solid var(--color-border);
+
+  &:hover {
+    background-color: var(--color-surface-secondary);
+  }
+}

@@ -56,6 +56,18 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     boolean existsBySlug(String slug);
 
     /**
+     * Comprueba si otra tienda (con distinto identificador) usa ya ese slug.
+     *
+     * <p>Se usa al editar el perfil comercial para permitir conservar el slug
+     * propio sin chocar con una comprobación de unicidad.</p>
+     *
+     * @param slug slug a comprobar.
+     * @param id   identificador de la tienda que se está editando.
+     * @return {@code true} si otra tienda usa el slug.
+     */
+    boolean existsBySlugAndIdNot(String slug, Long id);
+
+    /**
      * Devuelve todas las tiendas con su vendedor cargado, ordenadas por nombre.
      *
      * <p>Se usa en el panel de administración, que necesita mostrar datos del

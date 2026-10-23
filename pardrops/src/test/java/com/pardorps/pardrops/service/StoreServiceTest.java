@@ -113,7 +113,8 @@ class StoreServiceTest {
 
         StoreResponse response = storeService.updateOwnStore(
                 seller,
-                new StoreRequest("  Hola  ", "  ", null, " contacto@pardrops.com ", "3001112222", "  "));
+                new StoreRequest("  Hola  ", "  ", null, " contacto@pardrops.com ",
+                        "3001112222", "  ", null, null));
 
         assertEquals("Hola", response.description());
         assertNull(response.logoUrl());
@@ -146,9 +147,67 @@ class StoreServiceTest {
 
         assertThrows(
                 ApiException.class,
-                () -> storeService.updateOwnStore(seller, new StoreRequest("Hola", null, null, null, null, null)));
+                () -> storeService.updateOwnStore(
+                        seller,
+                        new StoreRequest("Hola", null, null, null, null, null, null, null)));
 
         verify(storeRepository, never()).save(any(Store.class));
+    }
+
+    @Test
+    @DisplayName("Actualiza el nombre comercial y el slug únicos de la tienda")
+    void updatesNameAndSlug() {
+        User seller = user(1L);
+        Store store = store(1L, seller, "estilo-urbano", StoreStatus.ACTIVE);
+        when(storeRepository.findBySellerId(1L)).thenReturn(Optional.of(store));
+        when(storeRepository.existsBySlugAndIdNot("moda-urbana", 1L)).thenReturn(false);
+        when(storeRepository.save(any(Store.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        StoreResponse response = storeService.updateOwnStore(
+                seller,
+                new StoreRequest(null, null, null, null, null, null,
+                        "  Moda Urbana  ", "moda-urbana"));
+
+        assertEquals("Moda Urbana", response.name());
+        assertEquals("moda-urbana", response.slug());
+        verify(storeRepository).save(store);
+    }
+
+    @Test
+    @DisplayName("Rechaza un slug que ya usa otra tienda")
+    void rejectsDuplicatedSlug() {
+        User seller = user(1L);
+        Store store = store(1L, seller, "estilo-urbano", StoreStatus.ACTIVE);
+        when(storeRepository.findBySellerId(1L)).thenReturn(Optional.of(store));
+        when(storeRepository.existsBySlugAndIdNot("moda-urbana", 1L)).thenReturn(true);
+
+        ApiException exception = assertThrows(
+                ApiException.class,
+                () -> storeService.updateOwnStore(
+                        seller,
+                        new StoreRequest(null, null, null, null, null, null, null, "moda-urbana")));
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatus());
+        assertEquals("estilo-urbano", store.getSlug());
+        verify(storeRepository, never()).save(any(Store.class));
+    }
+
+    @Test
+    @DisplayName("Conserva el slug propio sin comprobar la unicidad")
+    void keepsOwnSlugWithoutUniquenessCheck() {
+        User seller = user(1L);
+        Store store = store(1L, seller, "estilo-urbano", StoreStatus.ACTIVE);
+        when(storeRepository.findBySellerId(1L)).thenReturn(Optional.of(store));
+        when(storeRepository.save(any(Store.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        StoreResponse response = storeService.updateOwnStore(
+                seller,
+                new StoreRequest(null, null, null, null, null, null, null, "estilo-urbano"));
+
+        assertEquals("estilo-urbano", response.slug());
+        verify(storeRepository, never()).existsBySlugAndIdNot(any(), any());
     }
 
     /**

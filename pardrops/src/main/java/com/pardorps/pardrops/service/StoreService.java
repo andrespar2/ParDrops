@@ -100,6 +100,20 @@ public class StoreService {
         store.setContactPhone(trimToNull(request.contactPhone()));
         store.setWhatsapp(trimToNull(request.whatsapp()));
 
+        String name = trimToNull(request.name());
+        if (name != null) {
+            store.setName(name);
+        }
+
+        String slug = trimToNull(request.slug());
+        if (slug != null && !slug.equals(store.getSlug())) {
+            if (storeRepository.existsBySlugAndIdNot(slug, store.getId())) {
+                throw ApiException.conflict(
+                        "Ya existe otra tienda con el slug: " + slug);
+            }
+            store.setSlug(slug);
+        }
+
         Store saved = storeRepository.save(store);
         return toResponse(saved, countPublishedProducts(saved));
     }

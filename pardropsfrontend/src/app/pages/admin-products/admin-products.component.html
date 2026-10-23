@@ -109,8 +109,11 @@
           <div class="images">
             <div class="images__header">
               <h3 class="images__title">Imágenes</h3>
-              <button type="button" class="btn-ghost" (click)="addImage()">+ Añadir imagen</button>
+              <button type="button" class="btn-ghost" (click)="addImage()">+ Añadir imagen por URL</button>
             </div>
+
+            <!-- Subida desde el dispositivo con vista previa -->
+            <app-image-uploader (imageUploaded)="addUploadedImage($event)" />
 
             @for (image of images(); track $index) {
               <div class="image-row">

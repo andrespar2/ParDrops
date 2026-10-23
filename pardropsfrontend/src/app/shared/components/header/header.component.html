@@ -151,6 +151,11 @@
         </a>
       }
 
+      <!-- Campanilla de notificaciones (solo usuarios con sesión) -->
+      @if (isAuthenticated()) {
+        <app-notification-bell />
+      }
+
       <!-- Carrito -->
       <a 
         routerLink="/carrito" 

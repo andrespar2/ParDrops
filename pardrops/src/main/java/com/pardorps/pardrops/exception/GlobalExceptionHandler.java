@@ -10,6 +10,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -97,6 +98,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.of("Correo o contraseña incorrectos"));
+    }
+
+    /**
+     * Maneja las peticiones a un fichero que no existe o está fuera del
+     * almacén de recursos estáticos.
+     *
+     * <p>Se responde 404 y no un error del servidor: una imagen borrada (o una
+     * URL inventada) es sencillamente un recurso que ya no está.</p>
+     *
+     * @param exception excepción de recurso estático no encontrado.
+     * @return respuesta 404 con un mensaje claro.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMissingResource(NoResourceFoundException exception) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of("El recurso solicitado no existe."));
     }
 
     /**

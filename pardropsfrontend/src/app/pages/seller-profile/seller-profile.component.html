@@ -1,0 +1,115 @@
+<!--
+  @file src/app/pages/seller-profile/seller-profile.component.html
+  @description Edición de la ficha pública de la tienda.
+-->
+
+<section class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <h1 class="admin-page__title">Mi tienda</h1>
+      <p class="admin-page__subtitle">
+        Así verán los clientes tu ficha comercial y tu catálogo.
+      </p>
+    </div>
+    @if (store()?.slug) {
+      <a [routerLink]="['/tiendas', store()!.slug]" class="admin-btn">
+        Ver tienda pública
+      </a>
+    }
+  </header>
+
+  @if (errorMessage()) {
+    <p class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</p>
+  }
+  @if (successMessage()) {
+    <p class="admin-alert admin-alert--ok" role="status">{{ successMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="admin-message">Cargando la ficha de tu tienda…</p>
+  } @else {
+    <form class="admin-form seller-profile" [formGroup]="form" (ngSubmit)="save()">
+      <div class="admin-field">
+        <label for="store-name">Nombre comercial</label>
+        <input id="store-name" class="admin-input" formControlName="name"
+               maxlength="120" (blur)="suggestSlug()" />
+        @if (submitted() && form.controls.name.invalid) {
+          <span class="seller-profile__error">El nombre es obligatorio.</span>
+        }
+      </div>
+
+      <div class="admin-field">
+        <label for="store-slug">Slug público</label>
+        <input id="store-slug" class="admin-input" formControlName="slug"
+               maxlength="140" placeholder="mi-tienda" />
+        <span class="seller-profile__hint">
+          URL: /tiendas/{{ form.controls.slug.value }}
+        </span>
+        @if (submitted() && form.controls.slug.invalid) {
+          <span class="seller-profile__error">
+            Usa minúsculas, números y guiones, por ejemplo mi-tienda.
+          </span>
+        }
+      </div>
+
+      <div class="admin-field">
+        <label for="store-description">Descripción</label>
+        <textarea id="store-description" class="admin-textarea"
+                  formControlName="description" maxlength="1000"></textarea>
+      </div>
+
+      <div class="seller-profile__row">
+        <div class="admin-field">
+          <label for="store-email">Correo de contacto</label>
+          <input id="store-email" type="email" class="admin-input"
+                 formControlName="contactEmail" maxlength="180" />
+          @if (submitted() && form.controls.contactEmail.invalid) {
+            <span class="seller-profile__error">Indica un correo válido.</span>
+          }
+        </div>
+
+        <div class="admin-field">
+          <label for="store-phone">Teléfono</label>
+          <input id="store-phone" class="admin-input"
+                 formControlName="contactPhone" maxlength="30" />
+        </div>
+
+        <div class="admin-field">
+          <label for="store-whatsapp">WhatsApp</label>
+          <input id="store-whatsapp" class="admin-input"
+                 formControlName="whatsapp" maxlength="30" />
+        </div>
+      </div>
+
+      <div class="seller-profile__media">
+        <div class="admin-field">
+          <span class="seller-profile__label">Logotipo</span>
+          @if (form.controls.logoUrl.value) {
+            <img [src]="form.controls.logoUrl.value" alt="Logotipo de la tienda"
+                 class="seller-profile__logo" />
+          }
+          <input class="admin-input" formControlName="logoUrl"
+                 placeholder="URL del logotipo" />
+          <app-image-uploader (imageUploaded)="setLogo($event)" />
+        </div>
+
+        <div class="admin-field">
+          <span class="seller-profile__label">Portada</span>
+          @if (form.controls.bannerUrl.value) {
+            <img [src]="form.controls.bannerUrl.value" alt="Portada de la tienda"
+                 class="seller-profile__preview" />
+          }
+          <input class="admin-input" formControlName="bannerUrl"
+                 placeholder="URL de la portada" />
+          <app-image-uploader (imageUploaded)="setBanner($event)" />
+        </div>
+      </div>
+
+      <div class="admin-form__actions">
+        <button type="submit" class="admin-btn admin-btn--primary" [disabled]="saving()">
+          {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

@@ -97,6 +97,15 @@
               <a routerLink="/cuenta" class="nav__user-link" (click)="toggleUserMenu()">
                 Mis pedidos
               </a>
+              @if (isSeller()) {
+                <a routerLink="/vendedor" class="nav__user-link" (click)="toggleUserMenu()">
+                  Panel de vendedor
+                </a>
+              } @else if (!isAdmin()) {
+                <a routerLink="/vender" class="nav__user-link" (click)="toggleUserMenu()">
+                  Vender en ParDrops
+                </a>
+              }
               @if (isAdmin()) {
                 <a routerLink="/admin" class="nav__user-link" (click)="toggleUserMenu()">
                   Panel de administración

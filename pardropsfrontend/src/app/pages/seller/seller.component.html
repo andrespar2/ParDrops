@@ -1,0 +1,44 @@
+<!--
+  @file src/app/pages/seller/seller.component.html
+  @description Plantilla del panel privado del vendedor.
+-->
+
+<div class="seller">
+  <aside class="seller__sidebar" [class.seller__sidebar--open]="menuOpen()">
+    <div class="seller__brand">
+      <span class="seller__brand-title">Panel de vendedor</span>
+      <span class="seller__brand-user">{{ userName() }}</span>
+    </div>
+
+    <nav class="seller__nav" aria-label="Secciones del panel del vendedor">
+      <ul class="seller__menu">
+        @for (section of sections; track section.path) {
+          <li class="seller__menu-item">
+            <a
+              class="seller__link"
+              [routerLink]="section.path"
+              routerLinkActive="seller__link--active"
+              (click)="closeMenu()"
+            >
+              <span class="seller__link-text">
+                <span class="seller__link-label">{{ section.label }}</span>
+                <span class="seller__link-desc">{{ section.description }}</span>
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="seller__links">
+      <a routerLink="/" class="seller__external">Volver a la tienda</a>
+    </div>
+  </aside>
+
+  <section class="seller__content">
+    <button type="button" class="seller__toggle" (click)="toggleMenu()">
+      {{ menuOpen() ? 'Ocultar secciones' : 'Ver secciones' }}
+    </button>
+    <router-outlet />
+  </section>
+</div>

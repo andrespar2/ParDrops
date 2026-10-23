@@ -82,6 +82,34 @@ export interface OrderItem {
 }
 
 /**
+ * Parte de un pedido que gestiona una tienda concreta.
+ *
+ * @interface OrderSubOrder
+ */
+export interface OrderSubOrder {
+  /** Identificador de la parte. */
+  id: number;
+  /** Nombre de la tienda. */
+  storeName: string;
+  /** Slug público de la tienda. */
+  storeSlug?: string | null;
+  /** Nombre del vendedor (nulo si es la tienda propia). */
+  sellerName?: string | null;
+  /** Estado de esta parte del pedido. */
+  status: OrderStatus;
+  /** Suma de las líneas de la parte. */
+  subtotal: number;
+  /** Gastos de envío de la parte. */
+  shipping: number;
+  /** Importe total de la parte. */
+  total: number;
+  /** Líneas que componen la parte. */
+  items: OrderItem[];
+  /** Fecha de creación (ISO 8601). */
+  createdAt: string;
+}
+
+/**
  * Pedido completo devuelto por la API.
  *
  * @interface Order
@@ -107,6 +135,8 @@ export interface Order {
   notes?: string | null;
   /** Líneas del pedido. */
   items: OrderItem[];
+  /** Partes del pedido, una por tienda (opcional). */
+  subOrders?: OrderSubOrder[];
   /** Suma de las líneas (COP). */
   subtotal: number;
   /** Impuestos aplicados (IVA 19 %, en COP). */

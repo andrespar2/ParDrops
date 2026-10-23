@@ -50,6 +50,9 @@ export class AuthService {
   /** Indica si el usuario actual es administrador. */
   public readonly isAdmin = computed(() => this._user()?.role === 'ADMIN');
 
+  /** Indica si el usuario actual es vendedor. */
+  public readonly isSeller = computed(() => this._user()?.role === 'SELLER');
+
   /**
    * Inicia sesión con correo y contraseña.
    *

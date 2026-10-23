@@ -1,0 +1,78 @@
+/**
+ * @file src/app/pages/seller-dashboard/seller-dashboard.component.scss
+ * @description Estilos del resumen del vendedor.
+ */
+
+@use '../admin/admin-shared';
+
+.seller-panel {
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  margin-bottom: var(--space-6);
+}
+
+.seller-panel__title {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-4);
+}
+
+.seller-panel__foot {
+  margin-top: var(--space-4);
+}
+
+.seller-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.seller-notifications {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.seller-notification {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-secondary);
+
+  &--unread {
+    border-left: 3px solid var(--color-primary);
+  }
+}
+
+.seller-notification__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.seller-notification__date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.seller-notification__title {
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.seller-notification__message {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.seller-notification__link {
+  display: inline-block;
+  margin-top: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+}

@@ -1,0 +1,59 @@
+/**
+ * @file src/app/pages/seller-products/seller-products.component.scss
+ * @description Estilos del catálogo propio del vendedor.
+ */
+
+@use '../admin/admin-shared';
+
+.seller-form {
+  max-width: 820px;
+  margin-bottom: var(--space-6);
+}
+
+.seller-form__title {
+  font-size: var(--font-size-lg);
+}
+
+.seller-form__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-4);
+}
+
+.seller-form__checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.seller-form__label {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-tertiary);
+}
+
+.seller-form__error {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+}
+
+.seller-form__slug {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.seller-form__images {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.seller-form__image {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+}

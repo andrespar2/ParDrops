@@ -1,0 +1,39 @@
+/**
+ * @file src/app/pages/seller-profile/seller-profile.component.scss
+ * @description Estilos de la ficha de la tienda del vendedor.
+ */
+
+@use '../admin/admin-shared';
+
+.seller-profile {
+  max-width: 900px;
+}
+
+.seller-profile__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.seller-profile__media {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-6);
+}
+
+.seller-profile__label {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-tertiary);
+}
+
+.seller-profile__hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.seller-profile__error {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+}

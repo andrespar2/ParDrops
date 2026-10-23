@@ -35,6 +35,9 @@ export class AccountComponent {
   /** Indica si el usuario es administrador. */
   public readonly isAdmin = this.authService.isAdmin;
 
+  /** Indica si el usuario es vendedor. */
+  public readonly isSeller = this.authService.isSeller;
+
   /** Pedidos del usuario. */
   public readonly orders = this.orderService.myOrders;
 
@@ -92,6 +95,17 @@ export class AccountComponent {
    */
   public formatPrice(price: number): string {
     return formatCurrency(price);
+  }
+
+  /**
+   * Devuelve la etiqueta legible del rol del usuario.
+   *
+   * @returns el nombre del rol en español.
+   */
+  public roleLabel(): string {
+    if (this.isAdmin()) return 'Administrador';
+    if (this.isSeller()) return 'Vendedor';
+    return 'Cliente';
   }
 
   /**

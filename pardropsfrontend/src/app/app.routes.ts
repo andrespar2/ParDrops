@@ -20,6 +20,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
+import { sellerGuard } from './core/guards/seller.guard';
 
 export const routes: Routes = [
   {
@@ -57,6 +58,49 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/account/account.component').then(m => m.AccountComponent),
     title: 'ParDrops - Mi cuenta'
+  },
+  {
+    path: 'vender',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/seller-application/seller-application.component').then(m => m.SellerApplicationComponent),
+    title: 'ParDrops - Vende en ParDrops'
+  },
+  {
+    path: 'tiendas/:slug',
+    loadComponent: () => import('./pages/store-public/store-public.component').then(m => m.StorePublicComponent),
+    title: 'ParDrops - Tienda'
+  },
+  {
+    path: 'vendedor',
+    canActivate: [sellerGuard],
+    loadComponent: () => import('./pages/seller/seller.component').then(m => m.SellerComponent),
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'resumen'
+      },
+      {
+        path: 'resumen',
+        loadComponent: () => import('./pages/seller-dashboard/seller-dashboard.component').then(m => m.SellerDashboardComponent),
+        title: 'ParDrops - Panel de vendedor'
+      },
+      {
+        path: 'productos',
+        loadComponent: () => import('./pages/seller-products/seller-products.component').then(m => m.SellerProductsComponent),
+        title: 'ParDrops - Mis productos'
+      },
+      {
+        path: 'pedidos',
+        loadComponent: () => import('./pages/seller-orders/seller-orders.component').then(m => m.SellerOrdersComponent),
+        title: 'ParDrops - Pedidos de mi tienda'
+      },
+      {
+        path: 'perfil',
+        loadComponent: () => import('./pages/seller-profile/seller-profile.component').then(m => m.SellerProfileComponent),
+        title: 'ParDrops - Mi tienda'
+      }
+    ]
   },
   {
     path: 'notificaciones',

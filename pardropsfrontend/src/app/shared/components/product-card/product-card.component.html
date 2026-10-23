@@ -51,6 +51,15 @@
     </div>
   </a>
 
+  @if (product.storeSlug) {
+    <a
+      [routerLink]="['/tiendas', product.storeSlug]"
+      class="product-card__store"
+    >
+      Ver tienda{{ product.sellerName ? ': ' + product.sellerName : '' }}
+    </a>
+  }
+
   <!-- Acciones -->
   <div class="product-card__actions">
     <button 

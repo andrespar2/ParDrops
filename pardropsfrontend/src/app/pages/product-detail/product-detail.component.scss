@@ -622,4 +622,15 @@
   .review-form__submit {
     align-self: stretch;
   }
-}
+}
+.product-detail__store {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-3);
+}
+
+.product-detail__store-link {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+

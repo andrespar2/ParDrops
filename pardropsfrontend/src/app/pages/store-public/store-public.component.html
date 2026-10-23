@@ -1,0 +1,78 @@
+<!--
+  @file src/app/pages/store-public/store-public.component.html
+  @description Página pública de la tienda de un vendedor.
+-->
+
+<main class="page">
+  <div class="container">
+    @if (loading()) {
+      <div class="loading">
+        <p>Cargando tienda…</p>
+      </div>
+    } @else if (notFound()) {
+      <div class="store-empty">
+        <h1 class="store-empty__title">Tienda no encontrada</h1>
+        <p class="store-empty__text">
+          La tienda que buscas no existe o ya no está disponible.
+        </p>
+        <a routerLink="/productos" class="store-empty__link">Explorar productos</a>
+      </div>
+    } @else if (errorMessage()) {
+      <p class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</p>
+    } @else if (store()) {
+      <header class="store-header">
+        @if (store()!.bannerUrl) {
+          <img [src]="store()!.bannerUrl" [alt]="'Portada de ' + store()!.name"
+               class="store-header__banner" />
+        }
+        <div class="store-header__body">
+          @if (store()!.logoUrl) {
+            <img [src]="store()!.logoUrl" [alt]="'Logotipo de ' + store()!.name"
+                 class="store-header__logo" />
+          }
+          <div class="store-header__info">
+            <h1 class="store-header__name">{{ store()!.name }}</h1>
+            <p class="store-header__seller">Vendido por {{ store()!.sellerName }}</p>
+            @if (store()!.description) {
+              <p class="store-header__description">{{ store()!.description }}</p>
+            }
+            <div class="store-header__contact">
+              @if (store()!.contactEmail) {
+                <a [href]="'mailto:' + store()!.contactEmail" class="store-header__link">
+                  {{ store()!.contactEmail }}
+                </a>
+              }
+              @if (store()!.contactPhone) {
+                <span class="store-header__data">{{ store()!.contactPhone }}</span>
+              }
+              @if (store()!.whatsapp) {
+                <span class="store-header__data">WhatsApp: {{ store()!.whatsapp }}</span>
+              }
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="store-products">
+        <header class="store-products__header">
+          <h2 class="store-products__title">Productos de la tienda</h2>
+          <span class="store-products__count">
+            {{ products().length }} producto{{ products().length === 1 ? '' : 's' }}
+          </span>
+        </header>
+
+        @if (products().length === 0) {
+          <p class="store-products__empty">
+            Esta tienda todavía no tiene productos publicados.
+          </p>
+        } @else {
+          <div class="grid grid--3">
+            @for (product of products(); track product.id) {
+              <app-product-card [product]="product" />
+            }
+          </div>
+        }
+      </section>
+    }
+  </div>
+</main>

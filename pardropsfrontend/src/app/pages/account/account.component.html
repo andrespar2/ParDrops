@@ -20,12 +20,17 @@
           <p class="profile__phone">{{ user()?.phone }}</p>
         }
         <span class="profile__role" [class.profile__role--admin]="isAdmin()">
-          {{ isAdmin() ? 'Administrador' : 'Cliente' }}
+          {{ roleLabel() }}
         </span>
 
         <div class="profile__actions">
           @if (isAdmin()) {
             <a routerLink="/admin/productos" class="profile__button">Panel de administración</a>
+          }
+          @if (isSeller()) {
+            <a routerLink="/vendedor" class="profile__button">Panel de vendedor</a>
+          } @else if (!isAdmin()) {
+            <a routerLink="/vender" class="profile__button">Vender en ParDrops</a>
           }
           <button type="button" class="profile__button profile__button--ghost" (click)="logout()">
             Cerrar sesión
@@ -79,6 +84,34 @@
                   <span>{{ orderItemCount(order) }} artículo(s)</span>
                   <span class="order__total">Total: {{ formatPrice(order.total) }}</span>
                 </footer>
+
+                @if (order.subOrders && order.subOrders.length > 0) {
+                  <div class="order__suborders">
+                    <p class="order__suborders-title">Envíos por tienda</p>
+                    <ul class="order__suborders-list">
+                      @for (subOrder of order.subOrders; track subOrder.id) {
+                        <li class="order__suborder">
+                          <div>
+                            @if (subOrder.storeSlug) {
+                              <a [routerLink]="['/tiendas', subOrder.storeSlug]"
+                                 class="order__item-name">
+                                {{ subOrder.storeName }}
+                              </a>
+                            } @else {
+                              <span>{{ subOrder.storeName }}</span>
+                            }
+                            <span class="order__suborder-total">
+                              {{ formatPrice(subOrder.total) }}
+                            </span>
+                          </div>
+                          <span class="order__status order__status--{{ subOrder.status.toLowerCase() }}">
+                            {{ statusLabel(subOrder.status) }}
+                          </span>
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                }
               </article>
             }
           </div>

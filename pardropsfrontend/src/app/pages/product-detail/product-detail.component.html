@@ -82,6 +82,15 @@
             {{ product()!.description }}
           </p>
 
+          @if (product()!.storeSlug) {
+            <p class="product-detail__store">
+              Vendido por
+              <a [routerLink]="['/tiendas', product()!.storeSlug]" class="product-detail__store-link">
+                {{ product()!.sellerName || 'la tienda' }}
+              </a>
+            </p>
+          }
+
           <!-- Descripción larga -->
           @if (product()!.longDescription) {
             <div class="product-detail__long-description">

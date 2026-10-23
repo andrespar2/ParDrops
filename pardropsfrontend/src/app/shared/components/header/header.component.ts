@@ -56,6 +56,9 @@ export class HeaderComponent {
   /** Indica si el usuario es administrador. */
   public readonly isAdmin = this.authService.isAdmin;
 
+  /** Indica si el usuario es vendedor. */
+  public readonly isSeller = this.authService.isSeller;
+
   /** Estado del menú móvil (expandido/colapsado). */
   public isMobileMenuOpen = false;
 

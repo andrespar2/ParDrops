@@ -1,0 +1,202 @@
+<!--
+  @file src/app/pages/seller-products/seller-products.component.html
+  @description Catálogo propio del vendedor.
+-->
+
+<section class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <h1 class="admin-page__title">Mis productos</h1>
+      <p class="admin-page__subtitle">
+        Publica, edita u oculta los productos de tu tienda.
+      </p>
+    </div>
+    <button type="button" class="admin-btn admin-btn--primary" (click)="startCreate()">
+      Nuevo producto
+    </button>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</p>
+  }
+  @if (successMessage()) {
+    <p class="admin-alert admin-alert--ok" role="status">{{ successMessage() }}</p>
+  }
+
+  @if (formOpen()) {
+    <form class="admin-form seller-form" [formGroup]="form" (ngSubmit)="save()">
+      <h2 class="seller-form__title">
+        {{ editingId() ? 'Editar producto' : 'Nuevo producto' }}
+      </h2>
+
+      <div class="admin-field">
+        <label for="product-name">Nombre</label>
+        <input id="product-name" class="admin-input" formControlName="name"
+               maxlength="200" (blur)="suggestSlug()" />
+        @if (submitted() && form.controls.name.invalid) {
+          <span class="seller-form__error">El nombre es obligatorio.</span>
+        }
+      </div>
+
+      <div class="admin-field">
+        <label for="product-slug">Slug (URL)</label>
+        <input id="product-slug" class="admin-input" formControlName="slug"
+               maxlength="220" placeholder="mi-producto" />
+        @if (submitted() && form.controls.slug.invalid) {
+          <span class="seller-form__error">
+            Usa minúsculas, números y guiones, por ejemplo mi-producto.
+          </span>
+        }
+      </div>
+
+      <div class="admin-field">
+        <label for="product-description">Descripción corta</label>
+        <textarea id="product-description" class="admin-textarea"
+                  formControlName="description" maxlength="500"></textarea>
+        @if (submitted() && form.controls.description.invalid) {
+          <span class="seller-form__error">La descripción es obligatoria.</span>
+        }
+      </div>
+
+      <div class="admin-field">
+        <label for="product-long">Descripción larga</label>
+        <textarea id="product-long" class="admin-textarea"
+                  formControlName="longDescription" maxlength="4000"></textarea>
+      </div>
+
+      <div class="seller-form__row">
+        <div class="admin-field">
+          <label for="product-price">Precio (COP)</label>
+          <input id="product-price" type="number" min="1" class="admin-input"
+                 formControlName="price" />
+          @if (submitted() && form.controls.price.invalid) {
+            <span class="seller-form__error">Indica un precio mayor que cero.</span>
+          }
+        </div>
+
+        <div class="admin-field">
+          <label for="product-original-price">Precio anterior</label>
+          <input id="product-original-price" type="number" min="1"
+                 class="admin-input" formControlName="originalPrice" />
+        </div>
+
+        <div class="admin-field">
+          <label for="product-stock">Existencias</label>
+          <input id="product-stock" type="number" min="0" class="admin-input"
+                 formControlName="stock" />
+          @if (submitted() && form.controls.stock.invalid) {
+            <span class="seller-form__error">Las existencias no pueden ser negativas.</span>
+          }
+        </div>
+      </div>
+
+      <div class="admin-field">
+        <label for="product-categories">Categorías (separadas por comas)</label>
+        <input id="product-categories" class="admin-input" formControlName="categories" />
+      </div>
+
+      <div class="admin-field">
+        <label for="product-tags">Etiquetas (separadas por comas)</label>
+        <input id="product-tags" class="admin-input" formControlName="tags" />
+      </div>
+
+      <div class="seller-form__checks">
+        <label class="admin-form__check">
+          <input type="checkbox" formControlName="isNew" /> Marcar como novedad
+        </label>
+        <label class="admin-form__check">
+          <input type="checkbox" formControlName="isFeatured" /> Destacar en portada
+        </label>
+        <label class="admin-form__check">
+          <input type="checkbox" formControlName="onSale" /> Marcar como oferta
+        </label>
+      </div>
+
+      <div class="admin-field">
+        <span class="seller-form__label">Imágenes</span>
+        @if (imageUrls().length > 0) {
+          <ul class="seller-form__images">
+            @for (url of imageUrls(); track url; let i = $index) {
+              <li class="seller-form__image">
+                <img [src]="url" alt="Imagen del producto" class="admin-thumb" />
+                <button type="button" class="admin-btn admin-btn--danger"
+                        (click)="removeImage(i)">
+                  Quitar
+                </button>
+              </li>
+            }
+          </ul>
+        }
+        <app-image-uploader (imageUploaded)="addImage($event)" />
+      </div>
+
+      <div class="admin-form__actions">
+        <button type="submit" class="admin-btn admin-btn--primary" [disabled]="saving()">
+          {{ saving() ? 'Guardando…' : 'Guardar producto' }}
+        </button>
+        <button type="button" class="admin-btn" (click)="cancelForm()">Cancelar</button>
+      </div>
+    </form>
+  }
+
+  @if (loading()) {
+    <p class="admin-message">Cargando tus productos…</p>
+  } @else if (products().length === 0) {
+    <p class="admin-message">
+      Todavía no tienes productos. Crea el primero para empezar a vender.
+    </p>
+  } @else {
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Imagen</th>
+          <th>Producto</th>
+          <th>Precio</th>
+          <th>Existencias</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (product of products(); track product.id) {
+          <tr>
+            <td>
+              <img
+                [src]="product.images?.length ? product.images[0].url : ''"
+                [alt]="product.name"
+                class="admin-thumb"
+              />
+            </td>
+            <td>
+              <strong>{{ product.name }}</strong>
+              <div class="seller-form__slug">{{ product.slug }}</div>
+            </td>
+            <td>{{ formatPrice(product.price) }}</td>
+            <td>{{ product.stock }}</td>
+            <td>
+              <span class="admin-badge"
+                    [class.admin-badge--active]="isPublished(product)"
+                    [class.admin-badge--hidden]="!isPublished(product)">
+                {{ isPublished(product) ? 'Publicado' : 'Oculto' }}
+              </span>
+            </td>
+            <td>
+              <div class="admin-table__actions">
+                <button type="button" class="admin-btn" (click)="startEdit(product)">
+                  Editar
+                </button>
+                <button type="button" class="admin-btn" (click)="toggleVisibility(product)">
+                  {{ isPublished(product) ? 'Ocultar' : 'Publicar' }}
+                </button>
+                <button type="button" class="admin-btn admin-btn--danger"
+                        (click)="remove(product)">
+                  Eliminar
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

@@ -1,0 +1,122 @@
+<!--
+  @file src/app/pages/seller-orders/seller-orders.component.html
+  @description Pedidos que corresponden al vendedor.
+-->
+
+<section class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <h1 class="admin-page__title">Pedidos recibidos</h1>
+      <p class="admin-page__subtitle">
+        Solo ves y preparas las partes de pedido que pertenecen a tu tienda.
+      </p>
+    </div>
+    <button type="button" class="admin-btn" (click)="loadOrders()">Actualizar</button>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</p>
+  }
+  @if (successMessage()) {
+    <p class="admin-alert admin-alert--ok" role="status">{{ successMessage() }}</p>
+  }
+
+  <div class="admin-filters">
+    <div class="admin-field">
+      <label for="order-status-filter">Estado</label>
+      <select id="order-status-filter" class="admin-select"
+              [value]="statusFilter()"
+              (change)="onFilterChange($any($event.target).value)">
+        <option value="">Todos</option>
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ statusLabel(status) }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="admin-message">Cargando tus pedidos…</p>
+  } @else if (filteredOrders().length === 0) {
+    <p class="admin-message">No hay pedidos para el filtro seleccionado.</p>
+  } @else {
+    <div class="seller-orders">
+      @for (order of filteredOrders(); track order.id) {
+        <article class="seller-order">
+          <header class="seller-order__header">
+            <div>
+              <h2 class="seller-order__title">Pedido #{{ order.orderId }}</h2>
+              <p class="seller-order__date">{{ formatDate(order.createdAt) }}</p>
+            </div>
+            <span class="admin-badge"
+                  [class.admin-badge--pending]="order.status === 'PENDING' || order.status === 'PAID'"
+                  [class.admin-badge--active]="order.status === 'PREPARED' || order.status === 'SHIPPED' || order.status === 'DELIVERED'"
+                  [class.admin-badge--suspended]="order.status === 'CANCELLED'">
+              {{ statusLabel(order.status) }}
+            </span>
+          </header>
+
+          <div class="seller-order__grid">
+            <div>
+              <p class="seller-order__label">Cliente</p>
+              <p>{{ order.customerName }}</p>
+              @if (order.customerPhone) {
+                <p class="seller-order__address">{{ order.customerPhone }}</p>
+              }
+            </div>
+            <div>
+              <p class="seller-order__label">Envío</p>
+              <p class="seller-order__address">
+                {{ order.addressStreet }}<br />
+                {{ order.addressCity }}, {{ order.addressPostalCode }}<br />
+                {{ order.addressCountry }}
+              </p>
+            </div>
+            <div>
+              <p class="seller-order__label">Importe</p>
+              <p class="seller-order__total">{{ formatPrice(order.total) }}</p>
+              <p class="seller-order__address">
+                Subtotal {{ formatPrice(order.subtotal) }} ·
+                Envío {{ formatPrice(order.shipping) }}
+              </p>
+            </div>
+          </div>
+
+          <ul class="seller-order__items">
+            @for (item of order.items; track item.productId + (item.variantName ?? '')) {
+              <li>
+                {{ item.productName }}
+                @if (item.variantName) {
+                  <span>({{ item.variantName }})</span>
+                }
+                × {{ item.quantity }} · {{ formatPrice(item.subtotal) }}
+              </li>
+            }
+          </ul>
+
+          <footer class="seller-order__footer">
+            @if (isFinal(order)) {
+              <span class="admin-message">Este pedido ya está finalizado.</span>
+            } @else {
+              <span class="seller-order__label">Avanzar estado:</span>
+              <div class="admin-table__actions">
+                @for (target of transitions(order); track target) {
+                  <button
+                    type="button"
+                    class="admin-btn"
+                    [class.admin-btn--primary]="target !== 'CANCELLED'"
+                    [class.admin-btn--danger]="target === 'CANCELLED'"
+                    [disabled]="updating() === order.id"
+                    (click)="changeStatus(order, target)"
+                  >
+                    {{ statusLabel(target) }}
+                  </button>
+                }
+              </div>
+            }
+          </footer>
+        </article>
+      }
+    </div>
+  }
+</section>

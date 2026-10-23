@@ -1,11 +1,13 @@
 package com.pardorps.pardrops.config;
 
+import com.pardorps.pardrops.model.Category;
 import com.pardorps.pardrops.model.Product;
 import com.pardorps.pardrops.model.ProductImage;
 import com.pardorps.pardrops.model.Role;
 import com.pardorps.pardrops.model.Store;
 import com.pardorps.pardrops.model.StoreStatus;
 import com.pardorps.pardrops.model.User;
+import com.pardorps.pardrops.repository.CategoryRepository;
 import com.pardorps.pardrops.repository.ProductRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
 import com.pardorps.pardrops.repository.UserRepository;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Siembra datos iniciales la primera vez que arranca la aplicación.
@@ -51,23 +54,27 @@ public class DataSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final StoreRepository storeRepository;
+    private final CategoryRepository categoryRepository;
     private final PasswordEncoder passwordEncoder;
 
     /**
-     * @param userRepository    acceso a los usuarios.
-     * @param productRepository acceso a los productos.
-     * @param storeRepository   acceso a las tiendas.
-     * @param passwordEncoder   cifrado de contraseñas.
+     * @param userRepository     acceso a los usuarios.
+     * @param productRepository  acceso a los productos.
+     * @param storeRepository    acceso a las tiendas.
+     * @param categoryRepository acceso a las categorías.
+     * @param passwordEncoder    cifrado de contraseñas.
      */
     public DataSeeder(
             UserRepository userRepository,
             ProductRepository productRepository,
             StoreRepository storeRepository,
+            CategoryRepository categoryRepository,
             PasswordEncoder passwordEncoder
     ) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.storeRepository = storeRepository;
+        this.categoryRepository = categoryRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -79,6 +86,7 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) {
         seedAdmin();
+        seedCategories();
         seedProducts();
         seedSeller();
     }
@@ -252,6 +260,42 @@ public class DataSeeder implements CommandLineRunner {
                         List.of(image("https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=800&h=800&fit=crop", "Botella térmica de acero inoxidable", true))
                 )
         ));
+    }
+
+    private void seedCategories() {
+        if (categoryRepository.count() > 0) {
+            return;
+        }
+
+        Object[][] defaults = {
+                {"Ropa", true},
+                {"Calzado", true},
+                {"Accesorios", true},
+                {"Camisetas", false},
+                {"Pantalones", false},
+                {"Zapatillas", false},
+                {"Chaquetas", false},
+                {"Mochilas", false},
+                {"Gorras", false},
+                {"Bufandas", false},
+                {"Botellas", false},
+                {"Sudadera", false}
+        };
+
+        for (Object[] row : defaults) {
+            String name = (String) row[0];
+            boolean featured = (boolean) row[1];
+
+            Category category = new Category();
+            category.setName(name);
+            category.setSlug(name.toLowerCase(Locale.ROOT)
+                    .replaceAll("[^a-z0-9]+", "-")
+                    .replaceAll("(^-|-$)", ""));
+            category.setDescription("Categoría " + name + " del catálogo ParDrops.");
+            category.setActive(true);
+            category.setFeatured(featured);
+            categoryRepository.save(category);
+        }
     }
 
     /**

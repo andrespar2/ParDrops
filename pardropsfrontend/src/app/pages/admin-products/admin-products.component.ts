@@ -12,30 +12,60 @@
 
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ProductService } from '../../core/services/product.service';
+import { AdminService } from '../../core/services/admin.service';
 import { ProductRequest } from '../../core/models/product-request.model';
 import { Product, ProductImage } from '../../core/models/product.model';
+import {
+  AdminCategory,
+  AdminProduct,
+  AdminStoreStatus,
+  AdminUserStatus,
+  PageResponse
+} from '../../core/models/admin.model';
 import { CURRENCY_CODE, formatCurrency } from '../../core/config/commerce.config';
 import { ImageUploaderComponent } from '../../shared/components/image-uploader/image-uploader.component';
 
 @Component({
   selector: 'app-admin-products',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ImageUploaderComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ImageUploaderComponent],
   templateUrl: './admin-products.component.html',
   styleUrls: ['./admin-products.component.scss']
 })
 export class AdminProductsComponent {
   private readonly fb = inject(FormBuilder);
   private readonly productService = inject(ProductService);
+  private readonly adminService = inject(AdminService);
 
-  /** Lista de productos (signal del servicio). */
+  /** Lista de productos (signal del servicio), usada por el formulario. */
   public readonly products = this.productService.products;
 
   /** Indica si el catálogo está cargándose. */
   public readonly loading = this.productService.loading;
+
+  /** Página del catálogo global devuelta por el panel de administración. */
+  public readonly adminPage = signal<PageResponse<AdminProduct> | null>(null);
+
+  /** Indica si el catálogo global se está cargando. */
+  public readonly adminLoading = signal<boolean>(true);
+
+  /** Categorías disponibles para asignar al producto. */
+  public readonly categories = signal<AdminCategory[]>([]);
+
+  /** Texto de búsqueda del listado global. */
+  public search = '';
+
+  /** Filtro por visibilidad (cadena vacía = todas). */
+  public activeFilter: '' | 'true' | 'false' = '';
+
+  /** Página actual del listado global (empezando en 0). */
+  private currentPage = 0;
+
+  /** Tamaño de página del listado global. */
+  private readonly pageSize = 10;
 
   /** Indica si el formulario de creación/edición está visible. */
   public readonly formOpen = signal<boolean>(false);
@@ -70,6 +100,187 @@ export class AdminProductsComponent {
     isFeatured: [false],
     onSale: [false]
   });
+
+  /**
+   * Carga el catálogo global y las categorías al abrir el panel.
+   */
+  constructor() {
+    this.loadAdminProducts();
+    this.adminService.listCategories(true).subscribe({
+      next: categories => this.categories.set(categories),
+      error: () => this.categories.set([])
+    });
+  }
+
+  /**
+   * Carga la página del catálogo global con los filtros actuales.
+   *
+   * @returns {void}
+   */
+  public loadAdminProducts(): void {
+    this.adminLoading.set(true);
+    this.errorMessage.set(null);
+
+    this.adminService.listProducts({
+      search: this.search,
+      active: this.activeFilter === '' ? null : this.activeFilter === 'true',
+      page: this.currentPage,
+      size: this.pageSize
+    }).subscribe({
+      next: page => {
+        this.adminPage.set(page);
+        this.adminLoading.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.errorMessage.set(
+          error.error?.message || 'No se pudo cargar el catálogo global.'
+        );
+        this.adminLoading.set(false);
+      }
+    });
+  }
+
+  /**
+   * Recarga el catálogo global desde la primera página.
+   *
+   * @returns {void}
+   */
+  public reloadAdmin(): void {
+    this.currentPage = 0;
+    this.loadAdminProducts();
+  }
+
+  /**
+   * Avanza o retrocede de página en el listado global.
+   *
+   * @param delta desplazamiento de páginas (-1 o 1).
+   * @returns {void}
+   */
+  public changePage(delta: number): void {
+    const total = this.adminPage()?.totalPages ?? 0;
+    const next = this.currentPage + delta;
+    if (next < 0 || next >= total) return;
+
+    this.currentPage = next;
+    this.loadAdminProducts();
+  }
+
+  /**
+   * Publica u oculta un producto del catálogo.
+   *
+   * @param product producto a moderar.
+   * @returns {void}
+   */
+  public toggleVisibility(product: AdminProduct): void {
+    const hide = product.active;
+    const confirmed = window.confirm(
+      hide
+        ? `¿Ocultar el producto "${product.name}" del catálogo público? Se avisará al vendedor.`
+        : `¿Publicar de nuevo el producto "${product.name}"?`
+    );
+    if (!confirmed) return;
+
+    this.errorMessage.set(null);
+
+    this.adminService.changeProductVisibility(product.id, !product.active).subscribe({
+      next: () => {
+        this.loadAdminProducts();
+        this.productService.loadProducts();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.errorMessage.set(
+          error.error?.message || 'No se pudo cambiar la visibilidad del producto.'
+        );
+      }
+    });
+  }
+
+  /**
+   * Elimina un producto del catálogo global tras pedir confirmación.
+   *
+   * @param product producto a eliminar.
+   * @returns {void}
+   */
+  public deleteAdminProduct(product: AdminProduct): void {
+    const confirmed = window.confirm(`¿Eliminar el producto "${product.name}"?`);
+    if (!confirmed) return;
+
+    this.errorMessage.set(null);
+
+    this.adminService.deleteProduct(product.id).subscribe({
+      next: () => {
+        this.loadAdminProducts();
+        this.productService.loadProducts();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.errorMessage.set(
+          error.error?.message || 'No se pudo eliminar el producto.'
+        );
+      }
+    });
+  }
+
+  /**
+   * Devuelve el nombre del propietario del producto.
+   *
+   * @param product producto del catálogo global.
+   * @returns el nombre del vendedor o la etiqueta de la plataforma.
+   */
+  public ownerLabel(product: AdminProduct): string {
+    return product.storeName || product.sellerName || 'ParDrops';
+  }
+
+  /**
+   * Abre el formulario de edición de un producto del catálogo global.
+   *
+   * <p>El formulario trabaja con el producto completo (imágenes, variantes y
+   * descripción larga), que el panel carga del catálogo público. Si el producto
+   * está oculto no forma parte de ese catálogo, así que se pide publicarlo
+   * antes de editarlo para no guardar una versión incompleta.</p>
+   *
+   * @param adminProduct producto del listado global.
+   * @returns {void}
+   */
+  public editFromAdmin(adminProduct: AdminProduct): void {
+    const full = this.products().find(product => product.id === adminProduct.id);
+
+    if (!full) {
+      this.errorMessage.set(
+        'Este producto está oculto: publícalo antes de editarlo para no perder ' +
+        'sus imágenes ni su descripción.'
+      );
+      return;
+    }
+
+    this.openEdit(full);
+  }
+
+  /**
+   * Devuelve la etiqueta legible del estado de una tienda.
+   *
+   * @param status estado de la tienda.
+   * @returns la etiqueta en español.
+   */
+  public storeStatusLabel(status: AdminStoreStatus | null): string {
+    switch (status) {
+      case 'ACTIVE': return 'Tienda activa';
+      case 'SUSPENDED': return 'Tienda suspendida';
+      case 'PENDING': return 'Tienda pendiente';
+      default: return 'Sin tienda';
+    }
+  }
+
+  /**
+   * Devuelve la etiqueta legible del estado de una cuenta de vendedor.
+   *
+   * @param status estado de la cuenta.
+   * @returns la etiqueta en español.
+   */
+  public sellerStatusLabel(status: AdminUserStatus | null): string {
+    if (status === 'SUSPENDED') return 'Cuenta suspendida';
+    if (status === 'ACTIVE') return 'Cuenta activa';
+    return '';
+  }
 
   /**
    * Abre el formulario para crear un producto nuevo.
@@ -264,13 +475,15 @@ export class AdminProductsComponent {
 
     const id = this.editingId();
     const operation = id
-      ? this.productService.updateProduct(id, request)
-      : this.productService.createProduct(request);
+      ? this.adminService.updateProduct(id, request)
+      : this.adminService.createProduct(request);
 
     operation.subscribe({
       next: () => {
         this.saving.set(false);
         this.cancel();
+        this.loadAdminProducts();
+        this.productService.loadProducts();
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage.set(
@@ -291,7 +504,11 @@ export class AdminProductsComponent {
     const confirmed = window.confirm(`¿Eliminar el producto "${product.name}"?`);
     if (!confirmed) return;
 
-    this.productService.deleteProduct(product.id).subscribe({
+    this.adminService.deleteProduct(product.id).subscribe({
+      next: () => {
+        this.loadAdminProducts();
+        this.productService.loadProducts();
+      },
       error: (error: HttpErrorResponse) => {
         this.errorMessage.set(error.error?.message || 'No se pudo eliminar el producto.');
       }

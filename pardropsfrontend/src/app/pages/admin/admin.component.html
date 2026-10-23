@@ -1,0 +1,62 @@
+<!--
+  @file src/app/pages/admin/admin.component.html
+  @description Plantilla del centro de administración.
+  Estructura: cabecera de sección, navegación lateral, contenido de la sección.
+-->
+
+<div class="admin">
+  <aside class="admin__sidebar" [class.admin__sidebar--open]="menuOpen()">
+    <div class="admin__brand">
+      <span class="admin__brand-title">Centro de administración</span>
+      <span class="admin__brand-user">{{ userName() }}</span>
+    </div>
+
+    <nav class="admin__nav" aria-label="Secciones del panel">
+      <ul class="admin__menu">
+        @for (section of sections; track section.path) {
+          <li class="admin__menu-item">
+            <a
+              class="admin__link"
+              [routerLink]="section.path"
+              routerLinkActive="admin__link--active"
+              (click)="closeMenu()"
+            >
+              <svg
+                class="admin__link-icon"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path [attr.d]="section.icon"></path>
+              </svg>
+              <span class="admin__link-text">
+                <span class="admin__link-label">{{ section.label }}</span>
+                <span class="admin__link-desc">{{ section.description }}</span>
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+  </aside>
+
+  <section class="admin__content">
+    <button
+      type="button"
+      class="admin__toggle"
+      (click)="toggleMenu()"
+      [attr.aria-expanded]="menuOpen()"
+      aria-label="Mostrar u ocultar la navegación del panel"
+    >
+      {{ menuOpen() ? 'Ocultar secciones' : 'Ver secciones' }}
+    </button>
+
+    <router-outlet></router-outlet>
+  </section>
+</div>

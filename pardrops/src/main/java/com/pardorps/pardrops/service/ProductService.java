@@ -1,7 +1,11 @@
 package com.pardorps.pardrops.service;
 
+import com.pardorps.pardrops.dto.AdminProductResponse;
+import com.pardorps.pardrops.dto.PageResponse;
 import com.pardorps.pardrops.dto.ProductRequest;
 import com.pardorps.pardrops.exception.ApiException;
+import com.pardorps.pardrops.model.AuditAction;
+import com.pardorps.pardrops.model.NotificationType;
 import com.pardorps.pardrops.model.Product;
 import com.pardorps.pardrops.model.ProductImage;
 import com.pardorps.pardrops.model.ProductVariant;
@@ -12,6 +16,9 @@ import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.repository.ProductRepository;
 import com.pardorps.pardrops.repository.ProductReviewRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,20 +45,32 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductReviewRepository productReviewRepository;
     private final StoreRepository storeRepository;
+    private final CategoryService categoryService;
+    private final AuditLogService auditLogService;
+    private final NotificationService notificationService;
 
     /**
      * @param productRepository      acceso a los productos.
      * @param productReviewRepository acceso a las reseñas (se borran con el producto).
      * @param storeRepository        acceso a las tiendas (para el slug público).
+     * @param categoryService        validación de categorías asignables.
+     * @param auditLogService        bitácora de auditoría.
+     * @param notificationService    avisos dentro de la aplicación.
      */
     public ProductService(
             ProductRepository productRepository,
             ProductReviewRepository productReviewRepository,
-            StoreRepository storeRepository
+            StoreRepository storeRepository,
+            CategoryService categoryService,
+            AuditLogService auditLogService,
+            NotificationService notificationService
     ) {
         this.productRepository = productRepository;
         this.productReviewRepository = productReviewRepository;
         this.storeRepository = storeRepository;
+        this.categoryService = categoryService;
+        this.auditLogService = auditLogService;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -77,6 +96,58 @@ public class ProductService {
         List<Product> products = productRepository.findAllWithSeller();
         enrich(products);
         return products;
+    }
+
+    /**
+     * Busca productos con los filtros del panel de administración.
+     *
+     * @param search   texto de búsqueda (nombre, slug o descripción).
+     * @param sellerId filtra por vendedor propietario.
+     * @param category filtra por categoría.
+     * @param active   filtra por visibilidad.
+     * @param page     número de página (empezando en 0).
+     * @param size     tamaño de página.
+     * @return página de productos con los datos del propietario.
+     */
+    @Transactional(readOnly = true)
+    public PageResponse<AdminProductResponse> searchForAdmin(
+            String search, Long sellerId, String category, Boolean active, int page, int size) {
+        PageRequest pageable = PageRequest.of(
+                Math.max(page, 0),
+                Math.max(size, 1),
+                Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Page<Product> result = productRepository.searchForAdmin(
+                trimToNull(search),
+                sellerId,
+                trimToNull(category),
+                active,
+                pageable);
+
+        List<Product> products = result.getContent();
+        enrich(products);
+
+        List<AdminProductResponse> content = products.stream()
+                .map(this::toAdminResponse)
+                .toList();
+
+        return PageResponse.of(content, result.getNumber(), result.getSize(),
+                result.getTotalElements());
+    }
+
+    /**
+     * Devuelve la ficha de un producto para el panel de administración.
+     *
+     * @param id identificador del producto.
+     * @return el producto con los datos de su propietario.
+     * @throws ApiException si el producto no existe (404).
+     */
+    @Transactional(readOnly = true)
+    public AdminProductResponse findAdminDetail(String id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> ApiException.notFound("Producto no encontrado: " + id));
+        enrich(List.of(product));
+        return toAdminResponse(product);
     }
 
     /**
@@ -148,6 +219,8 @@ public class ProductService {
             throw ApiException.conflict("Ya existe un producto con el slug: " + request.slug());
         }
 
+        categoryService.validateAssignable(request.categories());
+
         Product product = new Product();
         applyRequest(product, request);
         product.setSeller(owner);
@@ -176,6 +249,8 @@ public class ProductService {
         if (productRepository.existsBySlugAndIdNot(request.slug(), id)) {
             throw ApiException.conflict("Ya existe otro producto con el slug: " + request.slug());
         }
+
+        categoryService.validateAssignable(request.categories());
 
         applyRequest(product, request);
         Product saved = productRepository.save(product);
@@ -207,20 +282,60 @@ public class ProductService {
     /**
      * Publica u oculta un producto del catálogo (moderación del administrador).
      *
-     * @param id    identificador del producto.
+     * <p>Al ocultar un producto se avisa al vendedor responsable y se deja
+     * constancia en la bitácora de auditoría, porque se trata de una acción del
+     * administrador que afecta a un tercero.</p>
+     *
+     * @param id     identificador del producto.
      * @param active {@code true} para publicarlo, {@code false} para ocultarlo.
+     * @param admin  administrador que realiza la moderación (puede ser nulo en
+     *               llamadas internas).
      * @return el producto con el nuevo estado.
      * @throws ApiException si el producto no existe.
      */
     @Transactional
-    public Product setActive(String id, boolean active) {
+    public Product setActive(String id, boolean active, User admin) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> ApiException.notFound("Producto no encontrado: " + id));
 
+        boolean changed = product.isActive() != active;
         product.setActive(active);
         Product saved = productRepository.save(product);
         enrich(List.of(saved));
+
+        if (changed) {
+            recordModeration(saved, active, admin);
+        }
+
         return saved;
+    }
+
+    /**
+     * Registra la moderación del producto en la auditoría y avisa al vendedor.
+     *
+     * @param product producto moderado.
+     * @param active  nuevo estado de visibilidad.
+     * @param admin   administrador que realizó la acción.
+     */
+    private void recordModeration(Product product, boolean active, User admin) {
+        auditLogService.record(admin, AuditAction.PRODUCT_MODERATED, "PRODUCT",
+                product.getId(),
+                (active ? "Producto publicado: " : "Producto oculto: ") + product.getName());
+
+        User seller = product.getSeller();
+        if (seller == null) {
+            return;
+        }
+
+        notificationService.notify(
+                seller,
+                NotificationType.PRODUCT,
+                active ? "Tu producto vuelve a estar publicado" : "Tu producto fue oculto",
+                active
+                        ? "\"" + product.getName() + "\" vuelve a aparecer en el catálogo."
+                        : "El administrador ocultó \"" + product.getName()
+                                + "\" del catálogo. Revisa sus datos y vuelve a publicarlo.",
+                "/vendedor/productos");
     }
 
     /**
@@ -361,5 +476,77 @@ public class ProductService {
                 ));
             }
         }
+    }
+
+    /**
+     * Convierte un producto en su ficha para el panel de administración.
+     *
+     * <p>Incluye los datos del propietario (vendedor, su tienda y su estado) y
+     * la URL de la imagen principal, que es lo que el administrador necesita
+     * para moderar el catálogo global.</p>
+     *
+     * @param product producto a convertir.
+     * @return la ficha lista para enviar al cliente.
+     */
+    private AdminProductResponse toAdminResponse(Product product) {
+        User seller = product.getSeller();
+        Store store = seller == null ? null : storeOf(seller.getId());
+
+        String imageUrl = product.getImages().stream()
+                .filter(ProductImage::isPrimary)
+                .map(ProductImage::getUrl)
+                .findFirst()
+                .orElseGet(() -> product.getImages().stream()
+                        .map(ProductImage::getUrl)
+                        .findFirst()
+                        .orElse(null));
+
+        return new AdminProductResponse(
+                product.getId(),
+                product.getName(),
+                product.getSlug(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getCurrency(),
+                product.getStock(),
+                product.isActive(),
+                List.copyOf(product.getCategories()),
+                imageUrl,
+                seller == null ? null : seller.getId(),
+                seller == null ? null : seller.getFullName(),
+                seller == null ? null : seller.getEmail(),
+                store == null ? null : store.getId(),
+                store == null ? null : store.getName(),
+                store == null ? null : store.getSlug(),
+                store == null ? null : store.getStatus(),
+                seller == null ? null : seller.getStatus(),
+                product.getCreatedAt(),
+                product.getUpdatedAt()
+        );
+    }
+
+    /**
+     * Busca la tienda de un vendedor.
+     *
+     * @param sellerId identificador del vendedor.
+     * @return la tienda, o {@code null} si el vendedor no tiene.
+     */
+    private Store storeOf(Long sellerId) {
+        return storeRepository.findBySellerId(sellerId).orElse(null);
+    }
+
+    /**
+     * Normaliza un texto opcional: recorta los espacios y convierte la cadena
+     * vacía en {@code null}.
+     *
+     * @param value texto de origen.
+     * @return el texto normalizado o {@code null}.
+     */
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

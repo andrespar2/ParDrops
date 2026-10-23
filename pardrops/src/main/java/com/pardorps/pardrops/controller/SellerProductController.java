@@ -111,6 +111,6 @@ public class SellerProductController {
     ) {
         User seller = authService.getCurrentUser();
         Product product = productService.findOwned(id, seller);
-        return ResponseEntity.ok(productService.setActive(product.getId(), active));
+        return ResponseEntity.ok(productService.setActive(product.getId(), active, seller));
     }
 }

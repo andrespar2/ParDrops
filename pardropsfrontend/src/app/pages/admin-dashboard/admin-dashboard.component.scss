@@ -1,0 +1,27 @@
+/**
+ * @file src/app/pages/admin-dashboard/admin-dashboard.component.scss
+ * @description Estilos de la sección "Resumen general" del panel.
+ */
+
+@use '../admin/admin-shared';
+
+.admin-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-6);
+}
+
+.admin-panel__title {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--space-4);
+}
+
+.admin-panel__foot {
+  margin-top: var(--space-3);
+  font-size: var(--font-size-sm);
+
+  a {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+}

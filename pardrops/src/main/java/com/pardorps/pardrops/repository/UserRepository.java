@@ -3,6 +3,8 @@ package com.pardorps.pardrops.repository;
 import com.pardorps.pardrops.model.Role;
 import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.model.UserStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -62,4 +64,45 @@ public interface UserRepository extends JpaRepository<User, Long> {
             + "or lower(coalesce(u.phone, '')) like lower(concat('%', :term, '%')) "
             + "order by u.fullName asc")
     List<User> search(@Param("term") String term);
+
+    /**
+     * Busca cuentas aplicando los filtros del panel de administración.
+     *
+     * <p>Todos los filtros son opcionales: si llegan nulos o vacíos no se
+     * aplican. La búsqueda por texto recorre correo, nombre y teléfono.</p>
+     *
+     * @param search texto de búsqueda (puede ser nulo).
+     * @param role   filtra por rol (puede ser nulo).
+     * @param status filtra por estado (puede ser nulo).
+     * @param pageable paginación y orden.
+     * @return página de cuentas que cumplen los filtros.
+     */
+    @Query("select u from User u where "
+            + "(:search is null "
+            + "   or lower(u.email) like lower(concat('%', :search, '%')) "
+            + "   or lower(u.fullName) like lower(concat('%', :search, '%')) "
+            + "   or lower(coalesce(u.phone, '')) like lower(concat('%', :search, '%'))) "
+            + "and (:role is null or u.role = :role) "
+            + "and (:status is null or u.status = :status)")
+    Page<User> searchForAdmin(
+            @Param("search") String search,
+            @Param("role") Role role,
+            @Param("status") UserStatus status,
+            Pageable pageable);
+
+    /**
+     * Cuenta las cuentas que tienen un rol concreto.
+     *
+     * @param role rol buscado.
+     * @return número de cuentas.
+     */
+    long countByRole(Role role);
+
+    /**
+     * Cuenta las cuentas que tienen un estado concreto.
+     *
+     * @param status estado buscado.
+     * @return número de cuentas.
+     */
+    long countByStatus(UserStatus status);
 }

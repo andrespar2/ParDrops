@@ -1,0 +1,10 @@
+/**
+ * @file src/app/pages/admin-settings/admin-settings.component.scss
+ * @description Estilos de la sección "Configuración" del panel.
+ */
+
+@use '../admin/admin-shared';
+
+.admin-page__subtitle--spaced {
+  margin-bottom: var(--space-6);
+}

@@ -34,4 +34,12 @@ public interface SellerApplicationRepository extends JpaRepository<SellerApplica
      * @return listado de solicitudes.
      */
     List<SellerApplication> findAllByOrderByCreatedAtDesc();
+
+    /**
+     * Cuenta las solicitudes que están en un estado concreto.
+     *
+     * @param status estado de las solicitudes.
+     * @return número de solicitudes en ese estado.
+     */
+    long countByStatus(SellerApplicationStatus status);
 }

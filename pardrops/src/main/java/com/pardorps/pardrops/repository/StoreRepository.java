@@ -1,6 +1,7 @@
 package com.pardorps.pardrops.repository;
 
 import com.pardorps.pardrops.model.Store;
+import com.pardorps.pardrops.model.StoreStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -53,4 +54,33 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
      * @return {@code true} si ya existe.
      */
     boolean existsBySlug(String slug);
+
+    /**
+     * Devuelve todas las tiendas con su vendedor cargado, ordenadas por nombre.
+     *
+     * <p>Se usa en el panel de administración, que necesita mostrar datos del
+     * vendedor junto a los de la tienda.</p>
+     *
+     * @return listado de tiendas.
+     */
+    @Query("select s from Store s join fetch s.seller order by s.name asc")
+    List<Store> findAllWithOwner();
+
+    /**
+     * Devuelve las tiendas en un estado concreto, ordenadas por nombre.
+     *
+     * @param status estado de la tienda.
+     * @return listado de tiendas.
+     */
+    @Query("select s from Store s join fetch s.seller "
+            + "where s.status = :status order by s.name asc")
+    List<Store> findByStatusWithOwner(@Param("status") StoreStatus status);
+
+    /**
+     * Cuenta las tiendas que están en un estado concreto.
+     *
+     * @param status estado de la tienda.
+     * @return número de tiendas.
+     */
+    long countByStatus(StoreStatus status);
 }

@@ -96,7 +96,19 @@
 
             <div class="field">
               <label class="field__label" for="p-categories">Categorías (separadas por comas)</label>
-              <input id="p-categories" type="text" class="field__input" formControlName="categoriesText" placeholder="Ropa, Camisetas">
+              <input
+                id="p-categories"
+                type="text"
+                class="field__input"
+                formControlName="categoriesText"
+                list="admin-categories-list"
+                placeholder="Ropa, Camisetas"
+              >
+              <datalist id="admin-categories-list">
+                @for (category of categories(); track category.id) {
+                  <option [value]="category.name"></option>
+                }
+              </datalist>
             </div>
 
             <div class="field">
@@ -164,51 +176,123 @@
 
     <!-- Listado de productos -->
     <section class="list">
-      @if (loading() && products().length === 0) {
-        <p class="list__message">Cargando productos…</p>
-      } @else if (products().length === 0) {
-        <p class="list__message">No hay productos. Crea el primero con «Nuevo producto».</p>
-      } @else {
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Imagen</th>
-              <th>Producto</th>
-              <th>Precio</th>
-              <th>Stock</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (product of products(); track product.id) {
+      <form class="list__filters" (submit)="$event.preventDefault(); reloadAdmin()">
+        <input
+          type="search"
+          class="field__input"
+          name="search"
+          placeholder="Buscar por nombre, slug o descripción"
+          [(ngModel)]="search"
+        />
+        <select class="field__input" name="active" [(ngModel)]="activeFilter">
+          <option value="">Toda visibilidad</option>
+          <option value="true">Publicados</option>
+          <option value="false">Ocultos</option>
+        </select>
+        <button type="submit" class="btn-primary">Buscar</button>
+      </form>
+
+      @if (adminLoading()) {
+        <p class="list__message">Cargando catálogo…</p>
+      } @else if (adminPage(); as page) {
+        @if (page.content.length === 0) {
+          <p class="list__message">No hay productos que coincidan con el filtro.</p>
+        } @else {
+          <table class="table">
+            <thead>
               <tr>
-                <td>
-                  <img [src]="primaryImage(product)" [alt]="product.name" class="table__image">
-                </td>
-                <td>
-                  <span class="table__name">{{ product.name }}</span>
-                  <span class="table__slug">{{ product.slug }}</span>
-                </td>
-                <td>{{ formatPrice(product.price) }}</td>
-                <td>{{ product.stock }}</td>
-                <td>
-                  <div class="badges">
-                    @if (product.isNew) { <span class="badge badge--new">Nuevo</span> }
-                    @if (product.isFeatured) { <span class="badge badge--feat">Destacado</span> }
-                    @if (product.onSale) { <span class="badge badge--sale">Oferta</span> }
-                  </div>
-                </td>
-                <td>
-                  <div class="table__actions">
-                    <button type="button" class="btn-ghost" (click)="openEdit(product)">Editar</button>
-                    <button type="button" class="btn-danger" (click)="delete(product)">Eliminar</button>
-                  </div>
-                </td>
+                <th>Imagen</th>
+                <th>Producto</th>
+                <th>Propietario</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Visibilidad</th>
+                <th>Acciones</th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (product of page.content; track product.id) {
+                <tr>
+                  <td>
+                    <img [src]="product.imageUrl || ''" [alt]="product.name" class="table__image">
+                  </td>
+                  <td>
+                    <span class="table__name">{{ product.name }}</span>
+                    <span class="table__slug">{{ product.slug }}</span>
+                  </td>
+                  <td>
+                    {{ ownerLabel(product) }}
+                    <span class="table__slug">{{ storeStatusLabel(product.storeStatus) }}</span>
+                    @if (sellerStatusLabel(product.sellerStatus)) {
+                      <span class="table__slug">{{ sellerStatusLabel(product.sellerStatus) }}</span>
+                    }
+                  </td>
+                  <td>{{ formatPrice(product.price) }}</td>
+                  <td>{{ product.stock }}</td>
+                  <td>
+                    <div class="badges">
+                      @if (product.active) {
+                        <span class="badge badge--feat">Publicado</span>
+                      } @else {
+                        <span class="badge">Oculto</span>
+                      }
+                    </div>
+                  </td>
+                  <td>
+                    <div class="table__actions">
+                      <button
+                        type="button"
+                        class="btn-ghost"
+                        (click)="editFromAdmin(product)"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-ghost"
+                        (click)="toggleVisibility(product)"
+                      >
+                        {{ product.active ? 'Ocultar' : 'Publicar' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-danger"
+                        (click)="deleteAdminProduct(product)"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          <div class="list__pagination">
+            <span class="list__message">
+              {{ page.totalElements }} producto(s) · página {{ page.page + 1 }} de
+              {{ page.totalPages === 0 ? 1 : page.totalPages }}
+            </span>
+            <div class="table__actions">
+              <button
+                type="button"
+                class="btn-ghost"
+                [disabled]="page.page === 0"
+                (click)="changePage(-1)"
+              >
+                Anterior
+              </button>
+              <button
+                type="button"
+                class="btn-ghost"
+                [disabled]="page.page + 1 >= page.totalPages"
+                (click)="changePage(1)"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        }
       }
     </section>
   </div>

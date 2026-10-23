@@ -1,0 +1,135 @@
+/**
+ * @file src/app/pages/admin/admin.component.scss
+ * @description Estilos del centro de administración (armazón y navegación).
+ */
+
+.admin {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  align-items: start;
+  gap: var(--space-8);
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-4);
+}
+
+.admin__sidebar {
+  position: sticky;
+  top: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  overflow: hidden;
+}
+
+.admin__brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  background-color: var(--color-surface-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin__brand-title {
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-tertiary);
+}
+
+.admin__brand-user {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.admin__menu {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2);
+  gap: var(--space-1);
+}
+
+.admin__link {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    background-color: var(--color-surface-secondary);
+    color: var(--color-text-primary);
+  }
+
+  &--active {
+    background-color: var(--color-primary);
+    color: #ffffff;
+
+    .admin__link-desc {
+      color: rgba(255, 255, 255, 0.75);
+    }
+  }
+}
+
+.admin__link-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.admin__link-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin__link-label {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}
+
+.admin__link-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  line-height: var(--line-height-snug);
+}
+
+.admin__content {
+  min-width: 0;
+}
+
+.admin__toggle {
+  display: none;
+  width: 100%;
+  padding: var(--space-3);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 900px) {
+  .admin {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .admin__toggle {
+    display: block;
+  }
+
+  .admin__sidebar {
+    position: static;
+
+    &:not(.admin__sidebar--open) {
+      display: none;
+    }
+  }
+}

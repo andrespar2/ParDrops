@@ -118,6 +118,16 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     long countOutOfStock();
 
     /**
+     * Cuenta los productos publicados sin existencias de un vendedor.
+     *
+     * @param sellerId identificador del vendedor.
+     * @return número de productos publicados con stock cero.
+     */
+    @Query("select count(p) from Product p "
+            + "where p.seller.id = :sellerId and p.active = true and p.stock = 0")
+    long countOutOfStockBySellerId(@Param("sellerId") Long sellerId);
+
+    /**
      * Busca productos aplicando filtros de panel de administración.
      *
      * <p>Todos los filtros son opcionales: si llegan nulos o vacíos no se

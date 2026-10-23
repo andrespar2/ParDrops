@@ -95,6 +95,30 @@ class SecurityPermissionsTest {
     }
 
     @Test
+    @DisplayName("Responde 403 cuando un cliente abre el panel del vendedor")
+    void respondsForbiddenWhenCustomerOpensSellerDashboard() throws Exception {
+        String token = registrar("cliente-panel-vendedor@ejemplo.com", "Cliente Panel Vendedor");
+
+        HttpStatus status = exchange(
+                restClient.get().uri("/api/seller/dashboard")
+                        .header("Authorization", "Bearer " + token));
+
+        assertEquals(HttpStatus.FORBIDDEN, status);
+    }
+
+    @Test
+    @DisplayName("Permite al vendedor consultar su propio resumen")
+    void allowsSellerToReadOwnDashboard() throws Exception {
+        String token = registrarComo("vendedor-resumen@ejemplo.com", "Vendedor Resumen", Role.SELLER);
+
+        HttpStatus status = exchange(
+                restClient.get().uri("/api/seller/dashboard")
+                        .header("Authorization", "Bearer " + token));
+
+        assertEquals(HttpStatus.OK, status);
+    }
+
+    @Test
     @DisplayName("Permite al administrador consultar las cuentas de la plataforma")
     void allowsAdminToListUsers() throws Exception {
         String token = registrarComo("admin-lista@ejemplo.com", "Administrador Lista", Role.ADMIN);

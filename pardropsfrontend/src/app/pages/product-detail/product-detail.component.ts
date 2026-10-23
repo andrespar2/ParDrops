@@ -22,6 +22,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { formatCurrency } from '../../core/config/commerce.config';
 import { ProductService } from '../../core/services/product.service';
 import { CartService } from '../../core/services/cart.service';
 import { ReviewService } from '../../core/services/review.service';
@@ -210,22 +211,11 @@ export class ProductDetailComponent {
   }
 
   /**
-   * Formatea el precio en pesos colombianos (COP).
-   *
-   * Si el producto no trae moneda, se asume COP: la plataforma opera en
-   * Colombia y ningún precio debe mostrarse en otra divisa.
-   *
+   * Formatea el precio con moneda.
    * @param price - Precio a formatear.
    */
   public formatPrice(price: number): string {
-    const prod = this.product();
-    if (!prod) return price.toString();
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: prod.currency || 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price);
+    return formatCurrency(price);
   }
 
   /**

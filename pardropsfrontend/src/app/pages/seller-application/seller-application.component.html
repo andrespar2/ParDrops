@@ -1,0 +1,120 @@
+<!--
+  @file src/app/pages/seller-application/seller-application.component.html
+  @description Solicitud para convertirse en vendedor.
+-->
+
+<main class="page">
+  <div class="container">
+    <header class="page__header">
+      <h1 class="page__title">Vende en ParDrops</h1>
+      <p class="page__subtitle">
+        Cuéntanos sobre tu negocio. Un administrador revisará tu solicitud y,
+        si se aprueba, tendrás tu propia tienda y tu panel de vendedor.
+      </p>
+    </header>
+
+    @if (errorMessage()) {
+      <p class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</p>
+    }
+    @if (successMessage()) {
+      <p class="admin-alert admin-alert--ok" role="status">{{ successMessage() }}</p>
+    }
+
+    @if (isSeller()) {
+      <section class="application-panel">
+        <h2 class="application-panel__title">Ya tienes una tienda</h2>
+        <p class="application-panel__text">
+          Tu cuenta ya tiene el rol de vendedor. Gestiona tu catálogo y tus
+          pedidos desde el panel.
+        </p>
+        <a routerLink="/vendedor" class="admin-btn admin-btn--primary">
+          Ir a mi panel de vendedor
+        </a>
+      </section>
+    } @else if (loading()) {
+      <p class="admin-message">Consultando tu solicitud…</p>
+    } @else if (application()) {
+      <section class="application-panel">
+        <div class="application-panel__head">
+          <h2 class="application-panel__title">{{ application()!.businessName }}</h2>
+          <span
+            class="admin-badge"
+            [class.admin-badge--pending]="application()!.status === 'PENDING'"
+            [class.admin-badge--approved]="application()!.status === 'APPROVED'"
+            [class.admin-badge--rejected]="application()!.status === 'REJECTED'"
+          >
+            {{ statusLabel(application()!.status) }}
+          </span>
+        </div>
+        <p class="application-panel__text">
+          Enviada el {{ formatDate(application()!.createdAt) }}.
+        </p>
+        @if (application()!.status === 'PENDING') {
+          <p class="application-panel__text">
+            Estamos revisando tu solicitud. Te avisaremos cuando haya novedades.
+          </p>
+        } @else if (application()!.status === 'APPROVED') {
+          <p class="application-panel__text">
+            ¡Enhorabuena! Tu tienda ya está activa. Cierra sesión y vuelve a
+            entrar para actualizar tu rol si aún no ves el panel.
+          </p>
+          <a routerLink="/vendedor" class="admin-btn admin-btn--primary">
+            Ir a mi panel de vendedor
+          </a>
+        } @else {
+          @if (application()!.reviewNotes) {
+            <p class="application-panel__text">
+              Motivo: {{ application()!.reviewNotes }}
+            </p>
+          }
+          <p class="application-panel__text">
+            Puedes ponerte en contacto con el equipo para más información.
+          </p>
+        }
+      </section>
+    } @else {
+      <form class="admin-form application-form" [formGroup]="form" (ngSubmit)="send()">
+        <div class="admin-field">
+          <label for="business-name">Nombre del negocio</label>
+          <input id="business-name" class="admin-input"
+                 formControlName="businessName" maxlength="120" />
+          @if (submitted() && form.controls.businessName.invalid) {
+            <span class="application-form__error">
+              El nombre del negocio es obligatorio.
+            </span>
+          }
+        </div>
+
+        <div class="application-form__row">
+          <div class="admin-field">
+            <label for="business-tax">NIT o identificación</label>
+            <input id="business-tax" class="admin-input"
+                   formControlName="taxId" maxlength="40" />
+          </div>
+          <div class="admin-field">
+            <label for="business-city">Ciudad</label>
+            <input id="business-city" class="admin-input"
+                   formControlName="city" maxlength="120" />
+          </div>
+          <div class="admin-field">
+            <label for="business-phone">Teléfono</label>
+            <input id="business-phone" class="admin-input"
+                   formControlName="phone" maxlength="30" />
+          </div>
+        </div>
+
+        <div class="admin-field">
+          <label for="business-description">¿Qué productos venderás?</label>
+          <textarea id="business-description" class="admin-textarea"
+                    formControlName="description" maxlength="2000"></textarea>
+        </div>
+
+        <div class="admin-form__actions">
+          <button type="submit" class="admin-btn admin-btn--primary" [disabled]="sending()">
+            {{ sending() ? 'Enviando…' : 'Enviar solicitud' }}
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</main>

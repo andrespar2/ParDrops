@@ -9,9 +9,10 @@
 /**
  * Roles disponibles para los usuarios.
  * - `CUSTOMER`: cliente que compra y consulta su historial.
- * - `ADMIN`: administrador que gestiona el catálogo.
+ * - `SELLER`: vendedor con tienda propia y panel privado.
+ * - `ADMIN`: administrador que gestiona la plataforma.
  */
-export type UserRole = 'CUSTOMER' | 'ADMIN';
+export type UserRole = 'CUSTOMER' | 'SELLER' | 'ADMIN';
 
 /**
  * Usuario autenticado tal y como lo devuelve la API.

@@ -1,0 +1,66 @@
+/**
+ * @file src/app/pages/seller-orders/seller-orders.component.scss
+ * @description Estilos de los pedidos del vendedor.
+ */
+
+@use '../admin/admin-shared';
+
+.seller-orders {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.seller-order {
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+}
+
+.seller-order__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.seller-order__title {
+  font-size: var(--font-size-lg);
+}
+
+.seller-order__date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.seller-order__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.seller-order__label {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-1);
+}
+
+.seller-order__total {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+.seller-order__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border-light);
+}

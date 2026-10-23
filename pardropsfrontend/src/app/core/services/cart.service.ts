@@ -13,6 +13,12 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
 import { Cart, CartItem } from '../models/cart.model';
 import { Product, ProductVariant } from '../models/product.model';
+import {
+  CURRENCY_CODE,
+  FREE_SHIPPING_THRESHOLD,
+  SHIPPING_COST,
+  TAX_RATE
+} from '../config/commerce.config';
 
 @Injectable({
   providedIn: 'root'
@@ -63,27 +69,30 @@ export class CartService {
   );
 
   /**
-   * Signal computado con los costes de envío (gratis a partir de 400.000 COP).
+   * Signal computado con los costes de envío (gratis desde el umbral de COP).
    * @returns {number} Coste de envío.
    */
   public readonly shipping = computed(() => {
     const subtotal = this.subtotal();
-    return subtotal >= 400000 ? 0 : 25900;
+    return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   });
 
   /**
-   * Signal computado con los impuestos (IVA 19%).
+   * Signal computado con los impuestos (IVA 19% en Colombia).
    * @returns {number} Importe de impuestos.
    */
-  public readonly tax = computed(() => this.subtotal() * 0.19);
+  public readonly tax = computed(() => Math.round(this.subtotal() * TAX_RATE));
 
   /**
    * Signal computado con el total final.
    * @returns {number} Total a pagar.
    */
-  public readonly total = computed(() => 
-    this.subtotal() + this.tax() + this.shipping()
+  public readonly total = computed(() =>
+    Math.round(this.subtotal() + this.tax() + this.shipping())
   );
+
+  /** Subtotal a partir del cual el envío es gratuito. */
+  public readonly freeShippingThreshold = FREE_SHIPPING_THRESHOLD;
 
   /**
    * Signal computado que devuelve el estado completo del carrito.
@@ -95,7 +104,7 @@ export class CartService {
     tax: this.tax(),
     shipping: this.shipping(),
     total: this.total(),
-    currency: 'COP',
+    currency: CURRENCY_CODE,
     itemCount: this.itemCount(),
     isEmpty: this.isEmpty()
   }));

@@ -16,11 +16,12 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CartService } from '../../../core/services/cart.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { OrderService } from '../../../core/services/order.service';
+import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, NotificationBellComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
@@ -54,6 +55,9 @@ export class HeaderComponent {
 
   /** Indica si el usuario es administrador. */
   public readonly isAdmin = this.authService.isAdmin;
+
+  /** Indica si el usuario es vendedor. */
+  public readonly isSeller = this.authService.isSeller;
 
   /** Estado del menú móvil (expandido/colapsado). */
   public isMobileMenuOpen = false;

@@ -115,6 +115,14 @@ export interface Product {
   isFeatured: boolean;
   /** Indica si está en oferta */
   onSale: boolean;
+  /** Indica si está publicado en el catálogo (opcional). */
+  active?: boolean;
+  /** Identificador del vendedor propietario (opcional). */
+  sellerId?: number | null;
+  /** Nombre del vendedor propietario (opcional). */
+  sellerName?: string | null;
+  /** Slug de la tienda a la que pertenece (opcional). */
+  storeSlug?: string | null;
   /** Fecha de creación (opcional) */
   createdAt?: Date;
   /** Fecha de actualización (opcional) */

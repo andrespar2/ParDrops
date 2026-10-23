@@ -97,12 +97,18 @@
               <a routerLink="/cuenta" class="nav__user-link" (click)="toggleUserMenu()">
                 Mis pedidos
               </a>
-              @if (isAdmin()) {
-                <a routerLink="/admin/pedidos" class="nav__user-link" (click)="toggleUserMenu()">
-                  Administrar pedidos
+              @if (isSeller()) {
+                <a routerLink="/vendedor" class="nav__user-link" (click)="toggleUserMenu()">
+                  Panel de vendedor
                 </a>
-                <a routerLink="/admin/productos" class="nav__user-link" (click)="toggleUserMenu()">
-                  Administrar productos
+              } @else if (!isAdmin()) {
+                <a routerLink="/vender" class="nav__user-link" (click)="toggleUserMenu()">
+                  Vender en ParDrops
+                </a>
+              }
+              @if (isAdmin()) {
+                <a routerLink="/admin" class="nav__user-link" (click)="toggleUserMenu()">
+                  Panel de administración
                 </a>
               }
               <button
@@ -149,6 +155,11 @@
             <span class="nav__cart-badge nav__cart-badge--alert">{{ pendingCount() }}</span>
           }
         </a>
+      }
+
+      <!-- Campanilla de notificaciones (solo usuarios con sesión) -->
+      @if (isAuthenticated()) {
+        <app-notification-bell />
       }
 
       <!-- Carrito -->

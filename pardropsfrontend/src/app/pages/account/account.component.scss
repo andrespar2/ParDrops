@@ -233,3 +233,37 @@
   font-weight: 700;
   color: var(--color-text-primary);
 }
+
+.order__suborders {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border-light);
+  background-color: var(--color-surface-secondary);
+}
+
+.order__suborders-title {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-2);
+}
+
+.order__suborders-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.order__suborder {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.order__suborder-total {
+  margin-left: var(--space-3);
+  font-weight: 600;
+}

@@ -21,6 +21,7 @@ import {
   allowedOrderTransitions,
   orderStatusLabel
 } from '../../core/models/order.model';
+import { formatCurrency, formatDate as formatDateCO } from '../../core/config/commerce.config';
 
 @Component({
   selector: 'app-admin-orders',
@@ -137,11 +138,7 @@ export class AdminOrdersComponent {
    * @returns la fecha formateada en español.
    */
   public formatDate(isoDate: string): string {
-    return new Date(isoDate).toLocaleDateString('es-CO', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    });
+    return formatDateCO(isoDate);
   }
 
   /**
@@ -151,12 +148,7 @@ export class AdminOrdersComponent {
    * @returns el importe formateado en pesos colombianos.
    */
   public formatPrice(price: number): string {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price);
+    return formatCurrency(price);
   }
 
   /**

@@ -460,16 +460,20 @@ http://localhost:4200
 
 # 👥 Roles de usuario
 
-| Funcionalidad | Invitado | Cliente | Admin |
-|---|:---:|:---:|:---:|
-| Explorar productos | ✅ | ✅ | ✅ |
-| Consultar detalles | ✅ | ✅ | ✅ |
-| Agregar al carrito | ✅ | ✅ | ✅ |
-| Realizar pedidos | ✅ | ✅ | ✅ |
-| Historial personal | ❌ | ✅ | ✅ |
-| Reseñas elegibles | ❌ | ✅ | ✅ |
-| Gestionar productos | ❌ | ❌ | ✅ |
-| Gestionar pedidos | ❌ | ❌ | ✅ |
+| Funcionalidad | Invitado | Cliente | Vendedor | Admin |
+|---|:---:|:---:|:---:|:---:|
+| Explorar productos | ✅ | ✅ | ✅ | ✅ |
+| Consultar detalles / tienda pública | ✅ | ✅ | ✅ | ✅ |
+| Agregar al carrito | ✅ | ✅ | ✅ | ✅ |
+| Realizar pedidos | ✅ | ✅ | ✅ | ✅ |
+| Historial personal + estado por tienda | ❌ | ✅ | ✅ | ✅ |
+| Reseñas elegibles | ❌ | ✅ | ✅ | ✅ |
+| Solicitar ser vendedor | ❌ | ✅ | ❌ | ❌ |
+| Panel de vendedor / productos propios / subpedidos | ❌ | ❌ | ✅ | ❌ |
+| Editar ficha de tienda propia | ❌ | ❌ | ✅ | ❌ |
+| Gestionar productos/pedidos globales | ❌ | ❌ | ❌ | ✅ |
+| Gestionar solicitudes de vendedor | ❌ | ❌ | ❌ | ✅ |
+| Gestionar usuarios/categorías/auditoría | ❌ | ❌ | ❌ | ✅ |
 
 ### 👤 Invitado
 
@@ -479,9 +483,13 @@ Puede comprar sin registrarse. Su pedido queda almacenado, pero no se vincula a 
 
 Puede iniciar sesión, consultar sus pedidos y publicar reseñas cuando haya recibido los productos correspondientes.
 
+### 🛍️ Vendedor
+
+Puede tener su propia tienda, publicar productos, gestionar su catálogo y preparar sus subpedidos desde el panel `/vendedor`. Solo ve y gestiona sus propios datos.
+
 ### 🛠️ Administrador
 
-Puede administrar productos, gestionar pedidos y actualizar sus estados.
+Puede administrar productos, gestionar pedidos, usuarios, categorías, solicitudes de vendedor, auditoría y actualizar estados con validación de transiciones.
 
 ---
 
@@ -597,6 +605,29 @@ http://localhost:8080/api
 | `POST` | `/products/...` | ADMIN |
 | `PUT` | `/products/...` | ADMIN |
 | `DELETE` | `/products/...` | ADMIN |
+| `PATCH` | `/products/{id}/visibility` | ADMIN |
+
+## 🏪 Tiendas y marketplace
+
+| Método | Endpoint | Acceso |
+|---|---|---|
+| `GET` | `/stores` | Público |
+| `GET` | `/stores/{slug}` | Público |
+| `GET` | `/stores/{slug}/products` | Público |
+| `GET` | `/stores/mine` | SELLER |
+| `PUT` | `/stores/mine` | SELLER |
+| `POST` | `/seller-applications` | Autenticado (CUSTOMER) |
+| `GET` | `/seller-applications/me` | Autenticado |
+| `GET` | `/seller-applications` | ADMIN |
+| `PATCH` | `/seller-applications/{id}/decision` | ADMIN |
+
+## 🛒 Panel de vendedor
+
+| Método | Endpoint | Acceso |
+|---|---|---|
+| `GET` | `/seller/dashboard` | SELLER |
+| `GET/POST/PUT/DELETE/PATCH` | `/seller/products/**` | SELLER |
+| `GET/PATCH` | `/seller/orders/**` | SELLER |
 
 ## ⭐ Reseñas
 
@@ -614,6 +645,13 @@ http://localhost:8080/api
 | `GET` | `/orders/me` | Autenticado |
 | `GET` | `/orders` | ADMIN |
 | `PATCH` | `/orders/{id}/status` | ADMIN |
+
+## 🖼️ Multimedia y notificaciones
+
+| Método | Endpoint | Acceso |
+|---|---|---|
+| `POST/GET/DELETE` | `/media/**` | Autenticado |
+| `GET/PATCH` | `/notifications/**` | Autenticado |
 
 <details>
 <summary><b>🧪 Ejemplos de peticiones HTTP</b></summary>
@@ -806,6 +844,9 @@ Al iniciar nuevamente, la base de datos se regenera.
 | Rol | Correo | Contraseña |
 |---|---|---|
 | Administrador | `admin@pardrops.com` | `admin123` |
+| Vendedor | `vendedor@pardrops.com` | `vendedor123` |
+
+> Las cuentas demo se generan con el `DataSeeder` en desarrollo. La tienda del vendedor de prueba es `estilo-urbano`.
 
 ### Accesos administrativos
 

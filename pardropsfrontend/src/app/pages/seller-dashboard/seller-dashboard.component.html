@@ -1,0 +1,114 @@
+<!--
+  @file src/app/pages/seller-dashboard/seller-dashboard.component.html
+  @description Resumen de actividad del vendedor.
+-->
+
+<section class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <h1 class="admin-page__title">Resumen de mi tienda</h1>
+      <p class="admin-page__subtitle">
+        @if (dashboard()?.storeName) {
+          {{ dashboard()!.storeName }} · datos calculados solo con tu actividad.
+        } @else {
+          Datos calculados solo con tu actividad.
+        }
+      </p>
+    </div>
+    <div class="seller-page__actions">
+      @if (dashboard()?.storeSlug) {
+        <a [routerLink]="['/tiendas', dashboard()!.storeSlug]" class="admin-btn">
+          Ver mi tienda pública
+        </a>
+      }
+      <button type="button" class="admin-btn admin-btn--primary" (click)="refresh()">
+        Actualizar
+      </button>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <p class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="admin-message">Cargando tu resumen…</p>
+  } @else if (dashboard()) {
+    <div class="admin-cards">
+      <article class="admin-card">
+        <p class="admin-card__label">Ventas realizadas</p>
+        <p class="admin-card__value">{{ dashboard()!.salesCount }}</p>
+        <p class="admin-card__hint">Subpedidos entregados</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Pedidos recibidos</p>
+        <p class="admin-card__value">{{ dashboard()!.orderCount }}</p>
+        <p class="admin-card__hint">Partes de pedido de tu tienda</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Pedidos pendientes</p>
+        <p class="admin-card__value">{{ dashboard()!.pendingOrderCount }}</p>
+        <p class="admin-card__hint">Todavía sin finalizar</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Ingresos por ventas</p>
+        <p class="admin-card__value">{{ formatPrice(dashboard()!.revenue) }}</p>
+        <p class="admin-card__hint">Subpedidos no cancelados</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Productos publicados</p>
+        <p class="admin-card__value">{{ dashboard()!.publishedProductCount }}</p>
+        <p class="admin-card__hint">Visibles en el catálogo</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Productos agotados</p>
+        <p class="admin-card__value">{{ dashboard()!.outOfStockCount }}</p>
+        <p class="admin-card__hint">Publicados sin existencias</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Últimas notificaciones</p>
+        <p class="admin-card__value">{{ dashboard()!.recentNotifications.length }}</p>
+        <p class="admin-card__hint">Avisos recientes de tu cuenta</p>
+      </article>
+    </div>
+
+    <section class="seller-panel">
+      <h2 class="seller-panel__title">Últimas novedades</h2>
+      @if (dashboard()!.recentNotifications.length === 0) {
+        <p class="admin-message">No tienes avisos recientes.</p>
+      } @else {
+        <ul class="seller-notifications">
+          @for (notification of dashboard()!.recentNotifications; track notification.id) {
+            <li class="seller-notification" [class.seller-notification--unread]="!notification.read">
+              <div class="seller-notification__head">
+                <span class="admin-badge admin-badge--role">{{ notificationLabel(notification.type) }}</span>
+                <span class="seller-notification__date">{{ formatDate(notification.createdAt) }}</span>
+              </div>
+              <p class="seller-notification__title">{{ notification.title }}</p>
+              <p class="seller-notification__message">{{ notification.message }}</p>
+              @if (notification.link) {
+                <a [routerLink]="notification.link" class="seller-notification__link">
+                  Ver detalle
+                </a>
+              }
+            </li>
+          }
+        </ul>
+      }
+      <div class="seller-panel__foot">
+        <a routerLink="/notificaciones" class="admin-btn">Ver todas las notificaciones</a>
+      </div>
+    </section>
+
+    <section class="seller-panel">
+      <h2 class="seller-panel__title">Accesos rápidos</h2>
+      <div class="seller-panel__actions">
+        <a routerLink="/vendedor/productos" class="admin-btn admin-btn--primary">
+          Gestionar productos
+        </a>
+        <a routerLink="/vendedor/pedidos" class="admin-btn">Preparar pedidos</a>
+        <a routerLink="/vendedor/perfil" class="admin-btn">Editar mi tienda</a>
+      </div>
+    </section>
+  }
+</section>

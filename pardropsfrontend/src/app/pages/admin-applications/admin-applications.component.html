@@ -1,0 +1,106 @@
+<!--
+  @file src/app/pages/admin-applications/admin-applications.component.html
+  @description Plantilla de la sección "Solicitudes" del panel.
+-->
+
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <h1 class="admin-page__title">Solicitudes</h1>
+      <p class="admin-page__subtitle">
+        Aprueba o rechaza las solicitudes para convertirse en vendedor.
+        Al aprobar se crea la tienda del solicitante.
+      </p>
+    </div>
+    <button type="button" class="admin-btn" (click)="load()" [disabled]="loading()">
+      {{ loading() ? 'Actualizando…' : 'Actualizar' }}
+    </button>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</div>
+  }
+  @if (okMessage()) {
+    <div class="admin-alert admin-alert--ok" role="status">{{ okMessage() }}</div>
+  }
+
+  <form class="admin-filters" (submit)="$event.preventDefault(); load()">
+    <div class="admin-field">
+      <label for="app-status">Estado</label>
+      <select id="app-status" class="admin-select" name="status" [(ngModel)]="statusFilter">
+        <option value="">Todas</option>
+        <option value="PENDING">Pendientes</option>
+        <option value="APPROVED">Aprobadas</option>
+        <option value="REJECTED">Rechazadas</option>
+      </select>
+    </div>
+    <button type="submit" class="admin-btn admin-btn--primary">Filtrar</button>
+  </form>
+
+  @if (loading()) {
+    <p class="admin-message">Cargando solicitudes…</p>
+  } @else if (applications().length === 0) {
+    <p class="admin-message">No hay solicitudes que coincidan con el filtro.</p>
+  } @else {
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Solicitante</th>
+          <th>Negocio</th>
+          <th>Ciudad</th>
+          <th>Estado</th>
+          <th>Enviada</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (application of applications(); track application.id) {
+          <tr>
+            <td>
+              <strong>{{ application.applicantName }}</strong><br />
+              <span class="admin-message">{{ application.applicantEmail }}</span>
+            </td>
+            <td>
+              {{ application.businessName }}<br />
+              <span class="admin-message">NIT: {{ application.taxId }}</span>
+            </td>
+            <td>{{ application.city }}</td>
+            <td>
+              <span class="admin-badge admin-badge--{{ application.status.toLowerCase() }}">
+                {{ statusLabel(application.status) }}
+              </span>
+              @if (application.reviewNotes) {
+                <br /><span class="admin-message">{{ application.reviewNotes }}</span>
+              }
+            </td>
+            <td>{{ formatDate(application.createdAt) }}</td>
+            <td>
+              @if (application.status === 'PENDING') {
+                <div class="admin-table__actions">
+                  <button
+                    type="button"
+                    class="admin-btn admin-btn--primary"
+                    [disabled]="savingId() === application.id"
+                    (click)="approve(application)"
+                  >
+                    Aprobar
+                  </button>
+                  <button
+                    type="button"
+                    class="admin-btn admin-btn--danger"
+                    [disabled]="savingId() === application.id"
+                    (click)="reject(application)"
+                  >
+                    Rechazar
+                  </button>
+                </div>
+              } @else {
+                <span class="admin-message">Resuelta</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

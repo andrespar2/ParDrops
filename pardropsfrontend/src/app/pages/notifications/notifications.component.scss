@@ -1,0 +1,116 @@
+/*
+ * @file src/app/pages/notifications/notifications.component.scss
+ * @description Estilos de la página de notificaciones.
+ */
+
+.page {
+  padding: var(--space-12) 0;
+}
+
+.page__header {
+  margin-bottom: var(--space-6);
+}
+
+.page__title {
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--space-2);
+}
+
+.page__subtitle {
+  color: var(--color-text-tertiary);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.toolbar__count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.toolbar__action {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  &:hover {
+    background-color: var(--color-surface-secondary);
+  }
+}
+
+.message {
+  color: var(--color-text-tertiary);
+
+  &--error {
+    color: var(--color-danger);
+  }
+}
+
+.empty {
+  padding: var(--space-10);
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.empty__text {
+  color: var(--color-text-secondary);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  list-style: none;
+}
+
+.item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.item--unread {
+  border-color: var(--color-primary);
+  background-color: var(--color-surface-secondary);
+}
+
+.item__button {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-4);
+  text-align: left;
+  background: transparent;
+  border: none;
+
+  &:hover {
+    background-color: var(--color-border-light);
+  }
+}
+
+.item__title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.item__message {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.item__date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}

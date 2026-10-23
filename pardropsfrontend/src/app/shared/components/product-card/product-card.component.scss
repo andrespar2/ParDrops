@@ -171,4 +171,16 @@
     background-color: var(--color-text-tertiary);
     border-color: var(--color-text-tertiary);
   }
-}
+}
+.product-card__store {
+  display: inline-block;
+  padding: var(--space-1) var(--space-4) 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  text-decoration: underline;
+
+  &:hover {
+    color: var(--color-primary);
+  }
+}
+

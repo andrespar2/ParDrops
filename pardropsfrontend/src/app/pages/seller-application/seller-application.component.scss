@@ -1,0 +1,47 @@
+/**
+ * @file src/app/pages/seller-application/seller-application.component.scss
+ * @description Estilos de la solicitud para vender.
+ */
+
+@use '../admin/admin-shared';
+
+.application-form {
+  max-width: 820px;
+}
+
+.application-form__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4);
+}
+
+.application-form__error {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+}
+
+.application-panel {
+  max-width: 720px;
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+}
+
+.application-panel__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.application-panel__title {
+  font-size: var(--font-size-xl);
+}
+
+.application-panel__text {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-3);
+}

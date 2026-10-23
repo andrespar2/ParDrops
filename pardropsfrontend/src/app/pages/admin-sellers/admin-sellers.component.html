@@ -1,0 +1,111 @@
+<!--
+  @file src/app/pages/admin-sellers/admin-sellers.component.html
+  @description Plantilla de la sección "Vendedores" del panel.
+-->
+
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <h1 class="admin-page__title">Vendedores</h1>
+      <p class="admin-page__subtitle">
+        Consulta las tiendas, su actividad y suspende o reactiva sus cuentas.
+      </p>
+    </div>
+    <button type="button" class="admin-btn" (click)="load()" [disabled]="loading()">
+      {{ loading() ? 'Actualizando…' : 'Actualizar' }}
+    </button>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</div>
+  }
+  @if (okMessage()) {
+    <div class="admin-alert admin-alert--ok" role="status">{{ okMessage() }}</div>
+  }
+
+  <form class="admin-filters" (submit)="$event.preventDefault(); load()">
+    <div class="admin-field admin-field--grow">
+      <label for="seller-search">Buscar</label>
+      <input
+        id="seller-search"
+        class="admin-input"
+        type="search"
+        name="search"
+        placeholder="Vendedor, correo o tienda"
+        [(ngModel)]="search"
+      />
+    </div>
+    <div class="admin-field">
+      <label for="seller-status">Estado de la tienda</label>
+      <select id="seller-status" class="admin-select" name="status" [(ngModel)]="statusFilter">
+        <option value="">Todos</option>
+        <option value="ACTIVE">Activa</option>
+        <option value="SUSPENDED">Suspendida</option>
+        <option value="PENDING">Pendiente</option>
+      </select>
+    </div>
+    <button type="submit" class="admin-btn admin-btn--primary">Buscar</button>
+  </form>
+
+  @if (loading()) {
+    <p class="admin-message">Cargando vendedores…</p>
+  } @else if (sellers().length === 0) {
+    <p class="admin-message">No hay vendedores que coincidan con el filtro.</p>
+  } @else {
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Vendedor</th>
+          <th>Tienda</th>
+          <th>Estado tienda</th>
+          <th>Cuenta</th>
+          <th>Productos</th>
+          <th>Ventas</th>
+          <th>Alta</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (seller of sellers(); track seller.sellerId) {
+          <tr>
+            <td>
+              <strong>{{ seller.fullName }}</strong><br />
+              <span class="admin-message">{{ seller.email }}</span>
+            </td>
+            <td>
+              {{ seller.storeName }}<br />
+              <span class="admin-message">{{ seller.storeSlug }}</span>
+            </td>
+            <td>
+              <span class="admin-badge admin-badge--{{ seller.storeStatus.toLowerCase() }}">
+                {{ storeStatusLabel(seller.storeStatus) }}
+              </span>
+            </td>
+            <td>
+              <span class="admin-badge admin-badge--{{ seller.accountStatus.toLowerCase() }}">
+                {{ accountStatusLabel(seller.accountStatus) }}
+              </span>
+            </td>
+            <td>{{ seller.productCount }}</td>
+            <td>
+              {{ seller.salesCount }}<br />
+              <span class="admin-message">{{ formatPrice(seller.salesTotal) }}</span>
+            </td>
+            <td>{{ formatDate(seller.createdAt) }}</td>
+            <td>
+              <button
+                type="button"
+                class="admin-btn"
+                [class.admin-btn--danger]="seller.accountStatus === 'ACTIVE'"
+                [disabled]="savingId() === seller.sellerId"
+                (click)="toggleStatus(seller)"
+              >
+                {{ seller.accountStatus === 'ACTIVE' ? 'Suspender' : 'Reactivar' }}
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

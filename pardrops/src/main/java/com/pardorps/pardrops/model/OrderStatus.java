@@ -1,6 +1,9 @@
 package com.pardorps.pardrops.model;
 
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -71,5 +74,50 @@ public enum OrderStatus {
      */
     public boolean canTransitionTo(OrderStatus target) {
         return target != null && allowedTransitions().contains(target);
+    }
+
+    /**
+     * Calcula el estado global de un pedido a partir de sus partes.
+     *
+     * <p>El estado global refleja el peor caso: el menos avanzado de los
+     * subpedidos que siguen vivos. Los subpedidos cancelados no retrasan el
+     * pedido, porque el resto de la mercancía ya no depende de ellos; si todos
+     * están cancelados, el pedido queda cancelado.</p>
+     *
+     * @param statuses estados de las partes del pedido.
+     * @return el estado global, o {@code null} si no hay ninguna parte.
+     */
+    public static OrderStatus aggregate(Collection<OrderStatus> statuses) {
+        if (statuses == null || statuses.isEmpty()) {
+            return null;
+        }
+
+        List<OrderStatus> alive = statuses.stream()
+                .filter(status -> status != null && status != CANCELLED)
+                .toList();
+
+        if (alive.isEmpty()) {
+            return CANCELLED;
+        }
+
+        return alive.stream()
+                .min(Comparator.comparingInt(OrderStatus::progress))
+                .orElse(null);
+    }
+
+    /**
+     * Devuelve el nivel de avance del estado dentro del flujo de preparación.
+     *
+     * @return número de avance (0 es el estado inicial).
+     */
+    private int progress() {
+        return switch (this) {
+            case PENDING -> 0;
+            case PAID -> 1;
+            case PREPARED -> 2;
+            case SHIPPED -> 3;
+            case DELIVERED -> 4;
+            case CANCELLED -> 5;
+        };
     }
 }

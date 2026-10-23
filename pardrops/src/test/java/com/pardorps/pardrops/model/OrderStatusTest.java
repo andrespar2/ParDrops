@@ -3,7 +3,11 @@ package com.pardorps.pardrops.model;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -70,5 +74,48 @@ class OrderStatusTest {
     @DisplayName("No se admite una transición hacia un estado nulo")
     void cannotTransitionToNull() {
         assertFalse(OrderStatus.PENDING.canTransitionTo(null));
+    }
+
+    @Test
+    @DisplayName("Sin partes no hay estado global que calcular")
+    void aggregateWithoutPartsIsNull() {
+        assertNull(OrderStatus.aggregate(List.of()));
+        assertNull(OrderStatus.aggregate(null));
+    }
+
+    @Test
+    @DisplayName("El estado global refleja el peor caso entre las partes")
+    void aggregateReflectsWorstCase() {
+        assertEquals(OrderStatus.PENDING,
+                OrderStatus.aggregate(List.of(OrderStatus.SHIPPED, OrderStatus.PENDING)));
+        assertEquals(OrderStatus.PAID,
+                OrderStatus.aggregate(List.of(OrderStatus.DELIVERED, OrderStatus.PAID)));
+        assertEquals(OrderStatus.PREPARED,
+                OrderStatus.aggregate(List.of(OrderStatus.PREPARED, OrderStatus.SHIPPED)));
+    }
+
+    @Test
+    @DisplayName("Una parte cancelada no frena el avance del pedido")
+    void cancelledPartDoesNotHoldBackTheOrder() {
+        assertEquals(OrderStatus.SHIPPED,
+                OrderStatus.aggregate(List.of(OrderStatus.CANCELLED, OrderStatus.SHIPPED)));
+        assertEquals(OrderStatus.DELIVERED,
+                OrderStatus.aggregate(List.of(OrderStatus.CANCELLED, OrderStatus.DELIVERED)));
+    }
+
+    @Test
+    @DisplayName("Si todas las partes están canceladas, el pedido queda cancelado")
+    void aggregateIsCancelledWhenEveryPartIsCancelled() {
+        assertEquals(OrderStatus.CANCELLED,
+                OrderStatus.aggregate(List.of(OrderStatus.CANCELLED, OrderStatus.CANCELLED)));
+    }
+
+    @Test
+    @DisplayName("Una sola parte define el estado global del pedido")
+    void aggregateWithSinglePartKeepsItsStatus() {
+        assertEquals(OrderStatus.SHIPPED,
+                OrderStatus.aggregate(List.of(OrderStatus.SHIPPED)));
+        assertEquals(OrderStatus.DELIVERED,
+                OrderStatus.aggregate(List.of(OrderStatus.DELIVERED)));
     }
 }

@@ -1,5 +1,7 @@
 package com.pardorps.pardrops.controller;
 
+import com.pardorps.pardrops.dto.AdminProductResponse;
+import com.pardorps.pardrops.dto.PageResponse;
 import com.pardorps.pardrops.dto.ProductRequest;
 import com.pardorps.pardrops.model.Product;
 import com.pardorps.pardrops.model.User;
@@ -45,13 +47,50 @@ public class AdminProductController {
     }
 
     /**
-     * Lista todo el catálogo, incluidos los productos ocultos.
+     * Lista el catálogo global con búsqueda, filtros y paginación.
      *
-     * @return 200 con la lista completa de productos.
+     * <p>Sin filtros ni paginación se conserva el listado completo que ya
+     * consumía el panel, para no romper a los clientes anteriores.</p>
+     *
+     * @param search   texto de búsqueda por nombre, slug o descripción.
+     * @param sellerId filtra por vendedor propietario.
+     * @param category filtra por categoría.
+     * @param active   filtra por visibilidad.
+     * @param page     número de página (empezando en 0; opcional).
+     * @param size     tamaño de página (opcional).
+     * @return 200 con el listado completo o con la página solicitada.
      */
     @GetMapping
-    public ResponseEntity<List<Product>> list() {
-        return ResponseEntity.ok(productService.findAll());
+    public ResponseEntity<?> list(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long sellerId,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
+    ) {
+        if (page == null && size == null && search == null && sellerId == null
+                && category == null && active == null) {
+            List<Product> products = productService.findAll();
+            return ResponseEntity.ok(products);
+        }
+
+        int pageNumber = page == null ? 0 : page;
+        int pageSize = size == null ? 20 : size;
+        PageResponse<AdminProductResponse> result = productService.searchForAdmin(
+                search, sellerId, category, active, pageNumber, pageSize);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * Devuelve la ficha de un producto con su propietario.
+     *
+     * @param id identificador del producto.
+     * @return 200 con la ficha del producto.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<AdminProductResponse> detail(@PathVariable String id) {
+        return ResponseEntity.ok(productService.findAdminDetail(id));
     }
 
     /**
@@ -98,6 +137,9 @@ public class AdminProductController {
     /**
      * Publica u oculta un producto del catálogo.
      *
+     * <p>Al ocultar un producto se avisa al vendedor responsable y se registra
+     * la acción en la auditoría.</p>
+     *
      * @param id     identificador del producto.
      * @param active {@code true} para publicarlo, {@code false} para ocultarlo.
      * @return 200 con el producto actualizado.
@@ -107,6 +149,7 @@ public class AdminProductController {
             @PathVariable String id,
             @RequestParam boolean active
     ) {
-        return ResponseEntity.ok(productService.setActive(id, active));
+        User admin = authService.getCurrentUser();
+        return ResponseEntity.ok(productService.setActive(id, active, admin));
     }
 }

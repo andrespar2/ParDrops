@@ -1,6 +1,7 @@
 package com.pardorps.pardrops.config;
 
 import com.pardorps.pardrops.model.Role;
+import com.pardorps.pardrops.service.CategoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -11,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
-
 /**
  * Ajusta el esquema de las bases de datos creadas antes de la evolución a
  * marketplace multivendedor.
@@ -54,12 +54,15 @@ public class MarketplaceSchemaMigration implements CommandLineRunner {
             """;
 
     private final JdbcTemplate jdbcTemplate;
+    private final CategoryService categoryService;
 
     /**
-     * @param jdbcTemplate acceso directo a la base de datos para ajustar el esquema.
+     * @param jdbcTemplate    acceso directo a la base de datos para ajustar el esquema.
+     * @param categoryService servicio de categorías (importación inicial).
      */
-    public MarketplaceSchemaMigration(JdbcTemplate jdbcTemplate) {
+    public MarketplaceSchemaMigration(JdbcTemplate jdbcTemplate, CategoryService categoryService) {
         this.jdbcTemplate = jdbcTemplate;
+        this.categoryService = categoryService;
     }
 
     /**
@@ -72,6 +75,21 @@ public class MarketplaceSchemaMigration implements CommandLineRunner {
         syncRoleEnum();
         backfillUserStatus();
         backfillProductActive();
+        importCategories();
+    }
+
+    /**
+     * Importa como categorías los nombres que ya usaban los productos.
+     *
+     * <p>Cuando el catálogo pierde las categorías de texto libre, esta
+     * importación garantiza que ningún producto quede apuntando a una categoría
+     * inexistente.</p>
+     */
+    private void importCategories() {
+        int imported = categoryService.importExistingCategories();
+        if (imported > 0) {
+            log.info("Categorías importadas desde el catálogo de productos: {}", imported);
+        }
     }
 
     /**

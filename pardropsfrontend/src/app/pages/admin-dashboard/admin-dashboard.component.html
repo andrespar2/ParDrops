@@ -1,0 +1,137 @@
+<!--
+  @file src/app/pages/admin-dashboard/admin-dashboard.component.html
+  @description Plantilla de la sección "Resumen general" del panel.
+-->
+
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <h1 class="admin-page__title">Resumen general</h1>
+      <p class="admin-page__subtitle">
+        Estadísticas y actividad de la plataforma en tiempo real.
+      </p>
+    </div>
+    <button type="button" class="admin-btn" (click)="refresh()" [disabled]="loading()">
+      {{ loading() ? 'Actualizando…' : 'Actualizar' }}
+    </button>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</div>
+  }
+
+  @if (loading() && !dashboard()) {
+    <p class="admin-message">Cargando el resumen general…</p>
+  } @else if (dashboard(); as data) {
+    <section class="admin-cards">
+      <article class="admin-card">
+        <p class="admin-card__label">Cuentas registradas</p>
+        <p class="admin-card__value">{{ data.userCount }}</p>
+        <p class="admin-card__hint">
+          {{ data.customerCount }} clientes · {{ data.sellerCount }} vendedores
+        </p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Vendedores activos</p>
+        <p class="admin-card__value">{{ data.activeSellerCount }}</p>
+        <p class="admin-card__hint">
+          {{ data.suspendedUserCount }} cuentas suspendidas
+        </p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Productos</p>
+        <p class="admin-card__value">{{ data.productCount }}</p>
+        <p class="admin-card__hint">
+          {{ data.publishedProductCount }} publicados ·
+          {{ data.outOfStockCount }} sin existencias
+        </p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Tiendas</p>
+        <p class="admin-card__value">{{ data.storeCount }}</p>
+        <p class="admin-card__hint">{{ data.activeStoreCount }} activas</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Pedidos</p>
+        <p class="admin-card__value">{{ data.orderCount }}</p>
+        <p class="admin-card__hint">
+          {{ data.pendingOrderCount }} partes sin finalizar
+        </p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Ingresos totales</p>
+        <p class="admin-card__value">{{ formatPrice(data.revenue) }}</p>
+        <p class="admin-card__hint">Suma de todos los pedidos</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Solicitudes pendientes</p>
+        <p class="admin-card__value">{{ data.pendingApplicationCount }}</p>
+        <p class="admin-card__hint">
+          <a routerLink="/admin/solicitudes">Revisar solicitudes</a>
+        </p>
+      </article>
+    </section>
+
+    <div class="admin-columns">
+      <section class="admin-panel">
+        <h2 class="admin-panel__title">Últimos pedidos</h2>
+        @if (data.recentOrders.length === 0) {
+          <p class="admin-message">Todavía no hay pedidos.</p>
+        } @else {
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Pedido</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of data.recentOrders; track order.id) {
+                <tr>
+                  <td>#{{ order.id }}</td>
+                  <td>{{ order.customerName }}</td>
+                  <td>{{ formatDate(order.createdAt) }}</td>
+                  <td>{{ formatPrice(order.total) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <p class="admin-panel__foot">
+            <a routerLink="/admin/pedidos">Ver todos los pedidos</a>
+          </p>
+        }
+      </section>
+
+      <section class="admin-panel">
+        <h2 class="admin-panel__title">Tiendas con más ventas</h2>
+        @if (data.topStores.length === 0) {
+          <p class="admin-message">Todavía no hay ventas registradas.</p>
+        } @else {
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Tienda</th>
+                <th>Ventas</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (store of data.topStores; track store.storeSlug) {
+                <tr>
+                  <td>{{ store.storeName }}</td>
+                  <td>{{ store.salesCount }}</td>
+                  <td>{{ formatPrice(store.salesTotal) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <p class="admin-panel__foot">
+            <a routerLink="/admin/vendedores">Ver vendedores</a>
+          </p>
+        }
+      </section>
+    </div>
+  }
+</div>

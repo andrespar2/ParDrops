@@ -1,0 +1,51 @@
+<!--
+  @file src/app/pages/admin-audit/admin-audit.component.html
+  @description Plantilla de la sección "Auditoría" del panel.
+-->
+
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <h1 class="admin-page__title">Auditoría</h1>
+      <p class="admin-page__subtitle">
+        Registro de las acciones administrativas más recientes.
+      </p>
+    </div>
+    <button type="button" class="admin-btn" (click)="load()" [disabled]="loading()">
+      {{ loading() ? 'Actualizando…' : 'Actualizar' }}
+    </button>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <p class="admin-message">Cargando registros…</p>
+  } @else if (logs().length === 0) {
+    <p class="admin-message">Todavía no hay registros de auditoría.</p>
+  } @else {
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Responsable</th>
+          <th>Acción</th>
+          <th>Entidad</th>
+          <th>Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (log of logs(); track log.id) {
+          <tr>
+            <td>{{ formatDateTime(log.createdAt) }}</td>
+            <td>{{ log.actorName }}</td>
+            <td>{{ actionLabel(log.action) }}</td>
+            <td>{{ log.entityType }}{{ log.entityId ? ' #' + log.entityId : '' }}</td>
+            <td>{{ log.details }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

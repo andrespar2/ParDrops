@@ -8,9 +8,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,6 +29,12 @@ import java.util.UUID;
  * el tipo {@code string} que maneja el frontend. Las imágenes, categorías,
  * etiquetas y variantes se guardan en tablas secundarias mediante
  * {@code @ElementCollection}, ya que son valores que pertenecen al producto.</p>
+ *
+ * <p>Con la evolución a marketplace, un producto puede pertenecer a un
+ * {@link User} con rol {@link Role#SELLER} (campo {@code seller}); los productos
+ * del catálogo histórico siguen sin vendedor y los gestiona el
+ * administrador. El campo {@code active} permite retirar un producto del
+ * catálogo sin borrarlo del historial de los pedidos.</p>
  */
 @Entity
 @Table(
@@ -119,6 +127,49 @@ public class Product {
 
     /** Fecha de la última modificación. */
     private Instant updatedAt;
+
+    /** Vendedor propietario del producto (nulo en los productos de la tienda propia). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id")
+    private User seller;
+
+    /**
+     * Indica si el producto está publicado en el catálogo.
+     *
+     * <p>Se declara sin {@code nullable = false} porque la columna se añadió a
+     * una base de datos ya poblada; la migración
+     * {@code MarketplaceSchemaMigration} marca como activos los productos
+     * anteriores y {@link #onCreate()} publica los nuevos.</p>
+     */
+    @Column(name = "active")
+    private boolean active = true;
+
+    /**
+     * Identificador del vendedor propietario (solo lectura, para el frontend).
+     *
+     * <p>Campo transitorio: lo rellena el servicio antes de devolver el
+     * producto para que la interfaz no tenga que resolver la relación.</p>
+     */
+    @Transient
+    private Long sellerId;
+
+    /**
+     * Nombre del vendedor propietario (solo lectura, para el frontend).
+     *
+     * <p>Campo transitorio: lo rellena el servicio antes de devolver el
+     * producto para que la interfaz no tenga que resolver la relación.</p>
+     */
+    @Transient
+    private String sellerName;
+
+    /**
+     * Slug de la tienda a la que pertenece el producto (solo lectura).
+     *
+     * <p>Campo transitorio: lo rellena el servicio antes de devolver el
+     * producto para que la interfaz no tenga que resolver la relación.</p>
+     */
+    @Transient
+    private String storeSlug;
 
     /** Constructor vacío requerido por JPA. */
     public Product() {

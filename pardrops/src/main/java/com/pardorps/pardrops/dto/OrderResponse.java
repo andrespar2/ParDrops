@@ -21,6 +21,7 @@ import java.util.List;
  * @param addressCountry    país.
  * @param notes             comentarios del cliente.
  * @param items             líneas del pedido.
+ * @param subOrders         partes del pedido, una por tienda.
  * @param subtotal          suma de las líneas.
  * @param tax               impuestos aplicados.
  * @param shipping          gastos de envío.
@@ -40,6 +41,7 @@ public record OrderResponse(
         String addressCountry,
         String notes,
         List<OrderItemResponse> items,
+        List<OrderSubOrderResponse> subOrders,
         Double subtotal,
         Double tax,
         Double shipping,

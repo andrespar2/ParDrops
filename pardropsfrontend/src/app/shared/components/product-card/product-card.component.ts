@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Product } from '../../../core/models/product.model';
 import { CartService } from '../../../core/services/cart.service';
+import { formatCurrency } from '../../../core/config/commerce.config';
 
 @Component({
   selector: 'app-product-card',
@@ -47,20 +48,11 @@ export class ProductCardComponent {
   }
 
   /**
-   * Formatea el precio en pesos colombianos (COP).
-   *
-   * Si el producto no trae moneda, se asume COP: la plataforma opera en
-   * Colombia y ningún precio debe mostrarse en otra divisa.
-   *
+   * Formatea el precio con moneda.
    * @param {number} price - Precio a formatear.
-   * @returns {string} Precio formateado (ej. "$ 119.900,00").
+   * @returns {string} Precio formateado.
    */
   public formatPrice(price: number): string {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: this.product.currency || 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price);
+    return formatCurrency(price);
   }
 }

@@ -20,6 +20,7 @@ import { CartService } from '../../core/services/cart.service';
 import { OrderService } from '../../core/services/order.service';
 import { AuthService } from '../../core/services/auth.service';
 import { CreateOrderItemRequest, Order } from '../../core/models/order.model';
+import { DEFAULT_COUNTRY, formatCurrency } from '../../core/config/commerce.config';
 
 @Component({
   selector: 'app-checkout',
@@ -63,7 +64,7 @@ export class CheckoutComponent {
     addressStreet: ['', [Validators.required, Validators.maxLength(250)]],
     addressCity: ['', [Validators.required, Validators.maxLength(120)]],
     addressPostalCode: ['', [Validators.required, Validators.maxLength(20)]],
-    addressCountry: ['Colombia', [Validators.required, Validators.maxLength(120)]],
+    addressCountry: [DEFAULT_COUNTRY, [Validators.required, Validators.maxLength(120)]],
     notes: ['', [Validators.maxLength(500)]]
   });
 
@@ -115,11 +116,6 @@ export class CheckoutComponent {
    * @returns el importe formateado en pesos colombianos.
    */
   public formatPrice(price: number): string {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price);
+    return formatCurrency(price);
   }
 }

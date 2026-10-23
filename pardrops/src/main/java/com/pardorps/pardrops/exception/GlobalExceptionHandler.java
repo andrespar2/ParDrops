@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -65,6 +66,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of("El cuerpo de la petición no es válido."));
+    }
+
+    /**
+     * Maneja el intento de acceso de una cuenta suspendida.
+     *
+     * <p>Se distingue del error de credenciales porque la respuesta correcta no
+     * es "inténtalo de nuevo con otras credenciales", sino que el usuario debe
+     * contactar con el administrador.</p>
+     *
+     * @param exception excepción de cuenta deshabilitada.
+     * @return respuesta 403 con un mensaje explicativo.
+     */
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErrorResponse> handleDisabled(DisabledException exception) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(
+                        "Tu cuenta está suspendida. Contacta con el administrador para reactivarla."));
     }
 
     /**

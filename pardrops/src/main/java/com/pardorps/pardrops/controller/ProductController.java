@@ -1,28 +1,22 @@
 package com.pardorps.pardrops.controller;
 
-import com.pardorps.pardrops.dto.ProductRequest;
 import com.pardorps.pardrops.model.Product;
 import com.pardorps.pardrops.service.ProductService;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 /**
- * API del catálogo de productos.
+ * API pública del catálogo de productos.
  *
- * <p>Las lecturas son públicas (para el modo invitado), mientras que crear,
- * editar y eliminar están restringidas al rol ADMIN por la configuración de
- * seguridad.</p>
+ * <p>Las lecturas son públicas (para el modo invitado) y solo devuelven los
+ * productos publicados. La escritura del catálogo deja de estar aquí: la
+ * gestiona el panel de administración ({@code /api/admin/products}) y el panel
+ * del vendedor ({@code /api/seller/products}).</p>
  */
 @RestController
 @RequestMapping("/api/products")
@@ -38,13 +32,13 @@ public class ProductController {
     }
 
     /**
-     * Lista todos los productos.
+     * Lista los productos publicados del catálogo.
      *
      * @return 200 con la lista de productos.
      */
     @GetMapping
     public ResponseEntity<List<Product>> list() {
-        return ResponseEntity.ok(productService.findAll());
+        return ResponseEntity.ok(productService.findPublished());
     }
 
     /**
@@ -56,43 +50,5 @@ public class ProductController {
     @GetMapping("/{slug}")
     public ResponseEntity<Product> detail(@PathVariable String slug) {
         return ResponseEntity.ok(productService.findBySlug(slug));
-    }
-
-    /**
-     * Crea un producto (solo administrador).
-     *
-     * @param request datos del producto.
-     * @return 201 con el producto creado.
-     */
-    @PostMapping
-    public ResponseEntity<Product> create(@Valid @RequestBody ProductRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(productService.create(request));
-    }
-
-    /**
-     * Actualiza un producto (solo administrador).
-     *
-     * @param id      identificador del producto.
-     * @param request nuevos datos.
-     * @return 200 con el producto actualizado.
-     */
-    @PutMapping("/{id}")
-    public ResponseEntity<Product> update(
-            @PathVariable String id,
-            @Valid @RequestBody ProductRequest request
-    ) {
-        return ResponseEntity.ok(productService.update(id, request));
-    }
-
-    /**
-     * Elimina un producto (solo administrador).
-     *
-     * @param id identificador del producto.
-     * @return 204 sin contenido.
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        productService.delete(id);
-        return ResponseEntity.noContent().build();
     }
 }

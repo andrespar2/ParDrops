@@ -273,3 +273,38 @@ Interfaz en `http://localhost:8025` y SMTP en `localhost:1025`. Con
 | #53 | Editor en el panel de administración |
 | #54 | Pruebas |
 | #55 | Documentación final |
+
+## 12. Cómo probar
+
+### Sin SMTP (outbox)
+
+1. Arranca con `.\dev.ps1` sin definir `MAIL_ENABLED`.
+2. Crea un pedido desde el frontend.
+3. Abre `pardrops/data/mail-outbox` y revisa el `.eml` y el `.html` del vendedor.
+4. Como administrador, cambia el pedido a `PAID` y revisa el comprobante.
+5. Cambia a `PREPARED` o `SHIPPED` y revisa el aviso de estado.
+
+### Con Gmail
+
+Configura `.env.local` como se indica en la sección 9, reinicia y repite el
+recorrido. Los correos llegan a las direcciones reales.
+
+### Editor
+
+La sección **Administración → Plantillas de correo**
+(`http://localhost:4200/admin/plantillas-correo`) permite editar el asunto, el
+cuerpo HTML, activar o desactivar la plantilla, previsualizarla y restaurar los
+valores predeterminados.
+
+## 13. Estado
+
+| Elemento | Estado |
+|---|---|
+| Plantillas predeterminadas | Implementado |
+| SMTP y outbox | Implementado |
+| Correo al vendedor | Implementado |
+| Comprobante al comprador | Implementado |
+| Avisos de cambio de estado | Implementado |
+| Editor del panel | Implementado |
+| Pruebas backend | 215 en verde |
+| Pruebas frontend | 83 en verde |

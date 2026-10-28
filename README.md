@@ -85,6 +85,7 @@ Una plataforma e-commerce moderna, intuitiva y construida con tecnologías de ú
 | [💰 Comercio](#-configuración-comercial) | IVA, precios y envíos |
 | [📡 API](#-api-rest) | Endpoints disponibles |
 | [🔐 Seguridad](#-seguridad) | Autenticación JWT y Google |
+| [✉️ Correos](#-correos-transaccionales) | Notificaciones y plantillas |
 | [📦 Pedidos](#-gestión-de-pedidos) | Estados y seguimiento |
 | [⭐ Reseñas](#-sistema-de-reseñas) | Valoraciones verificadas |
 | [🗄 Base de datos](#-base-de-datos) | Persistencia local |
@@ -187,6 +188,22 @@ Valoraciones disponibles después de recibir el producto.
 ### 🛠️ Administración
 
 Creación, edición y eliminación de productos, además de gestión de pedidos.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+### ✉️ Correos transaccionales
+
+Orden de compra al vendedor, comprobante de pago y avisos de estado al comprador.
+
+</td>
+<td valign="top">
+
+### 🧩 Plantillas editables
+
+El administrador personaliza los mensajes y los previsualiza desde el panel.
 
 </td>
 </tr>
@@ -661,6 +678,16 @@ El acceso con Google añade dos rutas fuera de `/api`:
 | `POST/GET/DELETE` | `/media/**` | Autenticado |
 | `GET/PATCH` | `/notifications/**` | Autenticado |
 
+## ✉️ Plantillas de correo
+
+| Método | Endpoint | Acceso |
+|---|---|---|
+| `GET` | `/admin/email-templates` | ADMIN |
+| `GET` | `/admin/email-templates/{code}` | ADMIN |
+| `PUT` | `/admin/email-templates/{code}` | ADMIN |
+| `POST` | `/admin/email-templates/{code}/reset` | ADMIN |
+| `POST` | `/admin/email-templates/{code}/preview` | ADMIN |
+
 <details>
 <summary><b>🧪 Ejemplos de peticiones HTTP</b></summary>
 
@@ -752,6 +779,30 @@ funcionando; solo queda inactivo el botón de Google.
 
 La guía completa, el flujo paso a paso, la tabla de errores y las decisiones de
 seguridad están en [`docs/autenticacion-google.md`](docs/autenticacion-google.md).
+
+### Correos transaccionales
+
+La plataforma envía tres correos:
+
+| Correo | Destinatario | Cuándo |
+|---|---|---|
+| Orden de compra | Vendedor | Al crearse el pedido, con su subpedido |
+| Comprobante de compra | Comprador | Al pasar el pedido a `PAID` |
+| Cambio de estado | Comprador | En cada transición distinta de `PAID` |
+
+Sin SMTP configurado, los correos se guardan como `.eml` y `.html` en
+`pardrops/data/mail-outbox`. Para enviarlos de verdad, define las variables
+`MAIL_*` en `.env.local` (por ejemplo, Gmail con contraseña de aplicación).
+
+El administrador puede editar el asunto y el cuerpo HTML, previsualizar y
+restaurar los mensajes desde:
+
+```text
+http://localhost:4200/admin/plantillas-correo
+```
+
+La guía completa, las variables, los placeholders y la solución de problemas
+están en [`docs/correo.md`](docs/correo.md).
 
 ---
 

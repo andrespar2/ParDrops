@@ -47,6 +47,9 @@ public class StoreService {
     public StoreResponse findPublicBySlug(String slug) {
         Store store = storeRepository.findBySlugWithOwner(slug)
                 .orElseThrow(() -> ApiException.notFound("Tienda no encontrada: " + slug));
+        if (store.getStatus() != StoreStatus.ACTIVE) {
+            throw ApiException.notFound("Tienda no encontrada: " + slug);
+        }
         return toResponse(store, countPublishedProducts(store));
     }
 
@@ -96,8 +99,9 @@ public class StoreService {
         store.setDescription(trimToNull(request.description()));
         store.setLogoUrl(trimToNull(request.logoUrl()));
         store.setBannerUrl(trimToNull(request.bannerUrl()));
-        store.setContactEmail(trimToNull(request.contactEmail()));
-        store.setContactPhone(trimToNull(request.contactPhone()));
+        store.setPublicEmail(trimToNull(request.publicEmail()));
+        store.setPublicPhone(trimToNull(request.publicPhone()));
+        store.setCity(trimToNull(request.city()));
         store.setWhatsapp(trimToNull(request.whatsapp()));
 
         String name = trimToNull(request.name());
@@ -204,11 +208,13 @@ public class StoreService {
                 store.getDescription(),
                 store.getLogoUrl(),
                 store.getBannerUrl(),
-                store.getContactEmail(),
-                store.getContactPhone(),
+                store.getPublicEmail(),
+                store.getPublicPhone(),
+                store.getCity(),
                 store.getWhatsapp(),
                 store.getStatus(),
-                store.getSeller() != null ? store.getSeller().getFullName() : null,
+                0.0,
+                0L,
                 productCount,
                 store.getCreatedAt()
         );

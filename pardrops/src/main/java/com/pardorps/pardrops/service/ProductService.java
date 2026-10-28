@@ -397,11 +397,18 @@ public class ProductService {
             return;
         }
 
-        Map<Long, String> storeSlugs = storeRepository.findAll().stream()
+        List<Store> stores = storeRepository.findAll().stream()
                 .filter(store -> store.getSeller() != null)
+                .toList();
+        Map<Long, String> storeSlugs = stores.stream()
                 .collect(Collectors.toMap(
                         store -> store.getSeller().getId(),
                         Store::getSlug,
+                        (first, second) -> first));
+        Map<Long, String> storeNames = stores.stream()
+                .collect(Collectors.toMap(
+                        store -> store.getSeller().getId(),
+                        Store::getName,
                         (first, second) -> first));
 
         for (Product product : products) {
@@ -413,7 +420,7 @@ public class ProductService {
                 continue;
             }
             product.setSellerId(seller.getId());
-            product.setSellerName(seller.getFullName());
+            product.setSellerName(storeNames.getOrDefault(seller.getId(), "ParDrops"));
             product.setStoreSlug(storeSlugs.get(seller.getId()));
         }
     }

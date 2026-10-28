@@ -71,7 +71,7 @@ class SellerApplicationServiceTest {
 
         SellerApplicationResponse response = service.submit(
                 applicant,
-                new SellerApplicationRequest("Estilo Urbano", "900123", "Ropa urbana", "3001112222", "Bogotá"));
+                new SellerApplicationRequest("Estilo Urbano", "900123", "Ropa urbana", "3001112222", "Bogotá", null, null, null, null, null, null, null));
 
         assertEquals(SellerApplicationStatus.PENDING, response.status());
         assertEquals("Estilo Urbano", response.businessName());
@@ -93,7 +93,7 @@ class SellerApplicationServiceTest {
 
         ApiException exception = assertThrows(
                 ApiException.class,
-                () -> service.submit(applicant, new SellerApplicationRequest("Estilo Urbano", null, null, null, null)));
+                () -> service.submit(applicant, new SellerApplicationRequest("Estilo Urbano", null, null, null, null, null, null, null, null, null, null, null)));
 
         assertEquals(HttpStatus.CONFLICT, exception.getStatus());
         verify(sellerApplicationRepository, never()).save(any(SellerApplication.class));
@@ -106,7 +106,7 @@ class SellerApplicationServiceTest {
 
         ApiException exception = assertThrows(
                 ApiException.class,
-                () -> service.submit(seller, new SellerApplicationRequest("Estilo Urbano", null, null, null, null)));
+                () -> service.submit(seller, new SellerApplicationRequest("Estilo Urbano", null, null, null, null, null, null, null, null, null, null, null)));
 
         assertEquals(HttpStatus.CONFLICT, exception.getStatus());
     }
@@ -242,7 +242,7 @@ class SellerApplicationServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
         when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(admin));
 
-        service.submit(applicant, new SellerApplicationRequest("Estilo Urbano", null, null, null, null));
+        service.submit(applicant, new SellerApplicationRequest("Estilo Urbano", null, null, null, null, null, null, null, null, null, null, null));
 
         verify(notificationService).notify(
                 eq(admin),
@@ -264,7 +264,7 @@ class SellerApplicationServiceTest {
 
         ApiException exception = assertThrows(
                 ApiException.class,
-                () -> service.submit(applicant, new SellerApplicationRequest("Estilo Urbano", null, null, null, null)));
+                () -> service.submit(applicant, new SellerApplicationRequest("Estilo Urbano", null, null, null, null, null, null, null, null, null, null, null)));
 
         assertEquals(HttpStatus.CONFLICT, exception.getStatus());
         verify(sellerApplicationRepository, never()).save(any(SellerApplication.class));
@@ -283,7 +283,7 @@ class SellerApplicationServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         SellerApplicationResponse response = service.submit(
-                applicant, new SellerApplicationRequest("Estilo Urbano", null, null, null, null));
+                applicant, new SellerApplicationRequest("Estilo Urbano", null, null, null, null, null, null, null, null, null, null, null));
 
         assertEquals(SellerApplicationStatus.PENDING, response.status());
     }

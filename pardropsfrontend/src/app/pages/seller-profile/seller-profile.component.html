@@ -60,18 +60,24 @@
 
       <div class="seller-profile__row">
         <div class="admin-field">
-          <label for="store-email">Correo de contacto</label>
+          <label for="store-email">Correo público</label>
           <input id="store-email" type="email" class="admin-input"
-                 formControlName="contactEmail" maxlength="180" />
-          @if (submitted() && form.controls.contactEmail.invalid) {
+                 formControlName="publicEmail" maxlength="180" />
+          @if (submitted() && form.controls.publicEmail.invalid) {
             <span class="seller-profile__error">Indica un correo válido.</span>
           }
         </div>
 
         <div class="admin-field">
-          <label for="store-phone">Teléfono</label>
+          <label for="store-phone">Teléfono público</label>
           <input id="store-phone" class="admin-input"
-                 formControlName="contactPhone" maxlength="30" />
+                 formControlName="publicPhone" maxlength="30" />
+        </div>
+
+        <div class="admin-field">
+          <label for="store-city">Ciudad</label>
+          <input id="store-city" class="admin-input"
+                 formControlName="city" maxlength="120" />
         </div>
 
         <div class="admin-field">

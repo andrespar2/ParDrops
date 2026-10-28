@@ -32,18 +32,20 @@
           }
           <div class="store-header__info">
             <h1 class="store-header__name">{{ store()!.name }}</h1>
-            <p class="store-header__seller">Vendido por {{ store()!.sellerName }}</p>
             @if (store()!.description) {
               <p class="store-header__description">{{ store()!.description }}</p>
             }
+            @if (store()!.city) {
+              <p class="store-header__data">{{ store()!.city }}</p>
+            }
             <div class="store-header__contact">
-              @if (store()!.contactEmail) {
-                <a [href]="'mailto:' + store()!.contactEmail" class="store-header__link">
-                  {{ store()!.contactEmail }}
+              @if (store()!.publicEmail) {
+                <a [href]="'mailto:' + store()!.publicEmail" class="store-header__link">
+                  {{ store()!.publicEmail }}
                 </a>
               }
-              @if (store()!.contactPhone) {
-                <span class="store-header__data">{{ store()!.contactPhone }}</span>
+              @if (store()!.publicPhone) {
+                <span class="store-header__data">{{ store()!.publicPhone }}</span>
               }
               @if (store()!.whatsapp) {
                 <span class="store-header__data">WhatsApp: {{ store()!.whatsapp }}</span>

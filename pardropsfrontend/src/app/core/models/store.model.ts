@@ -7,7 +7,7 @@
  */
 
 /** Estado de una tienda dentro del marketplace. */
-export type StoreStatus = 'ACTIVE' | 'SUSPENDED' | 'PENDING';
+export type StoreStatus = 'ACTIVE' | 'SUSPENDED';
 
 /**
  * Ficha pública de la tienda de un vendedor.
@@ -27,16 +27,20 @@ export interface Store {
   logoUrl?: string | null;
   /** URL de la portada. */
   bannerUrl?: string | null;
-  /** Correo de contacto. */
-  contactEmail?: string | null;
-  /** Teléfono de contacto. */
-  contactPhone?: string | null;
+  /** Correo público de la tienda. */
+  publicEmail?: string | null;
+  /** Teléfono público de la tienda. */
+  publicPhone?: string | null;
+  /** Ciudad de la tienda. */
+  city?: string | null;
   /** WhatsApp de contacto. */
   whatsapp?: string | null;
   /** Estado de la tienda. */
   status: StoreStatus;
-  /** Nombre del vendedor propietario. */
-  sellerName: string;
+  /** Media de estrellas de sus productos. */
+  rating: number;
+  /** Número de reseñas de sus productos. */
+  reviewCount: number;
   /** Número de productos publicados. */
   productCount: number;
   /** Fecha de alta (ISO 8601). */
@@ -55,12 +59,14 @@ export interface StoreRequest {
   logoUrl?: string | null;
   /** URL de la portada. */
   bannerUrl?: string | null;
-  /** Correo de contacto. */
-  contactEmail?: string | null;
-  /** Teléfono de contacto. */
-  contactPhone?: string | null;
+  /** Correo público de la tienda. */
+  publicEmail?: string | null;
+  /** Teléfono público de la tienda. */
+  publicPhone?: string | null;
   /** WhatsApp de contacto. */
   whatsapp?: string | null;
+  /** Ciudad de la tienda. */
+  city?: string | null;
   /** Nombre comercial. */
   name?: string | null;
   /** Slug público (minúsculas, números y guiones). */

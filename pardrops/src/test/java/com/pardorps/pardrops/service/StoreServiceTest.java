@@ -114,12 +114,12 @@ class StoreServiceTest {
         StoreResponse response = storeService.updateOwnStore(
                 seller,
                 new StoreRequest("  Hola  ", "  ", null, " contacto@pardrops.com ",
-                        "3001112222", "  ", null, null));
+                        "3001112222", "  ", null, null, null));
 
         assertEquals("Hola", response.description());
         assertNull(response.logoUrl());
-        assertEquals("contacto@pardrops.com", response.contactEmail());
-        assertEquals("3001112222", response.contactPhone());
+        assertEquals("contacto@pardrops.com", response.publicEmail());
+        assertEquals("3001112222", response.publicPhone());
         assertNull(response.whatsapp());
         verify(storeRepository).save(store);
     }
@@ -149,7 +149,7 @@ class StoreServiceTest {
                 ApiException.class,
                 () -> storeService.updateOwnStore(
                         seller,
-                        new StoreRequest("Hola", null, null, null, null, null, null, null)));
+                        new StoreRequest("Hola", null, null, null, null, null, null, null, null)));
 
         verify(storeRepository, never()).save(any(Store.class));
     }
@@ -167,7 +167,7 @@ class StoreServiceTest {
         StoreResponse response = storeService.updateOwnStore(
                 seller,
                 new StoreRequest(null, null, null, null, null, null,
-                        "  Moda Urbana  ", "moda-urbana"));
+                        null, "  Moda Urbana  ", "moda-urbana"));
 
         assertEquals("Moda Urbana", response.name());
         assertEquals("moda-urbana", response.slug());
@@ -186,7 +186,7 @@ class StoreServiceTest {
                 ApiException.class,
                 () -> storeService.updateOwnStore(
                         seller,
-                        new StoreRequest(null, null, null, null, null, null, null, "moda-urbana")));
+                        new StoreRequest(null, null, null, null, null, null, null, null, "moda-urbana")));
 
         assertEquals(HttpStatus.CONFLICT, exception.getStatus());
         assertEquals("estilo-urbano", store.getSlug());
@@ -204,7 +204,7 @@ class StoreServiceTest {
 
         StoreResponse response = storeService.updateOwnStore(
                 seller,
-                new StoreRequest(null, null, null, null, null, null, null, "estilo-urbano"));
+                new StoreRequest(null, null, null, null, null, null, null, null, "estilo-urbano"));
 
         assertEquals("estilo-urbano", response.slug());
         verify(storeRepository, never()).existsBySlugAndIdNot(any(), any());

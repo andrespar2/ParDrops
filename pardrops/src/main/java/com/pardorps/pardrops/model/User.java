@@ -1,8 +1,8 @@
 package com.pardorps.pardrops.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
+import jakarta.persistence.Entity;import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -56,6 +56,7 @@ public class User {
     private String email;
 
     /** Contraseña almacenada como hash BCrypt (nunca en texto plano). */
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 

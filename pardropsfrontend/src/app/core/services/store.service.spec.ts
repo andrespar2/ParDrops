@@ -26,11 +26,13 @@ function buildStore(slug: string): Store {
     description: 'Moda urbana',
     logoUrl: null,
     bannerUrl: null,
-    contactEmail: 'hola@estilourbano.com',
-    contactPhone: '3001112222',
+    publicEmail: 'hola@estilourbano.com',
+    publicPhone: '3001112222',
+    city: 'Bogotá',
     whatsapp: null,
     status: 'ACTIVE',
-    sellerName: 'Vendedor de ejemplo',
+    rating: 4.5,
+    reviewCount: 8,
     productCount: 3,
     createdAt: '2026-01-01T10:00:00Z'
   };

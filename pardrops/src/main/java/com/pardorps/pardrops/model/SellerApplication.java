@@ -61,6 +61,34 @@ public class SellerApplication {
     @Column(length = 120)
     private String city;
 
+    /** Correo público de la tienda. */
+    @Column(length = 180)
+    private String publicEmail;
+
+    /** Teléfono público de la tienda. */
+    @Column(length = 30)
+    private String publicPhone;
+
+    /** Nombre legal del titular (solo administrador). */
+    @Column(length = 120)
+    private String legalName;
+
+    /** Tipo de documento del titular (solo administrador). */
+    @Column(length = 20)
+    private String documentType;
+
+    /** Número de documento del titular (solo administrador). */
+    @Column(length = 40)
+    private String documentNumber;
+
+    /** Dirección legal del titular (solo administrador). */
+    @Column(length = 300)
+    private String legalAddress;
+
+    /** Teléfono personal del titular (solo administrador). */
+    @Column(length = 30)
+    private String personalPhone;
+
     /** Estado de la solicitud. */
     @Enumerated(EnumType.STRING)
     @Column(length = 20)

@@ -103,6 +103,20 @@ export interface SellerApplication {
   phone?: string | null;
   /** Ciudad del negocio. */
   city?: string | null;
+  /** Correo público de la tienda. */
+  publicEmail?: string | null;
+  /** Teléfono público de la tienda. */
+  publicPhone?: string | null;
+  /** Nombre legal del titular. */
+  legalName?: string | null;
+  /** Tipo de documento del titular. */
+  documentType?: string | null;
+  /** Número de documento del titular. */
+  documentNumber?: string | null;
+  /** Dirección legal del titular. */
+  legalAddress?: string | null;
+  /** Teléfono personal del titular. */
+  personalPhone?: string | null;
   /** Estado de la solicitud. */
   status: SellerApplicationStatus;
   /** Comentario del administrador. */
@@ -135,4 +149,18 @@ export interface SellerApplicationRequest {
   phone?: string | null;
   /** Ciudad del negocio. */
   city?: string | null;
+  /** Correo público de la tienda. */
+  publicEmail?: string | null;
+  /** Teléfono público de la tienda. */
+  publicPhone?: string | null;
+  /** Nombre legal del titular. */
+  legalName?: string | null;
+  /** Tipo de documento del titular. */
+  documentType?: string | null;
+  /** Número de documento del titular. */
+  documentNumber?: string | null;
+  /** Dirección legal del titular. */
+  legalAddress?: string | null;
+  /** Teléfono personal del titular. */
+  personalPhone?: string | null;
 }

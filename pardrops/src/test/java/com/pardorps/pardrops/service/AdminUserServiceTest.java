@@ -15,6 +15,7 @@ import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.model.UserStatus;
 import com.pardorps.pardrops.repository.OrderSubOrderRepository;
 import com.pardorps.pardrops.repository.ProductRepository;
+import com.pardorps.pardrops.repository.SellerApplicationRepository;
 import com.pardorps.pardrops.repository.SellerBalanceRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
 import com.pardorps.pardrops.repository.UserRepository;
@@ -56,6 +57,7 @@ class AdminUserServiceTest {
     private final NotificationService notificationService = mock(NotificationService.class);
 
     private final SellerBalanceRepository balanceRepository = mock(SellerBalanceRepository.class);
+    private final SellerApplicationRepository sellerApplicationRepository = mock(SellerApplicationRepository.class);
 
     private final AdminUserService adminUserService = new AdminUserService(
             userRepository,
@@ -64,7 +66,8 @@ class AdminUserServiceTest {
             subOrderRepository,
             auditLogService,
             notificationService,
-            balanceRepository);
+            balanceRepository,
+            sellerApplicationRepository);
 
     @Test
     @DisplayName("Impide que el administrador suspenda su propia cuenta")

@@ -113,6 +113,13 @@ public class SellerApplicationService {
         application.setDescription(trimToNull(request.description()));
         application.setPhone(trimToNull(request.phone()));
         application.setCity(trimToNull(request.city()));
+        application.setPublicEmail(trimToNull(request.publicEmail()));
+        application.setPublicPhone(trimToNull(request.publicPhone()));
+        application.setLegalName(trimToNull(request.legalName()));
+        application.setDocumentType(trimToNull(request.documentType()));
+        application.setDocumentNumber(trimToNull(request.documentNumber()));
+        application.setLegalAddress(trimToNull(request.legalAddress()));
+        application.setPersonalPhone(trimToNull(request.personalPhone()));
         application.setStatus(SellerApplicationStatus.PENDING);
         application.setCreatedAt(Instant.now());
 
@@ -292,9 +299,12 @@ public class SellerApplicationService {
         store.setName(application.getBusinessName());
         store.setSlug(storeService.buildSlug(application.getBusinessName()));
         store.setDescription(application.getDescription());
+        store.setCity(application.getCity());
+        store.setPublicEmail(application.getPublicEmail());
+        store.setPublicPhone(application.getPublicPhone());
+        store.setNotificationEmail(applicant.getEmail());
         store.setContactEmail(applicant.getEmail());
-        store.setContactPhone(
-                application.getPhone() != null ? application.getPhone() : applicant.getPhone());
+        store.setContactPhone(application.getPhone());
         store.setStatus(StoreStatus.ACTIVE);
         storeRepository.save(store);
     }
@@ -330,6 +340,13 @@ public class SellerApplicationService {
                 application.getDescription(),
                 application.getPhone(),
                 application.getCity(),
+                application.getPublicEmail(),
+                application.getPublicPhone(),
+                application.getLegalName(),
+                application.getDocumentType(),
+                application.getDocumentNumber(),
+                application.getLegalAddress(),
+                application.getPersonalPhone(),
                 application.getStatus(),
                 application.getReviewNotes(),
                 applicant != null ? applicant.getFullName() : null,

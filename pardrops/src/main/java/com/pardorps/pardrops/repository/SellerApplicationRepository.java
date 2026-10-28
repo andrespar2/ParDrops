@@ -21,6 +21,16 @@ public interface SellerApplicationRepository extends JpaRepository<SellerApplica
     Optional<SellerApplication> findFirstByUserIdOrderByCreatedAtDesc(Long userId);
 
     /**
+     * Busca la última solicitud aprobada de un usuario.
+     *
+     * @param userId identificador del usuario.
+     * @param status estado de la solicitud.
+     * @return la solicitud más reciente con ese estado.
+     */
+    Optional<SellerApplication> findFirstByUserIdAndStatusOrderByCreatedAtDesc(
+            Long userId, SellerApplicationStatus status);
+
+    /**
      * Devuelve las solicitudes en un estado concreto.
      *
      * @param status estado de la solicitud.

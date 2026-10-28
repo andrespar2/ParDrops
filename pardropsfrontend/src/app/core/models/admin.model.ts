@@ -98,6 +98,22 @@ export interface AdminSeller {
   email: string;
   /** Teléfono del vendedor. */
   phone: string | null;
+  /** Nombre legal del titular (solo admin). */
+  legalName: string | null;
+  /** Tipo de documento (solo admin). */
+  documentType: string | null;
+  /** Número de documento (solo admin). */
+  documentNumber: string | null;
+  /** Dirección legal (solo admin). */
+  legalAddress: string | null;
+  /** NIT o identificación tributaria. */
+  taxId: string | null;
+  /** Ciudad pública de la tienda. */
+  city: string | null;
+  /** Correo público de la tienda. */
+  publicEmail: string | null;
+  /** Teléfono público de la tienda. */
+  publicPhone: string | null;
   /** Estado de la cuenta del vendedor. */
   accountStatus: AdminUserStatus;
   /** Identificador de la tienda. */

@@ -1,240 +1,252 @@
 # Autenticación con Google
 
-Documento de diseño del acceso con Google en ParDrops. Forma parte del issue
-[#35](https://github.com/andrespar2/ParDrops/issues/35) y sirve de referencia
-para el resto del cronograma.
+Guía técnica y de configuración del acceso con Google en ParDrops. Forma parte
+del proyecto [ParDrops - Inicio de sesión con Google](https://github.com/users/andrespar2/projects/3)
+y documenta el diseño, la implementación y los pasos para ponerlo en marcha.
 
-## 1. Alcance
+## 1. Qué permite
 
-Permitir que un visitante cree una cuenta o inicie sesión con su cuenta de
-Google, sin eliminar ni alterar el registro y el inicio de sesión con correo y
-contraseña que ya existen.
+Un visitante puede crear una cuenta o iniciar sesión con su cuenta de Google.
+La plataforma mantiene las tres formas de entrar:
 
-Al terminar, la plataforma debe ofrecer tres formas de entrar:
-
-1. Correo y contraseña (comportamiento actual).
+1. Correo y contraseña (comportamiento original).
 2. Google (nuevo).
-3. Compra como invitado (comportamiento actual, sin historial).
+3. Compra como invitado (sin historial).
 
-## 2. Inventario de la autenticación actual
+El JWT y el contrato de `/api/auth/login`, `/api/auth/register` y
+`/api/auth/me` no cambian: Google solo añade otra vía para obtener el mismo
+`AuthResponse`.
 
-| Pieza | Archivo | Responsabilidad |
-|---|---|---|
-| Entidad de cuenta | `pardrops/.../model/User.java` | Correo único, contraseña, nombre, teléfono, rol y estado |
-| Repositorio | `pardrops/.../repository/UserRepository.java` | Búsqueda por correo y listados administrativos |
-| Servicio | `pardrops/.../service/AuthService.java` | Registro, login y usuario de la sesión |
-| Controlador | `pardrops/.../controller/AuthController.java` | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me` |
-| JWT | `pardrops/.../security/JwtService.java` | Firma HS256, `sub`, `uid`, `role` y caducidad de 24 h |
-| Filtro | `pardrops/.../security/JwtAuthenticationFilter.java` | Valida el token y carga la cuenta desde la base de datos |
-| Configuración | `pardrops/.../config/SecurityConfig.java` | Rutas públicas, roles, CORS, 401/403 en JSON |
-| Cliente | `pardropsfrontend/src/app/core/services/auth.service.ts` | Signals de sesión y persistencia en `localStorage` |
-| Pantalla | `pardropsfrontend/src/app/pages/login/` | Formularios de acceso y registro |
-| Guardas | `pardropsfrontend/src/app/core/guards/` | Protección de cuenta, administración y vendedor |
+## 2. Requisitos
 
-Contrato actual:
+- Java 25 y el JDK del proyecto (`.tools/jdk25` o `JAVA_HOME`).
+- Node.js 20 o superior.
+- Una cuenta de Google Cloud con posibilidad de crear credenciales OAuth.
+- Backend en `http://localhost:8080` y frontend en `http://localhost:4200`.
 
-```json
-{
-  "token": "<jwt>",
-  "user": {
-    "id": 1,
-    "email": "cliente@correo.com",
-    "fullName": "Cliente",
-    "phone": null,
-    "role": "CUSTOMER",
-    "status": "ACTIVE"
-  }
-}
+## 3. Configurar Google Cloud
+
+### 3.1 Crear el proyecto
+
+1. Entra en [Google Cloud Console](https://console.cloud.google.com/).
+2. Crea un proyecto (por ejemplo, `ParDrops`).
+3. Selecciona el proyecto en la barra superior.
+
+### 3.2 Configurar la pantalla de consentimiento
+
+1. Ve a **APIs y servicios → Pantalla de consentimiento de OAuth**.
+2. Elige **Externo** si la aplicación estará disponible para cualquier cuenta
+   de Google, o **Interno** si solo será para usuarios de una organización.
+3. Completa el nombre de la aplicación (`ParDrops`), el correo de asistencia y
+   el logo si lo tienes.
+4. Añade los ámbitos `openid`, `profile` y `email`.
+5. Añade usuarios de prueba mientras la aplicación esté en modo de prueba.
+
+### 3.3 Crear las credenciales
+
+1. Ve a **APIs y servicios → Credenciales**.
+2. Pulsa **Crear credenciales → ID de cliente de OAuth**.
+3. Tipo de aplicación: **Aplicación web**.
+4. Orígenes autorizados de JavaScript:
+   - `http://localhost:4200`
+   - `http://localhost:4000` (SSR, si se usa)
+5. URIs de redirección autorizados:
+   - `http://localhost:8080/login/oauth2/code/google`
+6. Guarda el **Client ID** y el **Client Secret**.
+
+> El secreto nunca debe subirse al repositorio. Se inyecta por variable de
+> entorno.
+
+### 3.4 Configurar el backend
+
+PowerShell:
+
+```powershell
+$env:GOOGLE_CLIENT_ID = 'tu-client-id.apps.googleusercontent.com'
+$env:GOOGLE_CLIENT_SECRET = 'tu-client-secret'
+.\dev.ps1
 ```
 
-El token viaja en `Authorization: Bearer <token>`. La API es *stateless* y el
-frontend no consulta `/api/auth/me` al arrancar: hidrata la sesión desde
-`localStorage`.
+Bash:
 
-## 3. Decisiones de diseño
+```bash
+export GOOGLE_CLIENT_ID="tu-client-id.apps.googleusercontent.com"
+export GOOGLE_CLIENT_SECRET="tu-client-secret"
+```
 
-### 3.1 Flujo OAuth2 con redirección
+Si el frontend o el backend se sirven en otra URL, ajusta:
 
-Se usa el flujo de autorización estándar de Spring Security, no Google
-Identity Services en el navegador. Motivos:
+| Variable | Valor por defecto | Uso |
+|---|---|---|
+| `APP_FRONTEND_URL` | `http://localhost:4200` | Base de las redirecciones al frontend |
+| `APP_OAUTH2_SECURE_COOKIES` | `false` | Marca la cookie del flujo como `Secure` (HTTPS) |
 
-- El *client secret* nunca llega al navegador.
-- La validación del `state` la hace Spring Security.
-- El backend sigue siendo la única autoridad que emite JWT.
-- Funciona igual en local y en producción.
+No hace falta tocar `application.properties`: los valores por defecto ya están
+preparados para desarrollo.
+
+## 4. Flujo completo
 
 ```text
 /login (Angular)
-  └─ botón "Continuar con Google"
+  └─ "Continuar con Google"
        └─ GET http://localhost:8080/oauth2/authorization/google
             └─ Google autentica y vuelve a /login/oauth2/code/google
                  └─ OAuth2AuthenticationSuccessHandler
-                      ├─ busca o crea la cuenta
-                      ├─ genera un código temporal de un solo uso
+                      ├─ busca, crea o vincula la cuenta
+                      ├─ emite un código temporal de un solo uso
                       └─ redirige a http://localhost:4200/auth/callback?code=...
                            └─ POST /api/auth/google/exchange { code }
                                 └─ AuthResponse { token, user }
-                                     └─ AuthService guarda la sesión y navega a /cuenta
+                                     └─ AuthService guarda la sesión y navega
+                                        a /cuenta o a la ruta solicitada
 ```
 
-El JWT no viaja en la URL. Solo viaja un código opaco, de un solo uso y con
-caducidad corta, que el frontend canjea por HTTP.
+Decisiones clave:
 
-### 3.2 Sesión sin estado con cookie temporal
+- El JWT **no** viaja en la URL. Viaja un código opaco que el frontend canjea
+  por HTTP.
+- El `state` y el `PKCE` se guardan en una cookie `HttpOnly`, `SameSite=Lax`,
+  con cinco minutos de vida, porque la API es *stateless*.
+- El código de canje dura 120 segundos, se invalida al emitir otro para la
+  misma cuenta y solo se puede usar una vez.
+- El canje está limitado a 10 intentos por minuto y por origen (`429` al
+  superarlo).
+- Si Google cancela, el backend redirige a `/login?oauth=cancelado`.
 
-`SecurityConfig` usa `SessionCreationPolicy.STATELESS`, pero el flujo de
-autorización necesita recordar el `state` entre la ida y la vuelta a Google.
-Se añade un `OAuth2AuthorizationRequestRepository` que guarda la solicitud en
-una cookie `HttpOnly`, `SameSite=Lax`, limitada a `/` y con caducidad de cinco
-minutos. La cookie se elimina al terminar el flujo. No se crea una sesión de
-aplicación.
+## 5. Cuentas y vinculación
 
-### 3.3 Cuentas sin contraseña local
+| Caso | Comportamiento |
+|---|---|
+| No existe la cuenta | Se crea con rol `CUSTOMER`, estado `ACTIVE` y proveedor `GOOGLE` |
+| Existe una cuenta local con el mismo correo verificado | Se vincula a Google sin duplicarla y se avisa al usuario |
+| Existe una cuenta local pero Google no confirma el correo | Se rechaza la vinculación |
+| La cuenta está suspendida | Se rechaza el acceso antes de emitir el JWT |
+| La cuenta ya está vinculada | Se reutiliza y se actualizan el nombre y el avatar |
 
-`users.password` es `NOT NULL`. Para no ejecutar una migración destructiva, las
-cuentas de Google reciben una contraseña técnica aleatoria cifrada con BCrypt
-que nadie conoce. El login local con ese correo sigue siendo posible solo si el
-usuario define una contraseña en el futuro; mientras tanto, la cuenta se
-identifica por `provider = GOOGLE` y `providerId = <sub de Google>`.
+Las cuentas de Google reciben una contraseña técnica aleatoria cifrada con
+BCrypt que nadie conoce. Así se mantiene la restricción `password NOT NULL`
+sin migraciones destructivas y el login local sigue funcionando para las
+cuentas que sí tienen contraseña.
 
-Esta decisión evita relajar la restricción de la columna y mantiene compatibles
-los datos existentes. La migración solo rellena los valores nuevos:
+Al vincular una cuenta local se conserva el nombre que el usuario había
+elegido, se actualiza la foto y se envía un aviso de seguridad a la campanilla.
 
-| Columna | Tipo | Valor inicial |
-|---|---|---|
-| `auth_provider` | `VARCHAR(20) NOT NULL` | `LOCAL` |
-| `provider_id` | `VARCHAR(255)` | `NULL` |
-| `avatar_url` | `VARCHAR(500)` | `NULL` |
-
-Restricción única para `(auth_provider, provider_id)` cuando `provider_id` no
-sea nulo.
-
-### 3.4 Vinculación de cuentas
-
-Si ya existe una cuenta local con el mismo correo:
-
-- Se vincula automáticamente **solo** cuando Google informa
-  `email_verified = true`.
-- Si la cuenta está suspendida, se rechaza el acceso con un mensaje claro.
-- Si Google no confirma el correo, se rechaza la vinculación y se pide usar el
-  acceso local.
-
-Nunca se crea una segunda cuenta con el mismo correo: el correo es la clave
-natural de la cuenta en ParDrops.
-
-### 3.5 Código de intercambio
-
-- Formato: 32 bytes aleatorios en Base64 URL-safe.
-- Vida: 2 minutos.
-- Un solo uso: se elimina al canjearlo, aunque la respuesta falle.
-- Almacenamiento en memoria (`ConcurrentHashMap`) con limpieza periódica. Si en
-  el futuro hay varias instancias, se sustituirá por una tabla o Redis.
-- En los logs solo se registra el identificador de la cuenta, nunca el código.
-
-## 4. Modelo de datos
+## 6. Modelo de datos
 
 ### `User`
 
-| Campo | Cambio |
-|---|---|
-| `authProvider` | Nuevo, `LOCAL` por defecto |
-| `providerId` | Nuevo, `sub` de Google, opcional |
-| `avatarUrl` | Nuevo, foto de perfil, opcional |
-| `password` | Sin cambios: sigue siendo obligatoria |
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `authProvider` | `LOCAL` / `GOOGLE` | Origen de la autenticación |
+| `providerId` | texto | `sub` de Google; único junto con el proveedor |
+| `avatarUrl` | texto | Foto de perfil |
+
+La migración `GoogleSchemaMigration` marca las cuentas existentes como `LOCAL`
+y crea el índice único `uk_users_provider`. Es idempotente.
 
 ### `UserResponse`
 
-Se añaden `provider` y `avatarUrl`. Los consumidores actuales siguen recibiendo
-los mismos campos, así que el cambio es compatible.
+Se añaden `provider` y `avatarUrl`. El resto del contrato no cambia.
 
-## 5. API
+## 7. API
 
 | Método | Ruta | Acceso | Descripción |
 |---|---|---|---|
 | `GET` | `/oauth2/authorization/google` | Público | Inicia el flujo con Google |
 | `GET` | `/login/oauth2/code/google` | Público | Callback que atiende Spring Security |
-| `POST` | `/api/auth/google/exchange` | Público | Canjea el código temporal por `AuthResponse` |
+| `POST` | `/api/auth/google/exchange` | Público (limitado) | Canjea el código por `AuthResponse` |
 | `GET` | `/api/auth/me` | Sesión | Sin cambios |
+
+Ejemplo de canje:
+
+```http
+POST /api/auth/google/exchange
+Content-Type: application/json
+
+{ "code": "codigo-temporal" }
+```
+
+Respuesta correcta:
+
+```json
+{
+  "token": "<jwt>",
+  "user": {
+    "id": 12,
+    "email": "cliente@gmail.com",
+    "fullName": "Cliente",
+    "phone": null,
+    "role": "CUSTOMER",
+    "status": "ACTIVE",
+    "provider": "GOOGLE",
+    "avatarUrl": "https://lh3.googleusercontent.com/a/..."
+  }
+}
+```
 
 Errores:
 
 | Situación | Respuesta |
 |---|---|
-| Google no configurado | Redirección a `/login?oauth=no-configurado` |
+| Google no configurado | La ruta de inicio no existe (404) y el resto de accesos sigue funcionando |
 | Usuario cancela en Google | Redirección a `/login?oauth=cancelado` |
 | Correo no verificado | Redirección a `/login?oauth=correo-no-verificado` |
 | Cuenta suspendida | Redirección a `/login?oauth=cuenta-suspendida` |
-| Código inválido o caducado | `401` con mensaje legible en el canje |
+| Código inválido o caducado | `401` con mensaje legible |
+| Demasiados intentos | `429` con mensaje legible |
 
-## 6. Seguridad
+## 8. Seguridad
 
-- El `client secret` solo vive en variables de entorno del backend.
+- El *client secret* solo existe en el entorno del backend.
 - El JWT se entrega en el cuerpo de una petición HTTP autenticada por el código
   temporal, nunca en la URL.
-- El código temporal es de un solo uso y caduca en dos minutos.
-- Solo se vinculan cuentas con correo verificado por Google.
+- Solo se vinculan cuentas con el correo verificado por Google.
 - Las cuentas suspendidas se rechazan antes de emitir el JWT.
-- El `state` y el `PKCE` los gestiona Spring Security.
-- En producción el backend y el frontend deben servirse por HTTPS; las cookies
-  llevarán `Secure` cuando `app.oauth2.secure-cookies=true`.
-- Los códigos y los tokens no se escriben en los logs.
+- El código temporal caduca, se invalida al emitir otro y no se registra en los
+  logs.
+- El endpoint de canje tiene un límite de intentos por origen.
+- En producción hay que usar HTTPS y activar
+  `APP_OAUTH2_SECURE_COOKIES=true`.
+- La cookie del flujo es `HttpOnly` y se elimina al terminar.
 
-## 7. Configuración
+## 9. Pruebas
 
-```properties
-spring.security.oauth2.client.registration.google.client-id=${GOOGLE_CLIENT_ID:}
-spring.security.oauth2.client.registration.google.client-secret=${GOOGLE_CLIENT_SECRET:}
-spring.security.oauth2.client.registration.google.scope=openid,profile,email
-spring.security.oauth2.client.registration.google.redirect-uri={baseUrl}/login/oauth2/code/{registrationId}
+```powershell
+# Backend
+cd pardrops
+$env:JAVA_HOME = (Resolve-Path '..\.tools\jdk25').Path
+.\mvnw.cmd -o test
 
-app.oauth2.frontend-url=${APP_FRONTEND_URL:http://localhost:4200}
-app.oauth2.success-path=/auth/callback
-app.oauth2.failure-path=/login
-app.oauth2.code-ttl-seconds=120
-app.oauth2.secure-cookies=${APP_OAUTH2_SECURE_COOKIES:false}
+# Frontend
+cd ..\pardropsfrontend
+npx ng test --watch=false
+npm run build
 ```
 
-En Google Cloud Console:
+Cobertura añadida:
 
-1. Crear un proyecto y configurar la pantalla de consentimiento.
-2. Crear credenciales de tipo "Aplicación web".
-3. Añadir el origen autorizado `http://localhost:4200`.
-4. Añadir el URI de redirección
-   `http://localhost:8080/login/oauth2/code/google`.
-
-La guía detallada se completa en el issue #42.
-
-## 8. Plan de implementación
-
-| Issue | Etapa | Entrega |
-|---|---|---|
-| #36 | Backend y base de datos | Modelo, repositorio, DTO y migración |
-| #37 | Backend y base de datos | OAuth2 en Spring Security y cookies de estado |
-| #38 | Backend y base de datos | Cuenta, vinculación, JWT y canje del código |
-| #39 | Interfaz de acceso | Botón de Google en el login |
-| #40 | Interfaz de acceso | Callback, sesión y avatar |
-| #41 | Pruebas y documentación | Suites de backend y frontend |
-| #42 | Pruebas y documentación | Guía de Google Cloud y README |
-
-## 9. Riesgos y mitigaciones
-
-| Riesgo | Mitigación |
+| Suite | Pruebas |
 |---|---|
-| El contexto de Spring falla sin credenciales | `oauth2Login` condicionado y registro simulado en pruebas |
-| El callback devuelve 401 | Rutas de OAuth públicas y *entry point* específico |
-| Se duplican cuentas por correo | Búsqueda por correo antes de crear y restricción única |
-| Se vincula una cuenta ajena | Solo con `email_verified = true` |
-| El JWT queda en el historial | Código temporal de un solo uso |
-| El `state` se pierde | Cookie `HttpOnly` específica del flujo |
-| El avatar externo falla | Respaldo con la inicial del nombre |
+| Backend | 179 (modelo, migración, servicio, código, límite, canje y flujo completo) |
+| Frontend | 75 en 16 archivos (servicio, login, callback y avatar) |
 
-## 10. Estrategia de ramas y commits
+Las pruebas no necesitan credenciales reales de Google: el registro se simula
+con propiedades de prueba y el flujo se valida sin salir a internet.
 
-- Rama de trabajo: `feature/google-auth`, creada desde `main`.
-- Un commit por unidad lógica, en español y con el formato
-  `tipo(alcance): descripción` (`feat`, `fix`, `test`, `docs`, `refactor`).
-- Cada issue se cierra en el mismo commit que lo completa, con `Closes #N` en el
-  cuerpo del commit o del pull request.
-- Al terminar, se abre un pull request hacia `main` y se enlaza con el Project.
-- Las pruebas de backend (`.\mvnw.cmd -o test`), frontend (`npm test`) y el
-  build (`npm run build`) deben pasar antes de cerrar cada issue de código.
+## 10. Solución de problemas
+
+| Síntoma | Causa probable | Solución |
+|---|---|---|
+| `redirect_uri_mismatch` | La URI no coincide exactamente | Revisa `http://localhost:8080/login/oauth2/code/google` en Google Cloud |
+| El botón devuelve 404 | Faltan credenciales | Define `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` y reinicia el backend |
+| `invalid_client` | Client ID o secret incorrectos | Copia de nuevo las credenciales |
+| `Error 400: invalid_request` | Origen no autorizado | Añade `http://localhost:4200` a los orígenes de JavaScript |
+| El callback vuelve a `/login?oauth=error` | Fallo al crear o vincular la cuenta | Revisa el log del backend y la cuenta en la base de datos |
+| La foto no aparece | Google no devolvió `picture` o la URL expiró | La interfaz usa la inicial como respaldo |
+| `429` al canjear | Se superaron 10 intentos en un minuto | Espera un minuto y reintenta |
+
+## 11. Referencias
+
+- [Spring Security: OAuth2 Login](https://docs.spring.io/spring-security/reference/servlet/oauth2/login/index.html)
+- [Google Identity: OpenID Connect](https://developers.google.com/identity/openid-connect/openid-connect)
+- [GitHub Project del cambio](https://github.com/users/andrespar2/projects/3)

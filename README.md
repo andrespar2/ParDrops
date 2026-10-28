@@ -84,7 +84,7 @@ Una plataforma e-commerce moderna, intuitiva y construida con tecnologías de ú
 | [👥 Usuarios](#-roles-de-usuario) | Roles y permisos |
 | [💰 Comercio](#-configuración-comercial) | IVA, precios y envíos |
 | [📡 API](#-api-rest) | Endpoints disponibles |
-| [🔐 Seguridad](#-seguridad) | Autenticación JWT |
+| [🔐 Seguridad](#-seguridad) | Autenticación JWT y Google |
 | [📦 Pedidos](#-gestión-de-pedidos) | Estados y seguimiento |
 | [⭐ Reseñas](#-sistema-de-reseñas) | Valoraciones verificadas |
 | [🗄 Base de datos](#-base-de-datos) | Persistencia local |
@@ -163,7 +163,7 @@ Cálculo de subtotal, IVA, envío y total.
 
 ### 🔐 Autenticación
 
-Registro e inicio de sesión con JWT.
+Registro e inicio de sesión con JWT o con tu cuenta de Google.
 
 </td>
 <td valign="top">
@@ -594,7 +594,15 @@ http://localhost:8080/api
 |---|---|---|
 | `POST` | `/auth/register` | Público |
 | `POST` | `/auth/login` | Público |
+| `POST` | `/auth/google/exchange` | Público (limitado) |
 | `GET` | `/auth/me` | Autenticado |
+
+El acceso con Google añade dos rutas fuera de `/api`:
+
+| Método | Endpoint | Acceso |
+|---|---|---|
+| `GET` | `/oauth2/authorization/google` | Público |
+| `GET` | `/login/oauth2/code/google` | Público (callback de Google) |
 
 ## 🛍️ Productos
 
@@ -710,10 +718,32 @@ Content-Type: application/json
 ### Medidas implementadas
 
 - Autenticación mediante JWT.
+- Acceso con Google mediante OAuth2/OIDC, con código temporal de un solo uso.
+- Vinculación de cuentas solo con el correo verificado por Google.
 - Control de acceso por roles.
 - Operaciones administrativas restringidas.
 - Validación de elegibilidad para reseñas.
 - Identificación del autor de reseñas desde la sesión.
+
+### Acceso con Google
+
+1. Crea un proyecto y una credencial OAuth de tipo **Aplicación web** en
+   [Google Cloud Console](https://console.cloud.google.com/).
+2. Autoriza el origen `http://localhost:4200` y la URI de redirección
+   `http://localhost:8080/login/oauth2/code/google`.
+3. Define las credenciales y arranca la aplicación:
+
+```powershell
+$env:GOOGLE_CLIENT_ID = 'tu-client-id.apps.googleusercontent.com'
+$env:GOOGLE_CLIENT_SECRET = 'tu-client-secret'
+.\dev.ps1
+```
+
+Sin esas variables la aplicación arranca igual y el resto de accesos sigue
+funcionando; solo queda inactivo el botón de Google.
+
+La guía completa, el flujo paso a paso, la tabla de errores y las decisiones de
+seguridad están en [`docs/autenticacion-google.md`](docs/autenticacion-google.md).
 
 ---
 
@@ -847,6 +877,11 @@ Al iniciar nuevamente, la base de datos se regenera.
 | Vendedor | `vendedor@pardrops.com` | `vendedor123` |
 
 > Las cuentas demo se generan con el `DataSeeder` en desarrollo. La tienda del vendedor de prueba es `estilo-urbano`.
+
+Para probar el acceso con Google no hay cuenta demo: usa cualquier cuenta de
+Google autorizada en la pantalla de consentimiento. La primera vez se crea un
+cliente nuevo; si ya existe una cuenta local con ese correo verificado, se
+vincula sin duplicarla.
 
 ### Accesos administrativos
 

@@ -34,7 +34,10 @@ import java.time.Instant;
 @Entity
 @Table(
         name = "users",
-        uniqueConstraints = @UniqueConstraint(name = "uk_users_email", columnNames = "email")
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_users_email", columnNames = "email"),
+                @UniqueConstraint(name = "uk_users_provider", columnNames = {"auth_provider", "provider_id"})
+        }
 )
 @Getter
 @Setter
@@ -83,6 +86,32 @@ public class User {
     @Builder.Default
     private UserStatus status = UserStatus.ACTIVE;
 
+    /**
+     * Origen de la autenticación de la cuenta.
+     *
+     * <p>Las cuentas anteriores al acceso con Google se marcan como
+     * {@link AuthProvider#LOCAL} mediante {@code GoogleSchemaMigration}. Las
+     * cuentas creadas o vinculadas con Google usan
+     * {@link AuthProvider#GOOGLE}.</p>
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", length = 20)
+    @Builder.Default
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+
+    /**
+     * Identificador de la cuenta en el proveedor externo.
+     *
+     * <p>Para Google se guarda el valor de {@code sub}, que identifica la
+     * identidad aunque el correo cambie. Es nulo en las cuentas locales.</p>
+     */
+    @Column(name = "provider_id", length = 255)
+    private String providerId;
+
+    /** URL de la foto de perfil que devuelve el proveedor externo. */
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
     /** Fecha y hora de creación de la cuenta. */
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -94,6 +123,9 @@ public class User {
     void onCreate() {
         if (status == null) {
             status = UserStatus.ACTIVE;
+        }
+        if (authProvider == null) {
+            authProvider = AuthProvider.LOCAL;
         }
         if (createdAt == null) {
             createdAt = Instant.now();

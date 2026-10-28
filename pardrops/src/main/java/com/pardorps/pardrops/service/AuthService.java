@@ -149,7 +149,9 @@ public class AuthService {
                 user.getFullName(),
                 user.getPhone(),
                 user.getRole(),
-                user.getStatus()
+                user.getStatus(),
+                user.getAuthProvider(),
+                user.getAvatarUrl()
         );
     }
 }

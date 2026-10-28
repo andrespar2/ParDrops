@@ -133,4 +133,15 @@ export interface Product {
   createdAt?: Date;
   /** Fecha de actualizaciÃ³n (opcional) */
   updatedAt?: Date;
-}
+}
+/**
+ * Rankings de la portada.
+ *
+ * @interface ProductHighlights
+ */
+export interface ProductHighlights {
+  /** Productos con más unidades vendidas. */
+  bestSellers: Product[];
+  /** Productos con mejor valoración. */
+  topRated: Product[];
+}

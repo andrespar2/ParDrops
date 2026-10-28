@@ -42,6 +42,16 @@ public class ProductController {
     }
 
     /**
+     * Devuelve los productos más vendidos y mejor valorados de la portada.
+     *
+     * @return 200 con los rankings.
+     */
+    @GetMapping("/highlights")
+    public ResponseEntity<com.pardorps.pardrops.dto.ProductHighlightsResponse> highlights() {
+        return ResponseEntity.ok(productService.highlights());
+    }
+
+    /**
      * Obtiene el detalle de un producto por su slug.
      *
      * @param slug slug del producto.

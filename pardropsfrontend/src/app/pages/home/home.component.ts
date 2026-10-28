@@ -9,10 +9,11 @@
  * @version 1.0.0
  */
 
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
+import { Product } from '../../core/models/product.model';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 
 @Component({
@@ -34,4 +35,23 @@ export class HomeComponent {
 
   /** Productos en oferta */
   public readonly saleProducts = computed(() => this.productService.saleProducts());
+
+  /** Productos más vendidos. */
+  public readonly bestSellers = signal<Product[]>([]);
+
+  /** Productos mejor valorados. */
+  public readonly topRated = signal<Product[]>([]);
+
+  constructor() {
+    this.productService.getHighlights().subscribe({
+      next: highlights => {
+        this.bestSellers.set(highlights.bestSellers);
+        this.topRated.set(highlights.topRated);
+      },
+      error: () => {
+        this.bestSellers.set([]);
+        this.topRated.set([]);
+      }
+    });
+  }
 }

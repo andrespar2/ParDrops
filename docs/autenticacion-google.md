@@ -151,8 +151,11 @@ elegido, se actualiza la foto y se envía un aviso de seguridad a la campanilla.
 | `providerId` | texto | `sub` de Google; único junto con el proveedor |
 | `avatarUrl` | texto | Foto de perfil |
 
-La migración `GoogleSchemaMigration` marca las cuentas existentes como `LOCAL`
-y crea el índice único `uk_users_provider`. Es idempotente.
+La migración `GoogleSchemaMigration` marca las cuentas existentes como `LOCAL`,
+crea el índice único `uk_users_provider` y sincroniza el `ENUM` de
+`audit_logs.action` con `GOOGLE_ACCOUNT_CREATED` y `GOOGLE_ACCOUNT_LINKED`.
+Esto último es necesario porque Hibernate no modifica un `ENUM` nativo de H2
+que ya existe. Es idempotente.
 
 ### `UserResponse`
 
@@ -252,6 +255,7 @@ con propiedades de prueba y el flujo se valida sin salir a internet.
 | `invalid_client` | Client ID o secret incorrectos | Copia de nuevo las credenciales |
 | `Error 400: invalid_request` | Origen no autorizado | Añade `http://localhost:4200` a los orígenes de JavaScript |
 | El callback vuelve a `/login?oauth=error` | Fallo al crear o vincular la cuenta | Revisa el log del backend y la cuenta en la base de datos |
+| Una base existente rechaza `GOOGLE_ACCOUNT_CREATED` | El `ENUM` de auditoría no está sincronizado | Actualiza y arranca: `GoogleSchemaMigration` lo corrige |
 | La foto no aparece | Google no devolvió `picture` o la URL expiró | La interfaz usa la inicial como respaldo |
 | `429` al canjear | Se superaron 10 intentos en un minuto | Espera un minuto y reintenta |
 

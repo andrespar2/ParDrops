@@ -14,7 +14,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
-import { API_BASE_URL, STORAGE_KEYS } from '../config/api.config';
+import { API_BASE_URL, GOOGLE_AUTH_URL, STORAGE_KEYS } from '../config/api.config';
 import {
   AuthResponse,
   LoginRequest,
@@ -81,6 +81,20 @@ export class AuthService {
         tap(response => this.storeSession(response)),
         map(response => response.user)
       );
+  }
+
+  /**
+   * Inicia el acceso con Google.
+   *
+   * Es una navegación de nivel superior al backend, que a su vez redirige a
+   * Google. El JWT no viaja en esta URL: al volver, el backend entrega un
+   * código temporal que se canjea en `/auth/callback`.
+   *
+   * @returns {void}
+   */
+  public loginWithGoogle(): void {
+    if (typeof window === 'undefined') return;
+    window.location.assign(GOOGLE_AUTH_URL);
   }
 
   /**

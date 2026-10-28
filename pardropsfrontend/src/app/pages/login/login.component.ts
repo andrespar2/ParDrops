@@ -135,6 +135,16 @@ export class LoginComponent {
   }
 
   /**
+   * Inicia el flujo de acceso con Google.
+   *
+   * @returns {void}
+   */
+  public onGoogleLogin(): void {
+    this.errorMessage.set(null);
+    this.authService.loginWithGoogle();
+  }
+
+  /**
    * Vuelve a la ruta desde la que se llegó al login, o a la cuenta.
    *
    * @returns {void}

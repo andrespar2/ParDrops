@@ -20,6 +20,18 @@ $root = $PSScriptRoot
 $backendDir = Join-Path $root 'pardrops'
 $frontendDir = Join-Path $root 'pardropsfrontend'
 
+# Carga las variables locales del proyecto (por ejemplo, las credenciales de
+# Google). El archivo .env.local no se versiona y es opcional.
+$envLocal = Join-Path $root '.env.local'
+if (Test-Path $envLocal) {
+  Get-Content $envLocal | ForEach-Object {
+    if ($_ -match '^\s*#' -or $_ -notmatch '=') { return }
+    $name, $value = $_ -split '=', 2
+    Set-Item -Path "Env:$($name.Trim())" -Value $value.Trim().Trim('"').Trim("'")
+  }
+  Write-Host 'Variables locales cargadas desde .env.local'
+}
+
 function Test-JavaHome([string]$path) {
   return $path -and (Test-Path (Join-Path $path 'bin\java.exe'))
 }

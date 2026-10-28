@@ -84,6 +84,16 @@ Si el frontend o el backend se sirven en otra URL, ajusta:
 No hace falta tocar `application.properties`: los valores por defecto ya están
 preparados para desarrollo.
 
+También puedes crear un archivo `.env.local` en la raíz del repositorio
+(ignorado por git) y `dev.ps1` lo cargará automáticamente:
+
+```properties
+GOOGLE_CLIENT_ID=tu-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=tu-client-secret
+```
+
+Toma como referencia [`.env.local.example`](../.env.local.example).
+
 ## 4. Flujo completo
 
 ```text

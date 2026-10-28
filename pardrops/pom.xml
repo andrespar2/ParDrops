@@ -60,6 +60,12 @@
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 
+		<!-- Correo transaccional: JavaMail y plantillas HTML. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+
 		<!-- Base de datos H2 en modo archivo (persistente, sin instalación). -->
 		<dependency>
 			<groupId>com.h2database</groupId>

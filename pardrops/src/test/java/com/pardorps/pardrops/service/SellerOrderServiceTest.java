@@ -36,11 +36,13 @@ class SellerOrderServiceTest {
     private final OrderSubOrderRepository subOrderRepository = mock(OrderSubOrderRepository.class);
     private final OrderRepository orderRepository = mock(OrderRepository.class);
     private final NotificationService notificationService = mock(NotificationService.class);
+    private final OrderEmailService orderEmailService = mock(OrderEmailService.class);
 
     private final SellerOrderService service = new SellerOrderService(
             subOrderRepository,
             orderRepository,
-            notificationService
+            notificationService,
+            orderEmailService
     );
 
     @Test
@@ -169,7 +171,25 @@ class SellerOrderServiceTest {
         service.updateStatus(seller, 10L, OrderStatus.PREPARED);
 
         verify(notificationService).notify(
-                eq(customer), eq(NotificationType.ORDER), any(), any(), eq("/pedidos"));
+                eq(customer), eq(NotificationType.ORDER), any(), any(), eq("/cuenta"));
+        verify(orderEmailService).sendStatusUpdate(order, mine);
+    }
+
+    @Test
+    @DisplayName("Envía el comprobante cuando el vendedor marca su parte como pagada")
+    void sendsReceiptWhenSubOrderIsPaid() {
+        User seller = seller(1L);
+        Order order = order(101L);
+        OrderSubOrder mine = subOrder(11L, seller, OrderStatus.PENDING);
+        order.getSubOrders().add(mine);
+        mine.setOrder(order);
+
+        when(subOrderRepository.findByIdAndSellerId(11L, 1L)).thenReturn(Optional.of(mine));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.updateStatus(seller, 11L, OrderStatus.PAID);
+
+        verify(orderEmailService).sendPaymentReceipt(order, mine);
     }
 
     /**

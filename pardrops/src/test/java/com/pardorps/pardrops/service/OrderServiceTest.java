@@ -45,12 +45,14 @@ class OrderServiceTest {
     private final ProductRepository productRepository = mock(ProductRepository.class);
     private final StoreRepository storeRepository = mock(StoreRepository.class);
     private final NotificationService notificationService = mock(NotificationService.class);
+    private final OrderEmailService orderEmailService = mock(OrderEmailService.class);
 
     private final OrderService orderService = new OrderService(
             orderRepository,
             productRepository,
             storeRepository,
-            notificationService
+            notificationService,
+            orderEmailService
     );
 
     @Test
@@ -234,7 +236,8 @@ class OrderServiceTest {
         verify(notificationService).notify(
                 eq(sellerB), eq(NotificationType.ORDER), any(), any(), eq("/vendedor/pedidos"));
         verify(notificationService).notify(
-                eq(customer), eq(NotificationType.ORDER), any(), any(), eq("/pedidos"));
+                eq(customer), eq(NotificationType.ORDER), any(), any(), eq("/cuenta"));
+        verify(orderEmailService).sendNewOrderToSellers(any(Order.class));
     }
 
     @Test
@@ -327,6 +330,40 @@ class OrderServiceTest {
         product.setSeller(seller);
         product.setActive(true);
         return product;
+    }
+
+    @Test
+    @DisplayName("Envía el comprobante cuando el pedido pasa a pagado")
+    void sendsReceiptWhenOrderIsPaid() {
+        Order order = new Order();
+        order.setId(42L);
+        order.setStatus(OrderStatus.PENDING);
+        order.setCustomerEmail("cliente@pardrops.com");
+        when(orderRepository.findById(42L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+
+        orderService.updateStatus(42L, OrderStatus.PAID);
+
+        verify(orderEmailService).sendPaymentReceipt(order);
+    }
+
+    @Test
+    @DisplayName("Envía el aviso y notifica al cliente cuando el pedido avanza")
+    void sendsStatusEmailWhenOrderAdvances() {
+        User customer = customer(10L);
+        Order order = new Order();
+        order.setId(43L);
+        order.setStatus(OrderStatus.PENDING);
+        order.setCustomerEmail("cliente@pardrops.com");
+        order.setUser(customer);
+        when(orderRepository.findById(43L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order)).thenReturn(order);
+
+        orderService.updateStatus(43L, OrderStatus.PREPARED);
+
+        verify(orderEmailService).sendStatusUpdate(order);
+        verify(notificationService).notify(
+                eq(customer), eq(NotificationType.ORDER), any(), any(), eq("/cuenta"));
     }
 
     /**

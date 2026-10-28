@@ -57,23 +57,27 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final StoreRepository storeRepository;
     private final NotificationService notificationService;
+    private final OrderEmailService orderEmailService;
 
     /**
      * @param orderRepository      acceso a los pedidos.
      * @param productRepository    acceso al catálogo para calcular precios.
      * @param storeRepository      acceso a las tiendas para nombrar cada parte.
      * @param notificationService  avisos dentro de la aplicación.
+     * @param orderEmailService    correos del ciclo del pedido.
      */
     public OrderService(
             OrderRepository orderRepository,
             ProductRepository productRepository,
             StoreRepository storeRepository,
-            NotificationService notificationService
+            NotificationService notificationService,
+            OrderEmailService orderEmailService
     ) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.storeRepository = storeRepository;
         this.notificationService = notificationService;
+        this.orderEmailService = orderEmailService;
     }
 
     /**
@@ -154,6 +158,7 @@ public class OrderService {
         Order saved = orderRepository.save(order);
         notifySellers(saved);
         notifyCustomer(saved, user);
+        orderEmailService.sendNewOrderToSellers(saved);
 
         return toResponse(saved);
     }
@@ -294,7 +299,7 @@ public class OrderService {
                 NotificationType.ORDER,
                 "Tu pedido está en camino",
                 "Hemos registrado tu pedido. Te avisaremos cuando cada tienda lo envíe.",
-                "/pedidos");
+                "/cuenta");
     }
 
     /**
@@ -360,7 +365,33 @@ public class OrderService {
             }
         }
 
-        return toResponse(orderRepository.save(order));
+        Order saved = orderRepository.save(order);
+        if (newStatus == OrderStatus.PAID) {
+            orderEmailService.sendPaymentReceipt(saved);
+        } else {
+            orderEmailService.sendStatusUpdate(saved);
+            notifyCustomerStatus(saved, newStatus);
+        }
+        return toResponse(saved);
+    }
+
+    /**
+     * Avisa al cliente autenticado de un cambio de estado del pedido.
+     *
+     * @param order  pedido actualizado.
+     * @param status estado nuevo.
+     */
+    private void notifyCustomerStatus(Order order, OrderStatus status) {
+        if (order.getUser() == null) {
+            return;
+        }
+        notificationService.notify(
+                order.getUser(),
+                NotificationType.ORDER,
+                "Tu pedido cambió de estado",
+                "El pedido #" + order.getId() + " pasó a "
+                        + orderEmailService.statusLabel(status) + ".",
+                "/cuenta");
     }
 
     /**

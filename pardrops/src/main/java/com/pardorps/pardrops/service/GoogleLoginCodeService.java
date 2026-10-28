@@ -29,6 +29,9 @@ public class GoogleLoginCodeService {
     /** Códigos vigentes indexados por su valor. */
     private final Map<String, Entry> codes = new ConcurrentHashMap<>();
 
+    /** Código vigente de cada cuenta, para invalidar los anteriores. */
+    private final Map<Long, String> activeCodeByUser = new ConcurrentHashMap<>();
+
     /** Vida de un código en segundos. */
     private final long ttlSeconds;
 
@@ -50,6 +53,10 @@ public class GoogleLoginCodeService {
         byte[] bytes = new byte[CODE_BYTES];
         random.nextBytes(bytes);
         String code = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        String previous = activeCodeByUser.put(userId, code);
+        if (previous != null) {
+            codes.remove(previous);
+        }
         codes.put(code, new Entry(userId, Instant.now().plusSeconds(ttlSeconds)));
         return code;
     }
@@ -72,13 +79,15 @@ public class GoogleLoginCodeService {
         if (entry == null || !entry.expiresAt().isAfter(Instant.now())) {
             throw ApiException.unauthorized("El código de acceso no es válido o caducó");
         }
+        activeCodeByUser.remove(entry.userId(), code);
         return entry.userId();
     }
 
-    /** Elimina los códigos que ya han caducado. */
+    /** Elimina los códigos que ya han caducado y sus índices inversos. */
     private void purgeExpired() {
         Instant now = Instant.now();
         codes.entrySet().removeIf(entry -> !entry.getValue().expiresAt().isAfter(now));
+        activeCodeByUser.values().removeIf(code -> !codes.containsKey(code));
     }
 
     /**

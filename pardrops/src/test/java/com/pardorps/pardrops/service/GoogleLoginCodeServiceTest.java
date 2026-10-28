@@ -43,6 +43,17 @@ class GoogleLoginCodeServiceTest {
     }
 
     @Test
+    @DisplayName("Emitir un código nuevo invalida el anterior de la misma cuenta")
+    void newCodeInvalidatesPreviousOne() {
+        GoogleLoginCodeService service = new GoogleLoginCodeService(120);
+        String first = service.issue(9L);
+        String second = service.issue(9L);
+
+        assertThrows(ApiException.class, () -> service.consume(first));
+        assertEquals(9L, service.consume(second));
+    }
+
+    @Test
     @DisplayName("Un código vacío o inexistente se rechaza")
     void unknownCodeIsRejected() {
         GoogleLoginCodeService service = new GoogleLoginCodeService(120);

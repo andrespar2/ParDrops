@@ -5,7 +5,9 @@ import com.pardorps.pardrops.dto.GoogleExchangeRequest;
 import com.pardorps.pardrops.dto.LoginRequest;
 import com.pardorps.pardrops.dto.RegisterRequest;
 import com.pardorps.pardrops.dto.UserResponse;
+import com.pardorps.pardrops.security.GoogleExchangeRateLimiter;
 import com.pardorps.pardrops.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,12 +25,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final GoogleExchangeRateLimiter googleExchangeRateLimiter;
 
     /**
-     * @param authService servicio de autenticación.
+     * @param authService              servicio de autenticación.
+     * @param googleExchangeRateLimiter límite de intentos del canje de Google.
      */
-    public AuthController(AuthService authService) {
+    public AuthController(
+            AuthService authService,
+            GoogleExchangeRateLimiter googleExchangeRateLimiter
+    ) {
         this.authService = authService;
+        this.googleExchangeRateLimiter = googleExchangeRateLimiter;
     }
 
     /**
@@ -61,8 +69,10 @@ public class AuthController {
      */
     @PostMapping("/google/exchange")
     public ResponseEntity<AuthResponse> exchangeGoogleCode(
-            @Valid @RequestBody GoogleExchangeRequest request
+            @Valid @RequestBody GoogleExchangeRequest request,
+            HttpServletRequest httpRequest
     ) {
+        googleExchangeRateLimiter.check(httpRequest.getRemoteAddr());
         return ResponseEntity.ok(authService.exchangeGoogleCode(request.code()));
     }
 

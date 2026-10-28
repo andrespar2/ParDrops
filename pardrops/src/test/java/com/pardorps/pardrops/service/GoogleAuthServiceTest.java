@@ -3,6 +3,7 @@ package com.pardorps.pardrops.service;
 import com.pardorps.pardrops.exception.GoogleLoginException;
 import com.pardorps.pardrops.model.AuditAction;
 import com.pardorps.pardrops.model.AuthProvider;
+import com.pardorps.pardrops.model.NotificationType;
 import com.pardorps.pardrops.model.Role;
 import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.model.UserStatus;
@@ -32,9 +33,10 @@ class GoogleAuthServiceTest {
     private final UserRepository userRepository = mock(UserRepository.class);
     private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
     private final AuditLogService auditLogService = mock(AuditLogService.class);
+    private final NotificationService notificationService = mock(NotificationService.class);
 
     private final GoogleAuthService service = new GoogleAuthService(
-            userRepository, passwordEncoder, auditLogService);
+            userRepository, passwordEncoder, auditLogService, notificationService);
 
     @Test
     @DisplayName("Crea una cuenta nueva con rol de cliente y proveedor Google")
@@ -81,8 +83,11 @@ class GoogleAuthServiceTest {
         assertEquals(AuthProvider.GOOGLE, user.getAuthProvider());
         assertEquals("sub-2", user.getProviderId());
         assertEquals("hash-local", user.getPassword());
+        assertEquals("Cuenta local", user.getFullName());
         verify(auditLogService).record(eq(user), eq(AuditAction.GOOGLE_ACCOUNT_LINKED),
                 eq("USER"), eq("3"), any());
+        verify(notificationService).notify(eq(user), eq(NotificationType.ACCOUNT),
+                any(), any(), eq("/cuenta"));
     }
 
     @Test
@@ -160,6 +165,34 @@ class GoogleAuthServiceTest {
                 () -> service.resolveUser(oidcUser));
 
         assertEquals("sin-correo", error.getReason());
+    }
+
+    @Test
+    @DisplayName("Acepta el correo verificado aunque Google lo envíe como texto")
+    void acceptsVerifiedEmailAsText() {
+        User local = User.builder()
+                .id(8L)
+                .email("texto@pardrops.com")
+                .password("hash-local")
+                .fullName("Cuenta local")
+                .role(Role.CUSTOMER)
+                .build();
+        when(userRepository.findByAuthProviderAndProviderId(AuthProvider.GOOGLE, "sub-7"))
+                .thenReturn(Optional.empty());
+        when(userRepository.findByEmail("texto@pardrops.com")).thenReturn(Optional.of(local));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        OidcUser oidcUser = mock(OidcUser.class);
+        when(oidcUser.getClaims()).thenReturn(Map.of(
+                "email", "texto@pardrops.com",
+                "sub", "sub-7",
+                "name", "Cuenta local",
+                "email_verified", "true"
+        ));
+
+        User user = service.resolveUser(oidcUser);
+
+        assertEquals(AuthProvider.GOOGLE, user.getAuthProvider());
     }
 
     private OidcUser googleUser(String email, String sub, boolean verified) {

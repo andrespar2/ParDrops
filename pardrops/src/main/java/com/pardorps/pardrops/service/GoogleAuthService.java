@@ -3,6 +3,7 @@ package com.pardorps.pardrops.service;
 import com.pardorps.pardrops.exception.GoogleLoginException;
 import com.pardorps.pardrops.model.AuditAction;
 import com.pardorps.pardrops.model.AuthProvider;
+import com.pardorps.pardrops.model.NotificationType;
 import com.pardorps.pardrops.model.Role;
 import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.repository.UserRepository;
@@ -41,20 +42,24 @@ public class GoogleAuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
+    private final NotificationService notificationService;
 
     /**
-     * @param userRepository  acceso a las cuentas.
-     * @param passwordEncoder cifrado de la contraseña técnica.
-     * @param auditLogService bitácora de auditoría.
+     * @param userRepository      acceso a las cuentas.
+     * @param passwordEncoder     cifrado de la contraseña técnica.
+     * @param auditLogService     bitácora de auditoría.
+     * @param notificationService avisos dentro de la aplicación.
      */
     public GoogleAuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            AuditLogService auditLogService
+            AuditLogService auditLogService,
+            NotificationService notificationService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditLogService = auditLogService;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -104,13 +109,22 @@ public class GoogleAuthService {
             }
             user.setAuthProvider(AuthProvider.GOOGLE);
             user.setProviderId(providerId);
-            User saved = userRepository.save(updateProfile(user, fullName, avatarUrl));
+            if (!avatarUrl.isBlank()) {
+                user.setAvatarUrl(avatarUrl);
+            }
+            User saved = userRepository.save(user);
             auditLogService.record(
                     saved,
                     AuditAction.GOOGLE_ACCOUNT_LINKED,
                     "USER",
                     String.valueOf(saved.getId()),
                     "Cuenta local vinculada con Google");
+            notificationService.notify(
+                    saved,
+                    NotificationType.ACCOUNT,
+                    "Cuenta vinculada con Google",
+                    "Ya puedes entrar con tu cuenta de Google. Si no fuiste tú, cambia tu contraseña.",
+                    "/cuenta");
             log.info("Cuenta {} vinculada con Google", saved.getId());
             return saved;
         }
@@ -172,9 +186,13 @@ public class GoogleAuthService {
         return value == null ? "" : String.valueOf(value).trim();
     }
 
-    /** Interpreta el claim booleano que puede llegar como texto. */
+    /** Interpreta el claim booleano que puede llegar como texto o número. */
     private boolean isTrue(Object value) {
-        return Boolean.TRUE.equals(value) || "true".equalsIgnoreCase(text(value));
+        if (Boolean.TRUE.equals(value)) {
+            return true;
+        }
+        String text = text(value).toLowerCase(Locale.ROOT);
+        return "true".equals(text) || "1".equals(text) || "yes".equals(text);
     }
 
     /** Devuelve nulo para cadenas vacías. */

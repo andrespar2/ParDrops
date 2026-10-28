@@ -1,8 +1,8 @@
-/**
+﻿/**
  * @file src/app/pages/admin/admin.component.ts
  * @description Armazón del centro de administración.
  *
- * Envuelve las páginas del panel con una navegación lateral de diez secciones
+ * Envuelve las páginas del panel con una navegación lateral de once secciones
  * (resumen, usuarios, solicitudes, vendedores, productos, categorías, pedidos,
  * notificaciones, auditoría y configuración). El contenido de cada sección se
  * carga en el `router-outlet` anidado. Solo es accesible con rol de
@@ -94,6 +94,12 @@ export class AdminComponent {
       label: 'Pedidos',
       description: 'Supervisión global y estados',
       icon: 'M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0'
+    },
+    {
+      path: 'plantillas-correo',
+      label: 'Plantillas de correo',
+      description: 'Edita los mensajes de pedidos y pagos',
+      icon: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM22 6l-10 7L2 6'
     },
     {
       path: 'notificaciones',

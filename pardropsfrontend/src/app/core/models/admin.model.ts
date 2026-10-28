@@ -354,3 +354,63 @@ export interface AuditLog {
   /** Fecha de la acción. */
   createdAt: string;
 }
+
+/**
+ * Códigos de las plantillas de correo.
+ *
+ * @type EmailTemplateCode
+ */
+export type EmailTemplateCode =
+  | 'SELLER_NEW_ORDER'
+  | 'BUYER_PAYMENT_RECEIPT'
+  | 'BUYER_ORDER_STATUS';
+
+/**
+ * Plantilla de correo editable desde el panel.
+ *
+ * @interface EmailTemplate
+ */
+export interface EmailTemplate {
+  /** Identificador. */
+  id: number;
+  /** Código del correo. */
+  code: EmailTemplateCode;
+  /** Nombre visible. */
+  name: string;
+  /** Explicación de cuándo se envía. */
+  description: string | null;
+  /** Asunto. */
+  subject: string;
+  /** Cuerpo HTML con variables. */
+  bodyHtml: string;
+  /** Indica si está activa. */
+  active: boolean;
+  /** Última modificación. */
+  updatedAt: string | null;
+}
+
+/**
+ * Datos editables de una plantilla.
+ *
+ * @interface EmailTemplateRequest
+ */
+export interface EmailTemplateRequest {
+  /** Asunto del correo. */
+  subject: string;
+  /** Cuerpo HTML. */
+  bodyHtml: string;
+  /** Indica si está activa. */
+  active: boolean;
+}
+
+/**
+ * Correo renderizado para la vista previa.
+ *
+ * @interface RenderedEmail
+ */
+export interface RenderedEmail {
+  /** Asunto final. */
+  subject: string;
+  /** Cuerpo HTML final. */
+  bodyHtml: string;
+}

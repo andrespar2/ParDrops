@@ -160,6 +160,20 @@ public class EmailTemplateService {
     }
 
     /**
+     * Renderiza una plantilla concreta sin comprobar si está activa.
+     *
+     * @param code  código del correo.
+     * @param model valores de las variables.
+     * @return el correo renderizado.
+     */
+    @Transactional(readOnly = true)
+    public RenderedEmail render(EmailTemplateCode code, Map<String, ?> model) {
+        EmailTemplate template = getRequired(code);
+        return EmailTemplateRenderer.render(
+                template.getSubject(), template.getBodyHtml(), model);
+    }
+
+    /**
      * Obtiene la plantilla o lanza un 404.
      *
      * @param code código del correo.

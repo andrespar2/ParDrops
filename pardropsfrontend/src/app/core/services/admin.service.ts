@@ -27,7 +27,11 @@ import {
   AdminStoreStatus,
   AuditLog,
   CategoryRequest,
+  EmailTemplate,
+  EmailTemplateCode,
+  EmailTemplateRequest,
   PageResponse,
+  RenderedEmail,
   SellerApplication,
   SellerApplicationDecision,
   SellerApplicationStatus
@@ -311,6 +315,69 @@ export class AdminService {
     return this.http.patch<SellerApplication>(
       `${API_BASE_URL}/seller-applications/${id}/decision`,
       decision
+    );
+  }
+
+  // ------------------------------------------------------------------
+  // Plantillas de correo.
+  // ------------------------------------------------------------------
+
+  /**
+   * Lista las plantillas de correo.
+   *
+   * @returns observable con las plantillas.
+   */
+  public listEmailTemplates(): Observable<EmailTemplate[]> {
+    return this.http.get<EmailTemplate[]>(`${this.adminUrl}/email-templates`);
+  }
+
+  /**
+   * Obtiene una plantilla por su código.
+   *
+   * @param code código del correo.
+   * @returns observable con la plantilla.
+   */
+  public getEmailTemplate(code: EmailTemplateCode): Observable<EmailTemplate> {
+    return this.http.get<EmailTemplate>(`${this.adminUrl}/email-templates/${code}`);
+  }
+
+  /**
+   * Actualiza una plantilla.
+   *
+   * @param code    código del correo.
+   * @param request nuevos valores.
+   * @returns observable con la plantilla actualizada.
+   */
+  public updateEmailTemplate(
+    code: EmailTemplateCode,
+    request: EmailTemplateRequest
+  ): Observable<EmailTemplate> {
+    return this.http.put<EmailTemplate>(`${this.adminUrl}/email-templates/${code}`, request);
+  }
+
+  /**
+   * Restaura los valores predeterminados de una plantilla.
+   *
+   * @param code código del correo.
+   * @returns observable con la plantilla restaurada.
+   */
+  public resetEmailTemplate(code: EmailTemplateCode): Observable<EmailTemplate> {
+    return this.http.post<EmailTemplate>(
+      `${this.adminUrl}/email-templates/${code}/reset`,
+      {}
+    );
+  }
+
+  /**
+   * Genera una vista previa con datos de ejemplo.
+   *
+   * @param code código del correo.
+   * @returns observable con el asunto y el HTML.
+   */
+  public previewEmailTemplate(code: EmailTemplateCode): Observable<RenderedEmail> {
+    return this.http.post<RenderedEmail>(
+      `${this.adminUrl}/email-templates/${code}/preview`,
+      {}
     );
   }
 

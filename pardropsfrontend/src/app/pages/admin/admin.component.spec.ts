@@ -29,11 +29,11 @@ describe('AdminComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('expone las diez secciones del centro de administracion', () => {
+  it('expone las once secciones del centro de administracion', () => {
     const fixture = TestBed.createComponent(AdminComponent);
     const sections = fixture.componentInstance.sections;
 
-    expect(sections.length).toBe(10);
+    expect(sections.length).toBe(11);
     expect(sections.map(section => section.path)).toEqual([
       'resumen',
       'usuarios',
@@ -42,6 +42,7 @@ describe('AdminComponent', () => {
       'productos',
       'categorias',
       'pedidos',
+      'plantillas-correo',
       'notificaciones',
       'auditoria',
       'configuracion'

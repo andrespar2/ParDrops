@@ -1,0 +1,111 @@
+<!--
+  @file src/app/pages/admin-email-templates/admin-email-templates.component.html
+  @description Editor de las plantillas de correo del panel.
+-->
+
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <h1 class="admin-page__title">Plantillas de correo</h1>
+      <p class="admin-page__subtitle">
+        Edita los mensajes que reciben el vendedor y el comprador. Los cambios se
+        aplican al siguiente correo que se envíe.
+      </p>
+    </div>
+    <button type="button" class="admin-btn" (click)="showPreview()" [disabled]="previewing() || loading()">
+      {{ previewing() ? 'Generando…' : 'Vista previa' }}
+    </button>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</div>
+  }
+  @if (okMessage()) {
+    <div class="admin-alert admin-alert--ok" role="status">{{ okMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <p class="admin-message">Cargando plantillas…</p>
+  } @else {
+    <div class="mail-templates">
+      <aside class="mail-templates__list" aria-label="Plantillas disponibles">
+        @for (template of templates(); track template.code) {
+          <button
+            type="button"
+            class="mail-templates__item"
+            [class.mail-templates__item--active]="template.code === selectedCode()"
+            (click)="select(template)"
+          >
+            <span class="mail-templates__item-name">{{ template.name }}</span>
+            <span class="mail-templates__item-desc">{{ template.description }}</span>
+            <span class="mail-templates__item-state">
+              {{ template.active ? 'Activa' : 'Inactiva' }}
+            </span>
+          </button>
+        }
+      </aside>
+
+      <section class="mail-templates__editor">
+        <form [formGroup]="form" (submit)="$event.preventDefault(); save()">
+          <div class="admin-field">
+            <label for="mail-subject">Asunto</label>
+            <input id="mail-subject" class="admin-input" type="text" formControlName="subject" />
+            @if (form.controls.subject.touched && form.controls.subject.invalid) {
+              <span class="admin-alert admin-alert--error">El asunto es obligatorio.</span>
+            }
+          </div>
+
+          <div class="admin-field">
+            <label for="mail-body">Cuerpo HTML</label>
+            <textarea
+              id="mail-body"
+              class="admin-textarea mail-templates__body"
+              formControlName="bodyHtml"
+            ></textarea>
+            @if (form.controls.bodyHtml.touched && form.controls.bodyHtml.invalid) {
+              <span class="admin-alert admin-alert--error">El cuerpo es obligatorio.</span>
+            }
+          </div>
+
+          <div class="mail-templates__variables">
+            <span class="mail-templates__variables-title">Variables disponibles:</span>
+            @for (variable of variables; track variable) {
+              <code class="mail-templates__variable">{{ '{{' + variable + '}}' }}</code>
+            }
+          </div>
+
+          <label class="admin-form__check">
+            <input type="checkbox" formControlName="active" />
+            <span>Enviar esta plantilla</span>
+          </label>
+
+          <div class="admin-form__actions">
+            <button type="submit" class="admin-btn admin-btn--primary" [disabled]="saving()">
+              {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+            </button>
+            <button type="button" class="admin-btn" (click)="reset()" [disabled]="saving()">
+              Restaurar predeterminado
+            </button>
+          </div>
+        </form>
+
+        <div class="mail-preview">
+          <h2 class="mail-preview__title">Vista previa</h2>
+          @if (preview()) {
+            <p class="mail-preview__subject"><strong>Asunto:</strong> {{ previewSubject() }}</p>
+            <iframe
+              class="mail-preview__frame"
+              title="Vista previa del correo"
+              sandbox=""
+              [srcdoc]="preview()"
+            ></iframe>
+          } @else {
+            <p class="admin-message">
+              Pulsa «Vista previa» para ver el correo con datos de ejemplo.
+            </p>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</div>

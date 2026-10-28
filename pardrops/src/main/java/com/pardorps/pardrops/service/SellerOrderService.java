@@ -32,20 +32,24 @@ public class SellerOrderService {
     private final OrderSubOrderRepository subOrderRepository;
     private final OrderRepository orderRepository;
     private final NotificationService notificationService;
+    private final OrderEmailService orderEmailService;
 
     /**
      * @param subOrderRepository acceso a las partes de los pedidos.
      * @param orderRepository    acceso a los pedidos.
      * @param notificationService avisos dentro de la aplicación.
+     * @param orderEmailService  correos del ciclo del pedido.
      */
     public SellerOrderService(
             OrderSubOrderRepository subOrderRepository,
             OrderRepository orderRepository,
-            NotificationService notificationService
+            NotificationService notificationService,
+            OrderEmailService orderEmailService
     ) {
         this.subOrderRepository = subOrderRepository;
         this.orderRepository = orderRepository;
         this.notificationService = notificationService;
+        this.orderEmailService = orderEmailService;
     }
 
     /**
@@ -98,6 +102,12 @@ public class SellerOrderService {
 
         notifyCustomer(order, subOrder);
 
+        if (newStatus == OrderStatus.PAID) {
+            orderEmailService.sendPaymentReceipt(order, subOrder);
+        } else {
+            orderEmailService.sendStatusUpdate(order, subOrder);
+        }
+
         return toResponse(subOrder);
     }
 
@@ -138,7 +148,7 @@ public class SellerOrderService {
                 "Tu pedido va avanzando",
                 "La tienda " + subOrder.getStoreName() + " actualizó su parte del pedido a "
                         + subOrder.getStatus() + ".",
-                "/pedidos"
+                "/cuenta"
         );
     }
 

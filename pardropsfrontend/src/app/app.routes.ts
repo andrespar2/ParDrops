@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file src/app/app.routes.ts
  * @description Configuración de rutas de la aplicación.
  *
@@ -10,7 +10,7 @@
  * - Checkout (datos del cliente)
  * - Autenticación (login y registro)
  * - Cuenta del usuario (historial de pedidos, protegida)
- * - Centro de administración con diez secciones (solo ADMIN)
+ * - Centro de administración con once secciones (solo ADMIN)
  * - Página 404 para rutas no encontradas
  *
  * @author ParDrops E-commerce
@@ -157,6 +157,11 @@ export const routes: Routes = [
         path: 'pedidos',
         loadComponent: () => import('./pages/admin-orders/admin-orders.component').then(m => m.AdminOrdersComponent),
         title: 'ParDrops - Administración de pedidos'
+      },
+      {
+        path: 'plantillas-correo',
+        loadComponent: () => import('./pages/admin-email-templates/admin-email-templates.component').then(m => m.AdminEmailTemplatesComponent),
+        title: 'ParDrops - Plantillas de correo'
       },
       {
         path: 'notificaciones',

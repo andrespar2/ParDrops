@@ -22,3 +22,7 @@
 # durante la verificación manual. No forman parte del producto.
 .playwright-mcp/
 build.log
+
+# --- Configuración local y secretos ---------------------------
+# Credenciales locales (Google, etc.). No se versionan.
+.env.local

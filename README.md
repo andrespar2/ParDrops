@@ -739,6 +739,14 @@ $env:GOOGLE_CLIENT_SECRET = 'tu-client-secret'
 .\dev.ps1
 ```
 
+O guarda las credenciales en un `.env.local` en la raíz (ignorado por git) para
+no tener que definirlas en cada terminal. `dev.ps1` lo carga solo:
+
+```properties
+GOOGLE_CLIENT_ID=tu-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=tu-client-secret
+```
+
 Sin esas variables la aplicación arranca igual y el resto de accesos sigue
 funcionando; solo queda inactivo el botón de Google.
 

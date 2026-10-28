@@ -14,7 +14,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
-import { API_BASE_URL, GOOGLE_AUTH_URL, STORAGE_KEYS } from '../config/api.config';
+import { API_BASE_URL, GOOGLE_AUTH_URL, OAUTH_REDIRECT_KEY, STORAGE_KEYS } from '../config/api.config';
 import {
   AuthResponse,
   LoginRequest,
@@ -92,9 +92,39 @@ export class AuthService {
    *
    * @returns {void}
    */
-  public loginWithGoogle(): void {
+  public loginWithGoogle(redirect?: string | null): void {
     if (typeof window === 'undefined') return;
+    if (redirect) {
+      sessionStorage.setItem(OAUTH_REDIRECT_KEY, redirect);
+    }
     window.location.assign(GOOGLE_AUTH_URL);
+  }
+
+  /**
+   * Canjea el código temporal que devuelve el callback de Google.
+   *
+   * @param code código de un solo uso recibido en la URL.
+   * @returns observable que emite el usuario autenticado.
+   */
+  public exchangeGoogleCode(code: string): Observable<User> {
+    return this.http
+      .post<AuthResponse>(`${this.authUrl}/google/exchange`, { code })
+      .pipe(
+        tap(response => this.storeSession(response)),
+        map(response => response.user)
+      );
+  }
+
+  /**
+   * Recupera y elimina la ruta pendiente tras el acceso con Google.
+   *
+   * @returns la ruta solicitada o nulo.
+   */
+  public takePendingRedirect(): string | null {
+    if (typeof window === 'undefined') return null;
+    const redirect = sessionStorage.getItem(OAUTH_REDIRECT_KEY);
+    sessionStorage.removeItem(OAUTH_REDIRECT_KEY);
+    return redirect;
   }
 
   /**

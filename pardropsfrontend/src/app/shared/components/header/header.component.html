@@ -85,7 +85,16 @@
             [attr.aria-expanded]="isUserMenuOpen()"
             aria-label="Abrir menú de usuario"
           >
-            <span class="nav__user-avatar">{{ user()?.fullName?.charAt(0)?.toUpperCase() }}</span>
+            @if (user()?.avatarUrl) {
+              <img
+                class="nav__user-avatar"
+                [src]="user()?.avatarUrl"
+                [alt]="'Foto de ' + user()?.fullName"
+                referrerpolicy="no-referrer"
+              >
+            } @else {
+              <span class="nav__user-avatar">{{ user()?.fullName?.charAt(0)?.toUpperCase() }}</span>
+            }
             <span class="nav__user-name">{{ user()?.fullName }}</span>
           </button>
 

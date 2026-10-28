@@ -15,6 +15,9 @@ export const API_ORIGIN = API_BASE_URL.replace(/\/api$/, '');
 /** Inicio del flujo de autorización de Google en el backend. */
 export const GOOGLE_AUTH_URL = `${API_ORIGIN}/oauth2/authorization/google`;
 
+/** Clave de sesión donde se guarda la ruta a la que volver tras el acceso. */
+export const OAUTH_REDIRECT_KEY = 'pardrops_oauth_redirect';
+
 /** Claves de almacenamiento local usadas por los servicios. */
 export const STORAGE_KEYS = {
   /** Token JWT de la sesión activa. */

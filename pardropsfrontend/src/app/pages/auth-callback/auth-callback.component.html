@@ -1,0 +1,20 @@
+<!--
+  @file src/app/pages/auth-callback/auth-callback.component.html
+  @description Pantalla de espera y error del acceso con Google.
+-->
+
+<main class="page">
+  <div class="container callback">
+    <div class="callback__card">
+      @if (loading()) {
+        <div class="callback__spinner" role="status" aria-label="Completando el acceso"></div>
+        <h1 class="callback__title">Conectando con Google…</h1>
+        <p class="callback__text">Estamos terminando de iniciar tu sesión.</p>
+      } @else {
+        <h1 class="callback__title">No pudimos iniciar sesión</h1>
+        <p class="callback__text callback__text--error" role="alert">{{ errorMessage() }}</p>
+        <a routerLink="/login" class="callback__link">Volver al acceso</a>
+      }
+    </div>
+  </div>
+</main>

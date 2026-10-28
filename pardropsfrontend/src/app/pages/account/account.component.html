@@ -13,7 +13,16 @@
     <div class="account">
       <!-- Datos del usuario -->
       <aside class="profile">
-        <div class="profile__avatar">{{ user()?.fullName?.charAt(0)?.toUpperCase() }}</div>
+        @if (user()?.avatarUrl) {
+          <img
+            class="profile__avatar"
+            [src]="user()?.avatarUrl"
+            [alt]="'Foto de ' + user()?.fullName"
+            referrerpolicy="no-referrer"
+          >
+        } @else {
+          <div class="profile__avatar">{{ user()?.fullName?.charAt(0)?.toUpperCase() }}</div>
+        }
         <h2 class="profile__name">{{ user()?.fullName }}</h2>
         <p class="profile__email">{{ user()?.email }}</p>
         @if (user()?.phone) {

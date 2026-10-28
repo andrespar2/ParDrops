@@ -217,4 +217,45 @@ describe('AdminService', () => {
     expect(request.request.method).toBe('GET');
     request.flush([]);
   });
+
+  it('lista y consulta las plantillas de correo', () => {
+    service.listEmailTemplates().subscribe();
+    const list = httpMock.expectOne(`${ADMIN}/email-templates`);
+    expect(list.request.method).toBe('GET');
+    list.flush([]);
+
+    service.getEmailTemplate('SELLER_NEW_ORDER').subscribe();
+    const one = httpMock.expectOne(`${ADMIN}/email-templates/SELLER_NEW_ORDER`);
+    expect(one.request.method).toBe('GET');
+    one.flush({});
+  });
+
+  it('actualiza una plantilla con asunto, cuerpo y estado', () => {
+    service.updateEmailTemplate('BUYER_ORDER_STATUS', {
+      subject: 'Nuevo asunto',
+      bodyHtml: '<p>Hola</p>',
+      active: true
+    }).subscribe();
+
+    const request = httpMock.expectOne(`${ADMIN}/email-templates/BUYER_ORDER_STATUS`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({
+      subject: 'Nuevo asunto',
+      bodyHtml: '<p>Hola</p>',
+      active: true
+    });
+    request.flush({});
+  });
+
+  it('restaura y previsualiza una plantilla', () => {
+    service.resetEmailTemplate('BUYER_PAYMENT_RECEIPT').subscribe();
+    const reset = httpMock.expectOne(`${ADMIN}/email-templates/BUYER_PAYMENT_RECEIPT/reset`);
+    expect(reset.request.method).toBe('POST');
+    reset.flush({});
+
+    service.previewEmailTemplate('BUYER_PAYMENT_RECEIPT').subscribe();
+    const preview = httpMock.expectOne(`${ADMIN}/email-templates/BUYER_PAYMENT_RECEIPT/preview`);
+    expect(preview.request.method).toBe('POST');
+    preview.flush({ subject: 'Comprobante', bodyHtml: '<p>Hola</p>' });
+  });
 });

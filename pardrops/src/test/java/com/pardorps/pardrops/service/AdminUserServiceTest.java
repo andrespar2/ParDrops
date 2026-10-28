@@ -15,6 +15,7 @@ import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.model.UserStatus;
 import com.pardorps.pardrops.repository.OrderSubOrderRepository;
 import com.pardorps.pardrops.repository.ProductRepository;
+import com.pardorps.pardrops.repository.SellerBalanceRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
 import com.pardorps.pardrops.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -54,13 +55,16 @@ class AdminUserServiceTest {
     private final AuditLogService auditLogService = mock(AuditLogService.class);
     private final NotificationService notificationService = mock(NotificationService.class);
 
+    private final SellerBalanceRepository balanceRepository = mock(SellerBalanceRepository.class);
+
     private final AdminUserService adminUserService = new AdminUserService(
             userRepository,
             storeRepository,
             productRepository,
             subOrderRepository,
             auditLogService,
-            notificationService);
+            notificationService,
+            balanceRepository);
 
     @Test
     @DisplayName("Impide que el administrador suspenda su propia cuenta")

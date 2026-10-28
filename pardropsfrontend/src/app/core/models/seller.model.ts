@@ -32,6 +32,14 @@ export interface SellerDashboard {
   outOfStockCount: number;
   /** Ingresos acumulados de los subpedidos no cancelados. */
   revenue: number;
+  /** Comisión acumulada de ParDrops. */
+  commissionTotal: number;
+  /** Neto acumulado de las ventas (retenido + disponible). */
+  netRevenue: number;
+  /** Neto retenido hasta la entrega. */
+  pendingBalance: number;
+  /** Neto disponible para el vendedor. */
+  availableBalance: number;
   /** Últimos avisos recibidos. */
   recentNotifications: Notification[];
 }

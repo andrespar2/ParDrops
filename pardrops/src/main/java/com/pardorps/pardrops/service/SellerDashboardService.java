@@ -4,10 +4,12 @@ import com.pardorps.pardrops.dto.NotificationResponse;
 import com.pardorps.pardrops.dto.SellerDashboardResponse;
 import com.pardorps.pardrops.model.OrderStatus;
 import com.pardorps.pardrops.model.OrderSubOrder;
+import com.pardorps.pardrops.model.SellerBalance;
 import com.pardorps.pardrops.model.Store;
 import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.repository.OrderSubOrderRepository;
 import com.pardorps.pardrops.repository.ProductRepository;
+import com.pardorps.pardrops.repository.SellerBalanceRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,23 +34,27 @@ public class SellerDashboardService {
     private final ProductRepository productRepository;
     private final StoreRepository storeRepository;
     private final NotificationService notificationService;
+    private final SellerBalanceRepository balanceRepository;
 
     /**
      * @param subOrderRepository  acceso a los subpedidos del vendedor.
      * @param productRepository   acceso a su catálogo.
      * @param storeRepository     acceso a la ficha comercial.
      * @param notificationService avisos del vendedor.
+     * @param balanceRepository   saldo y comisiones del vendedor.
      */
     public SellerDashboardService(
             OrderSubOrderRepository subOrderRepository,
             ProductRepository productRepository,
             StoreRepository storeRepository,
-            NotificationService notificationService
+            NotificationService notificationService,
+            SellerBalanceRepository balanceRepository
     ) {
         this.subOrderRepository = subOrderRepository;
         this.productRepository = productRepository;
         this.storeRepository = storeRepository;
         this.notificationService = notificationService;
+        this.balanceRepository = balanceRepository;
     }
 
     /**
@@ -82,6 +88,12 @@ public class SellerDashboardService {
 
         Store store = storeRepository.findBySellerId(seller.getId()).orElse(null);
 
+        SellerBalance balance = balanceRepository.findBySellerId(seller.getId()).orElse(null);
+        double commissionTotal = balance == null ? 0.0 : nz(balance.getCommissionTotal());
+        double pendingBalance = balance == null ? 0.0 : nz(balance.getPendingAmount());
+        double availableBalance = balance == null ? 0.0 : nz(balance.getAvailableAmount());
+        double netRevenue = round(pendingBalance + availableBalance);
+
         List<NotificationResponse> recentNotifications =
                 notificationService.findMine(seller).stream()
                         .limit(RECENT_NOTIFICATIONS)
@@ -96,7 +108,19 @@ public class SellerDashboardService {
                 publishedProductCount,
                 outOfStockCount,
                 revenue,
+                commissionTotal,
+                netRevenue,
+                pendingBalance,
+                availableBalance,
                 recentNotifications
         );
+    }
+
+    private double nz(Double value) {
+        return value == null ? 0.0 : value;
+    }
+
+    private double round(double value) {
+        return Math.round(value * 100.0) / 100.0;
     }
 }

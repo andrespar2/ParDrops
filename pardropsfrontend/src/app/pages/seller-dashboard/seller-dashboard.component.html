@@ -56,6 +56,21 @@
         <p class="admin-card__hint">Subpedidos no cancelados</p>
       </article>
       <article class="admin-card">
+        <p class="admin-card__label">Saldo retenido</p>
+        <p class="admin-card__value">{{ formatPrice(dashboard()!.pendingBalance) }}</p>
+        <p class="admin-card__hint">Hasta que se entregue el pedido</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Saldo disponible</p>
+        <p class="admin-card__value">{{ formatPrice(dashboard()!.availableBalance) }}</p>
+        <p class="admin-card__hint">Listo para el vendedor</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Comisión de ParDrops</p>
+        <p class="admin-card__value">{{ formatPrice(dashboard()!.commissionTotal) }}</p>
+        <p class="admin-card__hint">5% de las ventas entregadas</p>
+      </article>
+      <article class="admin-card">
         <p class="admin-card__label">Productos publicados</p>
         <p class="admin-card__value">{{ dashboard()!.publishedProductCount }}</p>
         <p class="admin-card__hint">Visibles en el catálogo</p>

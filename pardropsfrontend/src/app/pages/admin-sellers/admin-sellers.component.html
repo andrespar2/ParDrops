@@ -61,6 +61,9 @@
           <th>Cuenta</th>
           <th>Productos</th>
           <th>Ventas</th>
+          <th>Comisión</th>
+          <th>Retenido</th>
+          <th>Disponible</th>
           <th>Alta</th>
           <th>Acciones</th>
         </tr>
@@ -91,6 +94,9 @@
               {{ seller.salesCount }}<br />
               <span class="admin-message">{{ formatPrice(seller.salesTotal) }}</span>
             </td>
+            <td>{{ formatPrice(seller.commissionTotal) }}</td>
+            <td>{{ formatPrice(seller.pendingBalance) }}</td>
+            <td>{{ formatPrice(seller.availableBalance) }}</td>
             <td>{{ formatDate(seller.createdAt) }}</td>
             <td>
               <button

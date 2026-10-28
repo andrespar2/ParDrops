@@ -64,6 +64,21 @@
         <p class="admin-card__hint">Suma de todos los pedidos</p>
       </article>
       <article class="admin-card">
+        <p class="admin-card__label">Comisión de ParDrops</p>
+        <p class="admin-card__value">{{ formatPrice(data.commissionRevenue) }}</p>
+        <p class="admin-card__hint">5% de las ventas</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Saldo retenido</p>
+        <p class="admin-card__value">{{ formatPrice(data.retainedBalance) }}</p>
+        <p class="admin-card__hint">Pendiente de entrega</p>
+      </article>
+      <article class="admin-card">
+        <p class="admin-card__label">Saldo disponible</p>
+        <p class="admin-card__value">{{ formatPrice(data.availableBalance) }}</p>
+        <p class="admin-card__hint">Neto de vendedores</p>
+      </article>
+      <article class="admin-card">
         <p class="admin-card__label">Solicitudes pendientes</p>
         <p class="admin-card__value">{{ data.pendingApplicationCount }}</p>
         <p class="admin-card__hint">

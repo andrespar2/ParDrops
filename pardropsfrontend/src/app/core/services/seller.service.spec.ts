@@ -30,6 +30,10 @@ function buildDashboard(): SellerDashboard {
     publishedProductCount: 4,
     outOfStockCount: 1,
     revenue: 250000,
+    commissionTotal: 12500,
+    netRevenue: 237500,
+    pendingBalance: 100000,
+    availableBalance: 137500,
     recentNotifications: []
   };
 }

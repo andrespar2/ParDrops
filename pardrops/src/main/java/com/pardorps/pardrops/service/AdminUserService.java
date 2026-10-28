@@ -9,12 +9,14 @@ import com.pardorps.pardrops.exception.ApiException;
 import com.pardorps.pardrops.model.AuditAction;
 import com.pardorps.pardrops.model.NotificationType;
 import com.pardorps.pardrops.model.Role;
+import com.pardorps.pardrops.model.SellerBalance;
 import com.pardorps.pardrops.model.Store;
 import com.pardorps.pardrops.model.StoreStatus;
 import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.model.UserStatus;
 import com.pardorps.pardrops.repository.OrderSubOrderRepository;
 import com.pardorps.pardrops.repository.ProductRepository;
+import com.pardorps.pardrops.repository.SellerBalanceRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
 import com.pardorps.pardrops.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -48,6 +50,7 @@ public class AdminUserService {
     private final OrderSubOrderRepository subOrderRepository;
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
+    private final SellerBalanceRepository balanceRepository;
 
     /**
      * @param userRepository       acceso a los usuarios.
@@ -56,6 +59,7 @@ public class AdminUserService {
      * @param subOrderRepository   acceso a las partes de pedido (para las ventas).
      * @param auditLogService      bitácora de auditoría.
      * @param notificationService  avisos dentro de la aplicación.
+     * @param balanceRepository    saldo y comisiones del vendedor.
      */
     public AdminUserService(
             UserRepository userRepository,
@@ -63,7 +67,8 @@ public class AdminUserService {
             ProductRepository productRepository,
             OrderSubOrderRepository subOrderRepository,
             AuditLogService auditLogService,
-            NotificationService notificationService
+            NotificationService notificationService,
+            SellerBalanceRepository balanceRepository
     ) {
         this.userRepository = userRepository;
         this.storeRepository = storeRepository;
@@ -71,6 +76,7 @@ public class AdminUserService {
         this.subOrderRepository = subOrderRepository;
         this.auditLogService = auditLogService;
         this.notificationService = notificationService;
+        this.balanceRepository = balanceRepository;
     }
 
     /**
@@ -354,6 +360,7 @@ public class AdminUserService {
      */
     private AdminSellerResponse toSellerResponse(Store store) {
         User seller = store.getSeller();
+        SellerBalance balance = balanceRepository.findBySellerId(seller.getId()).orElse(null);
         return new AdminSellerResponse(
                 seller.getId(),
                 seller.getFullName(),
@@ -367,6 +374,9 @@ public class AdminUserService {
                 productRepository.countBySellerId(seller.getId()),
                 subOrderRepository.countBySellerId(seller.getId()),
                 subOrderRepository.sumTotalBySellerId(seller.getId()),
+                balance == null ? 0.0 : balance.getCommissionTotal(),
+                balance == null ? 0.0 : balance.getPendingAmount(),
+                balance == null ? 0.0 : balance.getAvailableAmount(),
                 seller.getCreatedAt()
         );
     }

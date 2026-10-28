@@ -114,6 +114,12 @@ export interface AdminSeller {
   salesCount: number;
   /** Importe total vendido. */
   salesTotal: number;
+  /** Comisión acumulada de la plataforma. */
+  commissionTotal: number;
+  /** Neto retenido hasta la entrega. */
+  pendingBalance: number;
+  /** Neto disponible para el vendedor. */
+  availableBalance: number;
   /** Fecha de alta de la cuenta. */
   createdAt: string;
 }
@@ -276,6 +282,12 @@ export interface AdminDashboard {
   pendingOrderCount: number;
   /** Importe total vendido. */
   revenue: number;
+  /** Comisión acumulada de la plataforma. */
+  commissionRevenue: number;
+  /** Neto retenido a los vendedores. */
+  retainedBalance: number;
+  /** Neto disponible de los vendedores. */
+  availableBalance: number;
   /** Solicitudes de vendedor por revisar. */
   pendingApplicationCount: number;
   /** Últimos pedidos registrados. */

@@ -39,6 +39,9 @@ public record AdminSellerResponse(
         long productCount,
         long salesCount,
         double salesTotal,
+        double commissionTotal,
+        double pendingBalance,
+        double availableBalance,
         Instant createdAt
 ) {
 }

@@ -1,13 +1,16 @@
 package com.pardorps.pardrops.service;
 
+import com.pardorps.pardrops.dto.ProductReviewResponse;
 import com.pardorps.pardrops.dto.StoreRequest;
 import com.pardorps.pardrops.dto.StoreResponse;
 import com.pardorps.pardrops.exception.ApiException;
 import com.pardorps.pardrops.model.Product;
+import com.pardorps.pardrops.model.ProductReview;
 import com.pardorps.pardrops.model.Store;
 import com.pardorps.pardrops.model.StoreStatus;
 import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.repository.ProductRepository;
+import com.pardorps.pardrops.repository.ProductReviewRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,14 +29,21 @@ public class StoreService {
 
     private final StoreRepository storeRepository;
     private final ProductRepository productRepository;
+    private final ProductReviewRepository reviewRepository;
 
     /**
      * @param storeRepository   acceso a las tiendas.
      * @param productRepository acceso al catálogo para contar los productos.
+     * @param reviewRepository  acceso a las reseñas para el rating de la tienda.
      */
-    public StoreService(StoreRepository storeRepository, ProductRepository productRepository) {
+    public StoreService(
+            StoreRepository storeRepository,
+            ProductRepository productRepository,
+            ProductReviewRepository reviewRepository
+    ) {
         this.storeRepository = storeRepository;
         this.productRepository = productRepository;
+        this.reviewRepository = reviewRepository;
     }
 
     /**
@@ -201,6 +211,13 @@ public class StoreService {
      * @return la tienda lista para enviar al cliente.
      */
     private StoreResponse toResponse(Store store, long productCount) {
+        double rating = 0.0;
+        long reviewCount = 0;
+        if (store.getSeller() != null) {
+            Double average = reviewRepository.averageRatingBySellerId(store.getSeller().getId());
+            rating = average == null ? 0.0 : Math.round(average * 100.0) / 100.0;
+            reviewCount = reviewRepository.countByProductSellerId(store.getSeller().getId());
+        }
         return new StoreResponse(
                 store.getId(),
                 store.getName(),
@@ -213,10 +230,39 @@ public class StoreService {
                 store.getCity(),
                 store.getWhatsapp(),
                 store.getStatus(),
-                0.0,
-                0L,
+                rating,
+                reviewCount,
                 productCount,
                 store.getCreatedAt()
+        );
+    }
+
+    /**
+     * Devuelve las reseñas recientes de los productos de una tienda.
+     *
+     * @param slug slug público de la tienda.
+     * @return reseñas con autor, estrellas y comentario.
+     */
+    @Transactional(readOnly = true)
+    public List<ProductReviewResponse> findReviews(String slug) {
+        Store store = storeRepository.findBySlugWithOwner(slug)
+                .orElseThrow(() -> ApiException.notFound("Tienda no encontrada: " + slug));
+        if (store.getStatus() != StoreStatus.ACTIVE || store.getSeller() == null) {
+            throw ApiException.notFound("Tienda no encontrada: " + slug);
+        }
+        return reviewRepository.findTop20ByProductSellerIdOrderByCreatedAtDesc(store.getSeller().getId())
+                .stream()
+                .map(this::toReviewResponse)
+                .toList();
+    }
+
+    private ProductReviewResponse toReviewResponse(ProductReview review) {
+        return new ProductReviewResponse(
+                review.getId(),
+                review.getRating(),
+                review.getComment(),
+                review.getUser() != null ? review.getUser().getFullName() : "Cliente",
+                review.getCreatedAt()
         );
     }
 }

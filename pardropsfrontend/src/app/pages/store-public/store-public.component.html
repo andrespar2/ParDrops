@@ -32,6 +32,13 @@
           }
           <div class="store-header__info">
             <h1 class="store-header__name">{{ store()!.name }}</h1>
+            <div class="store-header__rating">
+              <app-star-rating [rating]="store()!.rating" size="sm" />
+              <span class="store-header__rating-text">
+                {{ store()!.rating > 0 ? store()!.rating.toFixed(1) : 'Sin valoraciones' }}
+                · {{ store()!.reviewCount }} reseña{{ store()!.reviewCount === 1 ? '' : 's' }}
+              </span>
+            </div>
             @if (store()!.description) {
               <p class="store-header__description">{{ store()!.description }}</p>
             }
@@ -71,6 +78,33 @@
           <div class="grid grid--3">
             @for (product of products(); track product.id) {
               <app-product-card [product]="product" />
+            }
+          </div>
+        }
+      </section>
+
+      <section class="store-reviews">
+        <header class="store-products__header">
+          <h2 class="store-products__title">Reseñas de la tienda</h2>
+        </header>
+
+        @if (reviewsLoading()) {
+          <p class="store-products__empty">Cargando reseñas…</p>
+        } @else if (reviews().length === 0) {
+          <p class="store-products__empty">
+            Esta tienda todavía no tiene reseñas de sus productos.
+          </p>
+        } @else {
+          <div class="store-reviews__list">
+            @for (review of reviews(); track review.id) {
+              <article class="store-review">
+                <header class="store-review__header">
+                  <strong>{{ review.customerName }}</strong>
+                  <app-star-rating [rating]="review.rating" size="sm" />
+                  <time class="store-review__date">{{ review.createdAt | date: 'dd/MM/yyyy' }}</time>
+                </header>
+                <p class="store-review__comment">{{ review.comment }}</p>
+              </article>
             }
           </div>
         }

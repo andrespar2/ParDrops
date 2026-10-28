@@ -77,6 +77,19 @@ describe('StoreService', () => {
     expect(total).toBe(2);
   });
 
+  it('consulta las reseñas de la tienda', () => {
+    let total = 0;
+    service.getReviews('estilo-urbano').subscribe(reviews => (total = reviews.length));
+
+    const request = httpMock.expectOne(`${STORES_URL}/estilo-urbano/reviews`);
+    expect(request.request.method).toBe('GET');
+    request.flush([
+      { id: 1, rating: 5, comment: 'Excelente', customerName: 'Ana', createdAt: '2026-01-01T00:00:00Z' }
+    ]);
+
+    expect(total).toBe(1);
+  });
+
   it('carga la tienda del vendedor autenticado', () => {
     service.getMine().subscribe();
 

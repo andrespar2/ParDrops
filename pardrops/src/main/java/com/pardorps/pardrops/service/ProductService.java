@@ -471,15 +471,18 @@ public class ProductService {
             product.getTags().addAll(new ArrayList<>(request.tags()));
         }
 
-        product.getVariants().clear();
         if (request.variants() != null) {
+            product.getVariants().clear();
             for (ProductVariant variant : request.variants()) {
                 product.getVariants().add(new ProductVariant(
                         variant.getId(),
                         variant.getName(),
                         variant.getPrice(),
                         variant.getStock(),
-                        variant.getSku()
+                        variant.getSku(),
+                        variant.getSize(),
+                        variant.getColor(),
+                        variant.getImageUrl()
                 ));
             }
         }

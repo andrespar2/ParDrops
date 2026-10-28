@@ -43,11 +43,17 @@ export interface ProductVariant {
   /** Nombre de la variante */
   name: string;
   /** Precio específico de la variante (opcional) */
-  price?: number;
+  price?: number | null;
   /** Stock disponible para esta variante (opcional) */
-  stock?: number;
+  stock?: number | null;
   /** Código SKU de la variante (opcional) */
-  sku?: string;
+  sku?: string | null;
+  /** Talla de la variante (opcional) */
+  size?: string | null;
+  /** Color de la variante (opcional) */
+  color?: string | null;
+  /** Imagen de la variante (opcional) */
+  imageUrl?: string | null;
 }
 
 /**

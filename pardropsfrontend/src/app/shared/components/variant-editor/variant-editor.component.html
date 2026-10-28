@@ -1,0 +1,83 @@
+<!--
+  @file src/app/shared/components/variant-editor/variant-editor.component.html
+  @description Editor de tallas, colores, precios y stock por versión.
+-->
+
+<div class="variant-editor">
+  <div class="variant-editor__header">
+    <div>
+      <h3 class="variant-editor__title">Variantes</h3>
+      <p class="variant-editor__hint">
+        Añade tallas, colores u otras versiones con su propio precio y stock.
+      </p>
+    </div>
+    <button type="button" class="admin-btn admin-btn--primary" (click)="addVariant()">
+      Añadir variante
+    </button>
+  </div>
+
+  @if (variants.length === 0) {
+    <p class="variant-editor__empty">
+      Este producto no tiene variantes. Se usará el precio y el stock generales.
+    </p>
+  } @else {
+    <div class="variant-editor__table">
+      <div class="variant-editor__row variant-editor__row--head">
+        <span>Talla</span>
+        <span>Color</span>
+        <span>Precio</span>
+        <span>Stock</span>
+        <span>SKU</span>
+        <span></span>
+      </div>
+
+      @for (variant of variants; track variant.id; let i = $index) {
+        <div class="variant-editor__row">
+          <input
+            class="admin-input"
+            type="text"
+            placeholder="M"
+            [ngModel]="variant.size"
+            (ngModelChange)="update(i, 'size', $event || null)"
+          />
+          <input
+            class="admin-input"
+            type="text"
+            placeholder="Negro"
+            [ngModel]="variant.color"
+            (ngModelChange)="update(i, 'color', $event || null)"
+          />
+          <input
+            class="admin-input"
+            type="number"
+            min="0"
+            step="100"
+            [ngModel]="variant.price"
+            (ngModelChange)="update(i, 'price', $event === null || $event === '' ? null : +$event)"
+          />
+          <input
+            class="admin-input"
+            type="number"
+            min="0"
+            [ngModel]="variant.stock"
+            (ngModelChange)="update(i, 'stock', $event === null || $event === '' ? null : +$event)"
+          />
+          <input
+            class="admin-input"
+            type="text"
+            placeholder="SKU"
+            [ngModel]="variant.sku"
+            (ngModelChange)="update(i, 'sku', $event || null)"
+          />
+          <button
+            type="button"
+            class="admin-btn variant-editor__remove"
+            (click)="removeVariant(i)"
+          >
+            Quitar
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

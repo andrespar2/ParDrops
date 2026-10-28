@@ -74,6 +74,14 @@ public class OrderItem {
     @Column(length = 120)
     private String variantName;
 
+    /** Identificador estable de la variante elegida. */
+    @Column(name = "variant_id", length = 80)
+    private String variantId;
+
+    /** SKU de la variante en el momento de la compra. */
+    @Column(name = "variant_sku", length = 80)
+    private String variantSku;
+
     /** Precio unitario aplicado. */
     @Column(nullable = false)
     private Double unitPrice;

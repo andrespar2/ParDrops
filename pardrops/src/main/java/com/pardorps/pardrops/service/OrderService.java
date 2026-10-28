@@ -129,15 +129,19 @@ public class OrderService {
                         "El producto " + product.getName() + " ya no está disponible");
             }
 
-            double unitPrice = resolveUnitPrice(product, itemRequest.variantName());
+            double unitPrice = resolveUnitPrice(product, itemRequest.variantId(), itemRequest.variantName());
             double lineSubtotal = unitPrice * itemRequest.quantity();
             subtotal += lineSubtotal;
+
+            ProductVariant variant = findVariant(product, itemRequest.variantId(), itemRequest.variantName());
 
             OrderItem item = new OrderItem();
             item.setProductId(product.getId());
             item.setProductName(product.getName());
             item.setProductSlug(product.getSlug());
-            item.setVariantName(itemRequest.variantName());
+            item.setVariantId(variant != null ? variant.getId() : null);
+            item.setVariantName(variant != null ? variant.getName() : itemRequest.variantName());
+            item.setVariantSku(variant != null ? variant.getSku() : null);
             item.setUnitPrice(round(unitPrice));
             item.setQuantity(itemRequest.quantity());
             item.setSubtotal(round(lineSubtotal));
@@ -147,7 +151,7 @@ public class OrderService {
             Long sellerId = product.getSeller() != null ? product.getSeller().getId() : null;
             itemsBySeller.computeIfAbsent(sellerId, key -> new ArrayList<>()).add(item);
 
-            decreaseStock(product, itemRequest.quantity());
+            decreaseStock(product, variant, itemRequest.quantity());
         }
 
         double tax = round(subtotal * TAX_RATE);
@@ -275,13 +279,48 @@ public class OrderService {
      * @param quantity unidades compradas.
      * @throws ApiException si no hay stock suficiente (409).
      */
-    private void decreaseStock(Product product, int quantity) {
-        if (product.getStock() < quantity) {
-            throw ApiException.conflict(
-                    "No hay stock suficiente de " + product.getName());
+    private void decreaseStock(Product product, ProductVariant variant, int quantity) {
+        int available = variant != null && variant.getStock() != null
+                ? variant.getStock()
+                : product.getStock();
+        if (available < quantity) {
+            String label = variant != null ? product.getName() + " (" + variant.getName() + ")" : product.getName();
+            throw ApiException.conflict("No hay stock suficiente de " + label);
+        }
+        if (variant != null) {
+            variant.setStock(available - quantity);
         }
         product.setStock(product.getStock() - quantity);
         productRepository.save(product);
+    }
+
+    /**
+     * Busca una variante por identificador y, si no llega, por nombre.
+     *
+     * @param product     producto.
+     * @param variantId   identificador de la variante (puede ser nulo).
+     * @param variantName nombre de la variante (puede ser nulo).
+     * @return la variante o {@code null}.
+     */
+    private ProductVariant findVariant(Product product, String variantId, String variantName) {
+        if (product.getVariants() == null) {
+            return null;
+        }
+        if (variantId != null) {
+            for (ProductVariant variant : product.getVariants()) {
+                if (variantId.equals(variant.getId())) {
+                    return variant;
+                }
+            }
+        }
+        if (variantName != null) {
+            for (ProductVariant variant : product.getVariants()) {
+                if (variantName.equals(variant.getName())) {
+                    return variant;
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -428,13 +467,10 @@ public class OrderService {
      * @param variantName nombre de la variante (puede ser nulo).
      * @return el precio unitario a aplicar.
      */
-    private double resolveUnitPrice(Product product, String variantName) {
-        if (variantName != null && product.getVariants() != null) {
-            for (ProductVariant variant : product.getVariants()) {
-                if (variantName.equals(variant.getName()) && variant.getPrice() != null) {
-                    return variant.getPrice();
-                }
-            }
+    private double resolveUnitPrice(Product product, String variantId, String variantName) {
+        ProductVariant variant = findVariant(product, variantId, variantName);
+        if (variant != null && variant.getPrice() != null) {
+            return variant.getPrice();
         }
         return product.getPrice();
     }

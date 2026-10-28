@@ -48,6 +48,12 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
+		<!-- Acceso con Google: cliente OAuth2/OIDC para iniciar sesión. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-oauth2-client</artifactId>
+		</dependency>
+
 		<!-- Validación de los datos de entrada de la API (@Valid). -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

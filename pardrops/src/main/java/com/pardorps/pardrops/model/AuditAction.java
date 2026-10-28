@@ -40,5 +40,11 @@ public enum AuditAction {
     STORE_SUSPENDED,
 
     /** Tienda reactivada por el administrador. */
-    STORE_REACTIVATED
+    STORE_REACTIVATED,
+
+    /** Cuenta creada con Google. */
+    GOOGLE_ACCOUNT_CREATED,
+
+    /** Cuenta local vinculada con Google. */
+    GOOGLE_ACCOUNT_LINKED
 }

@@ -1,5 +1,6 @@
 package com.pardorps.pardrops.repository;
 
+import com.pardorps.pardrops.model.AuthProvider;
 import com.pardorps.pardrops.model.Role;
 import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.model.UserStatus;
@@ -24,6 +25,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return el usuario si existe.
      */
     Optional<User> findByEmail(String email);
+
+    /**
+     * Busca una cuenta por su proveedor de autenticación e identificador
+     * externo.
+     *
+     * <p>Para Google, {@code providerId} corresponde al valor {@code sub} del
+     * token de identidad. Permite reconocer la cuenta aunque el correo cambie
+     * en el proveedor.</p>
+     *
+     * @param authProvider proveedor de autenticación.
+     * @param providerId   identificador de la cuenta en el proveedor.
+     * @return la cuenta vinculada si existe.
+     */
+    Optional<User> findByAuthProviderAndProviderId(AuthProvider authProvider, String providerId);
 
     /**
      * Comprueba si ya existe una cuenta con ese correo.

@@ -30,23 +30,27 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final GoogleLoginCodeService googleLoginCodeService;
 
     /**
-     * @param userRepository        acceso a los usuarios.
-     * @param passwordEncoder       cifrado de contraseñas.
-     * @param jwtService            generación de tokens.
-     * @param authenticationManager validación de credenciales en el login.
+     * @param userRepository          acceso a los usuarios.
+     * @param passwordEncoder         cifrado de contraseñas.
+     * @param jwtService              generación de tokens.
+     * @param authenticationManager   validación de credenciales en el login.
+     * @param googleLoginCodeService  canje de los códigos del acceso con Google.
      */
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
-            AuthenticationManager authenticationManager
+            AuthenticationManager authenticationManager,
+            GoogleLoginCodeService googleLoginCodeService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
+        this.googleLoginCodeService = googleLoginCodeService;
     }
 
     /**
@@ -100,6 +104,27 @@ public class AuthService {
     }
 
     /**
+     * Canjea el código temporal del acceso con Google por la sesión JWT.
+     *
+     * <p>El código solo puede usarse una vez y caduca a los pocos minutos.</p>
+     *
+     * @param code código entregado al frontend tras el callback.
+     * @return el token y los datos públicos de la cuenta.
+     * @throws ApiException si el código no es válido o la cuenta está suspendida.
+     */
+    @Transactional(readOnly = true)
+    public AuthResponse exchangeGoogleCode(String code) {
+        Long userId = googleLoginCodeService.consume(code);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> ApiException.unauthorized(
+                        "La cuenta asociada ya no existe"));
+        if (!user.isActive()) {
+            throw ApiException.forbidden("Tu cuenta está suspendida");
+        }
+        return new AuthResponse(jwtService.generateToken(user), toResponse(user));
+    }
+
+    /**
      * Devuelve el usuario autenticado en la petición actual.
      *
      * @return la entidad del usuario.
@@ -149,7 +174,9 @@ public class AuthService {
                 user.getFullName(),
                 user.getPhone(),
                 user.getRole(),
-                user.getStatus()
+                user.getStatus(),
+                user.getAuthProvider(),
+                user.getAvatarUrl()
         );
     }
 }

@@ -1,10 +1,13 @@
 package com.pardorps.pardrops.controller;
 
 import com.pardorps.pardrops.dto.AuthResponse;
+import com.pardorps.pardrops.dto.GoogleExchangeRequest;
 import com.pardorps.pardrops.dto.LoginRequest;
 import com.pardorps.pardrops.dto.RegisterRequest;
 import com.pardorps.pardrops.dto.UserResponse;
+import com.pardorps.pardrops.security.GoogleExchangeRateLimiter;
 import com.pardorps.pardrops.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,12 +25,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final GoogleExchangeRateLimiter googleExchangeRateLimiter;
 
     /**
-     * @param authService servicio de autenticación.
+     * @param authService              servicio de autenticación.
+     * @param googleExchangeRateLimiter límite de intentos del canje de Google.
      */
-    public AuthController(AuthService authService) {
+    public AuthController(
+            AuthService authService,
+            GoogleExchangeRateLimiter googleExchangeRateLimiter
+    ) {
         this.authService = authService;
+        this.googleExchangeRateLimiter = googleExchangeRateLimiter;
     }
 
     /**
@@ -50,6 +59,21 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    /**
+     * Canjea el código temporal que entrega el callback de Google.
+     *
+     * @param request código de un solo uso.
+     * @return 200 con el token y el usuario.
+     */
+    @PostMapping("/google/exchange")
+    public ResponseEntity<AuthResponse> exchangeGoogleCode(
+            @Valid @RequestBody GoogleExchangeRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        googleExchangeRateLimiter.check(httpRequest.getRemoteAddr());
+        return ResponseEntity.ok(authService.exchangeGoogleCode(request.code()));
     }
 
     /**

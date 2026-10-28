@@ -54,6 +54,11 @@ export const routes: Routes = [
     title: 'ParDrops - Iniciar sesión'
   },
   {
+    path: 'auth/callback',
+    loadComponent: () => import('./pages/auth-callback/auth-callback.component').then(m => m.AuthCallbackComponent),
+    title: 'ParDrops - Acceso con Google'
+  },
+  {
     path: 'cuenta',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/account/account.component').then(m => m.AccountComponent),

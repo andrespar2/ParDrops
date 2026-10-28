@@ -11,9 +11,8 @@
  * @version 1.0.0
  */
 
-import { Component, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import {
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';import {
   AbstractControl,
   FormBuilder,
   ReactiveFormsModule,
@@ -43,7 +42,7 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
@@ -78,6 +77,18 @@ export class LoginComponent {
     },
     { validators: passwordsMatch }
   );
+
+  /**
+   * Lee el motivo de error que puede llegar desde el callback de Google.
+   *
+   * @returns {void}
+   */
+  public ngOnInit(): void {
+    const reason = this.route.snapshot.queryParamMap.get('oauth');
+    if (reason) {
+      this.errorMessage.set(this.googleErrorMessage(reason));
+    }
+  }
 
   /**
    * Cambia entre los modos de login y registro.
@@ -132,6 +143,41 @@ export class LoginComponent {
       error: (error: HttpErrorResponse) => this.handleError(error),
       complete: () => this.loading.set(false)
     });
+  }
+
+  /**
+   * Inicia el flujo de acceso con Google.
+   *
+   * @returns {void}
+   */
+  public onGoogleLogin(): void {
+    const redirect = this.route.snapshot.queryParamMap.get('redirect');
+    this.errorMessage.set(null);
+    this.authService.loginWithGoogle(redirect);
+  }
+
+  /**
+   * Traduce el motivo de error del acceso con Google a un mensaje legible.
+   *
+   * @param reason código recibido en la URL.
+   * @returns el mensaje para el usuario.
+   * @private
+   */
+  private googleErrorMessage(reason: string): string {
+    switch (reason) {
+      case 'cancelado':
+        return 'Cancelaste el acceso con Google.';
+      case 'correo-no-verificado':
+        return 'Google no confirmó que el correo te pertenezca. Usa el acceso con contraseña.';
+      case 'cuenta-suspendida':
+        return 'Tu cuenta está suspendida. Contacta con soporte.';
+      case 'sin-correo':
+        return 'Google no compartió un correo utilizable.';
+      case 'no-configurado':
+        return 'El acceso con Google no está configurado en este momento.';
+      default:
+        return 'No pudimos completar el acceso con Google. Inténtalo de nuevo.';
+    }
   }
 
   /**

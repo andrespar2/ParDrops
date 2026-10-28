@@ -15,6 +15,13 @@
 export type UserRole = 'CUSTOMER' | 'SELLER' | 'ADMIN';
 
 /**
+ * Origen de autenticación de la cuenta.
+ * - `LOCAL`: creada con correo y contraseña.
+ * - `GOOGLE`: creada o vinculada con Google.
+ */
+export type AuthProvider = 'LOCAL' | 'GOOGLE';
+
+/**
  * Usuario autenticado tal y como lo devuelve la API.
  *
  * @interface User
@@ -30,6 +37,12 @@ export interface User {
   phone?: string | null;
   /** Rol del usuario en la plataforma. */
   role: UserRole;
+  /** Estado de la cuenta. */
+  status?: 'ACTIVE' | 'SUSPENDED';
+  /** Origen de la autenticación de la cuenta. */
+  provider?: AuthProvider;
+  /** Foto de perfil del proveedor externo, si existe. */
+  avatarUrl?: string | null;
 }
 
 /**

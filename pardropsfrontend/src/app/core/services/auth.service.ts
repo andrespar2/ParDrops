@@ -14,7 +14,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, tap } from 'rxjs';
-import { API_BASE_URL, STORAGE_KEYS } from '../config/api.config';
+import { API_BASE_URL, GOOGLE_AUTH_URL, OAUTH_REDIRECT_KEY, STORAGE_KEYS } from '../config/api.config';
 import {
   AuthResponse,
   LoginRequest,
@@ -81,6 +81,61 @@ export class AuthService {
         tap(response => this.storeSession(response)),
         map(response => response.user)
       );
+  }
+
+  /**
+   * Inicia el acceso con Google.
+   *
+   * Es una navegación de nivel superior al backend, que a su vez redirige a
+   * Google. El JWT no viaja en esta URL: al volver, el backend entrega un
+   * código temporal que se canjea en `/auth/callback`.
+   *
+   * @returns {void}
+   */
+  public loginWithGoogle(redirect?: string | null): void {
+    if (typeof window === 'undefined') return;
+    if (redirect) {
+      sessionStorage.setItem(OAUTH_REDIRECT_KEY, redirect);
+    }
+    this.navigateTo(GOOGLE_AUTH_URL);
+  }
+
+  /**
+   * Navega a una URL externa. Se aísla para poder sustituirlo en las pruebas.
+   *
+   * @param url destino de la navegación.
+   * @returns {void}
+   * @protected
+   */
+  protected navigateTo(url: string): void {
+    window.location.assign(url);
+  }
+
+  /**
+   * Canjea el código temporal que devuelve el callback de Google.
+   *
+   * @param code código de un solo uso recibido en la URL.
+   * @returns observable que emite el usuario autenticado.
+   */
+  public exchangeGoogleCode(code: string): Observable<User> {
+    return this.http
+      .post<AuthResponse>(`${this.authUrl}/google/exchange`, { code })
+      .pipe(
+        tap(response => this.storeSession(response)),
+        map(response => response.user)
+      );
+  }
+
+  /**
+   * Recupera y elimina la ruta pendiente tras el acceso con Google.
+   *
+   * @returns la ruta solicitada o nulo.
+   */
+  public takePendingRedirect(): string | null {
+    if (typeof window === 'undefined') return null;
+    const redirect = sessionStorage.getItem(OAUTH_REDIRECT_KEY);
+    sessionStorage.removeItem(OAUTH_REDIRECT_KEY);
+    return redirect;
   }
 
   /**

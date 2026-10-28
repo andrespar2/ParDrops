@@ -30,6 +30,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { Product } from '../../core/models/product.model';
 import { ProductReview, ReviewEligibility } from '../../core/models/review.model';
 import { StarRatingComponent } from '../../shared/components/star-rating/star-rating.component';
+import { ImageUploaderComponent } from '../../shared/components/image-uploader/image-uploader.component';
 
 @Component({
   selector: 'app-product-detail',
@@ -39,7 +40,8 @@ import { StarRatingComponent } from '../../shared/components/star-rating/star-ra
     RouterLink,
     FormsModule,
     ReactiveFormsModule,
-    StarRatingComponent
+    StarRatingComponent,
+    ImageUploaderComponent
   ],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.scss']
@@ -138,6 +140,9 @@ export class ProductDetailComponent {
 
   /** Calificación elegida en el formulario (0 = sin elegir). */
   public readonly formRating = signal<number>(0);
+
+  /** Imágenes adjuntas a la reseña en edición. */
+  public readonly reviewImages = signal<string[]>([]);
 
   /** Indica si el usuario tiene sesión iniciada. */
   public readonly isAuthenticated = this.authService.isAuthenticated;
@@ -349,6 +354,20 @@ export class ProductDetailComponent {
    *
    * @returns {void}
    */
+  public addReviewImage(url: string): void {
+    this.reviewImages.update(images => images.length < 3 ? [...images, url] : images);
+  }
+
+  /**
+   * Quita una imagen de la reseña.
+   *
+   * @param index posición de la imagen.
+   * @returns {void}
+   */
+  public removeReviewImage(index: number): void {
+    this.reviewImages.update(images => images.filter((_, position) => position !== index));
+  }
+
   public submitReview(): void {
     const prod = this.product();
     this.submitted.set(true);
@@ -364,11 +383,12 @@ export class ProductDetailComponent {
 
     const { rating, comment } = this.reviewForm.getRawValue();
 
-    this.reviewService.createReview(prod.id, { rating, comment }).subscribe({
+    this.reviewService.createReview(prod.id, { rating, comment, images: this.reviewImages() }).subscribe({
       next: () => {
         this.successMessage.set('¡Gracias! Tu reseña se ha publicado correctamente.');
         this.submitted.set(false);
         this.formRating.set(0);
+        this.reviewImages.set([]);
         this.reviewForm.reset({ rating: 0, comment: '' });
         this.loadReviews(prod.id);
         this.loadEligibility(prod.id);

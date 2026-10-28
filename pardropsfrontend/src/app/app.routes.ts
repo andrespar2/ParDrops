@@ -164,6 +164,11 @@ export const routes: Routes = [
         title: 'ParDrops - Plantillas de correo'
       },
       {
+        path: 'resenas',
+        loadComponent: () => import('./pages/admin-reviews/admin-reviews.component').then(m => m.AdminReviewsComponent),
+        title: 'ParDrops - Reseñas'
+      },
+      {
         path: 'notificaciones',
         loadComponent: () => import('./pages/notifications/notifications.component').then(m => m.NotificationsComponent),
         title: 'ParDrops - Notificaciones del panel'

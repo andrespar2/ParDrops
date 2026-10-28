@@ -5,6 +5,7 @@ import com.pardorps.pardrops.dto.ProductReviewResponse;
 import com.pardorps.pardrops.dto.ReviewEligibilityResponse;
 import com.pardorps.pardrops.exception.ApiException;
 import com.pardorps.pardrops.model.OrderStatus;
+import com.pardorps.pardrops.model.AuditAction;
 import com.pardorps.pardrops.model.Product;
 import com.pardorps.pardrops.model.ProductReview;
 import com.pardorps.pardrops.model.Role;
@@ -24,6 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -40,8 +43,9 @@ class ProductReviewServiceTest {
             mock(ProductReviewRepository.class);
     private final ProductRepository productRepository = mock(ProductRepository.class);
     private final OrderRepository orderRepository = mock(OrderRepository.class);
+    private final AuditLogService auditLogService = mock(AuditLogService.class);
     private final ProductReviewService productReviewService = new ProductReviewService(
-            productReviewRepository, productRepository, orderRepository);
+            productReviewRepository, productRepository, orderRepository, auditLogService);
 
     @Test
     @DisplayName("Publica la reseña cuando el producto fue entregado y actualiza su valoración")
@@ -171,6 +175,31 @@ class ProductReviewServiceTest {
         assertFalse(eligibility.hasReviewed());
         verify(orderRepository, never()).existsByUserIdAndItemsProductIdAndStatus(
                 any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("El administrador elimina una reseña y recalcula la valoración")
+    void adminDeletesReviewAndRecalculatesRating() {
+        Product product = product();
+        User admin = user(9L);
+        ProductReview review = new ProductReview();
+        review.setId(5L);
+        review.setProduct(product);
+        review.setUser(user(1L));
+        review.setRating(5);
+        review.setComment("Muy buena");
+
+        when(productReviewRepository.findById(5L)).thenReturn(Optional.of(review));
+        when(productReviewRepository.countByProductId(PRODUCT_ID)).thenReturn(0L);
+        when(productReviewRepository.averageRatingByProductId(PRODUCT_ID)).thenReturn(null);
+
+        productReviewService.deleteReview(admin, 5L);
+
+        verify(productReviewRepository).delete(review);
+        verify(productRepository).save(product);
+        verify(auditLogService).record(
+                eq(admin), eq(AuditAction.REVIEW_DELETED),
+                eq("PRODUCT_REVIEW"), eq("5"), anyString());
     }
 
     /**

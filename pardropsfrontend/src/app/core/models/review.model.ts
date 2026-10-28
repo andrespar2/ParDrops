@@ -20,6 +20,8 @@ export interface ProductReview {
   comment: string;
   /** Nombre visible del autor de la reseña. */
   customerName: string;
+  /** URLs de las imágenes adjuntas. */
+  images?: string[];
   /** Fecha de publicación (ISO 8601). */
   createdAt: string;
 }
@@ -46,4 +48,6 @@ export interface CreateReviewRequest {
   rating: number;
   /** Comentario sobre la experiencia. */
   comment: string;
+  /** URLs de hasta tres imágenes. */
+  images?: string[];
 }

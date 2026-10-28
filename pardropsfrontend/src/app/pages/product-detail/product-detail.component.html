@@ -267,6 +267,13 @@
                 </div>
                 <app-star-rating [rating]="review.rating" size="sm" />
                 <p class="review__comment">{{ review.comment }}</p>
+                @if (review.images?.length) {
+                  <div class="review__images">
+                    @for (image of review.images; track image) {
+                      <img [src]="image" alt="Imagen de la reseña" class="review__image" />
+                    }
+                  </div>
+                }
               </li>
             }
           </ul>
@@ -331,6 +338,23 @@
                   reviewForm.controls.comment.invalid
                 ) {
                   <span class="field__error">Escribe un comentario sobre el producto.</span>
+                }
+              </div>
+
+              <div class="field">
+                <span class="field__label">Fotos (opcional, máximo 3)</span>
+                <app-image-uploader (imageUploaded)="addReviewImage($event)" />
+                @if (reviewImages().length) {
+                  <div class="review-form__images">
+                    @for (image of reviewImages(); track image; let i = $index) {
+                      <div class="review-form__image">
+                        <img [src]="image" alt="Imagen adjunta" />
+                        <button type="button" class="review-form__remove" (click)="removeReviewImage(i)">
+                          Quitar
+                        </button>
+                      </div>
+                    }
+                  </div>
                 }
               </div>
 

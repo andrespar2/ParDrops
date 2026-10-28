@@ -159,6 +159,21 @@
   color: var(--color-text-secondary);
 }
 
+.store-review__images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+
+  img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+  }
+}
+
 @media (max-width: 640px) {
   .store-header__body {
     flex-direction: column;

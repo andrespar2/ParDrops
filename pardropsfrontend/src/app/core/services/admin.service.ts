@@ -19,6 +19,7 @@ import {
   AdminCategory,
   AdminDashboard,
   AdminProduct,
+  AdminReview,
   AdminSeller,
   AdminUser,
   AdminUserDetail,
@@ -316,6 +317,29 @@ export class AdminService {
       `${API_BASE_URL}/seller-applications/${id}/decision`,
       decision
     );
+  }
+
+  // ------------------------------------------------------------------
+  // Moderación de reseñas.
+  // ------------------------------------------------------------------
+
+  /**
+   * Lista todas las reseñas para su moderación.
+   *
+   * @returns observable con las reseñas.
+   */
+  public listReviews(): Observable<AdminReview[]> {
+    return this.http.get<AdminReview[]>(`${this.adminUrl}/reviews`);
+  }
+
+  /**
+   * Elimina una reseña.
+   *
+   * @param id identificador de la reseña.
+   * @returns observable vacío.
+   */
+  public deleteReview(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.adminUrl}/reviews/${id}`);
   }
 
   // ------------------------------------------------------------------

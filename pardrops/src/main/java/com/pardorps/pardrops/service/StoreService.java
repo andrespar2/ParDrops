@@ -250,7 +250,9 @@ public class StoreService {
         if (store.getStatus() != StoreStatus.ACTIVE || store.getSeller() == null) {
             throw ApiException.notFound("Tienda no encontrada: " + slug);
         }
-        return reviewRepository.findTop20ByProductSellerIdOrderByCreatedAtDesc(store.getSeller().getId())
+        return reviewRepository.findRecentBySellerId(
+                        store.getSeller().getId(),
+                        org.springframework.data.domain.PageRequest.of(0, 20))
                 .stream()
                 .map(this::toReviewResponse)
                 .toList();
@@ -262,6 +264,7 @@ public class StoreService {
                 review.getRating(),
                 review.getComment(),
                 review.getUser() != null ? review.getUser().getFullName() : "Cliente",
+                review.getImages() == null ? List.of() : List.copyOf(review.getImages()),
                 review.getCreatedAt()
         );
     }

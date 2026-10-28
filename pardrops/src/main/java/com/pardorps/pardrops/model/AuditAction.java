@@ -52,5 +52,8 @@ public enum AuditAction {
     EMAIL_TEMPLATE_UPDATED,
 
     /** Plantilla de correo restaurada a sus valores predeterminados. */
-    EMAIL_TEMPLATE_RESET
+    EMAIL_TEMPLATE_RESET,
+
+    /** Reseña eliminada por el administrador. */
+    REVIEW_DELETED
 }

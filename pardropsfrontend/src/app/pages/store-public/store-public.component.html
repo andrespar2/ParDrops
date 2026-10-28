@@ -104,6 +104,13 @@
                   <time class="store-review__date">{{ review.createdAt | date: 'dd/MM/yyyy' }}</time>
                 </header>
                 <p class="store-review__comment">{{ review.comment }}</p>
+                @if (review.images?.length) {
+                  <div class="store-review__images">
+                    @for (image of review.images; track image) {
+                      <img [src]="image" alt="Imagen de la reseña" />
+                    }
+                  </div>
+                }
               </article>
             }
           </div>

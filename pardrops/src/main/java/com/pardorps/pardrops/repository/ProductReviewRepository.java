@@ -61,15 +61,20 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, Lo
      * @param sellerId identificador del vendedor.
      * @return número de reseñas.
      */
-    long countByProductSellerId(Long sellerId);
+    @Query("select count(r) from ProductReview r where r.product.seller.id = :sellerId")
+    long countByProductSellerId(@Param("sellerId") Long sellerId);
 
     /**
      * Devuelve las reseñas más recientes de los productos de un vendedor.
      *
      * @param sellerId identificador del vendedor.
-     * @return hasta 20 reseñas ordenadas por fecha descendente.
+     * @param pageable límite de resultados.
+     * @return reseñas ordenadas por fecha descendente.
      */
-    List<ProductReview> findTop20ByProductSellerIdOrderByCreatedAtDesc(Long sellerId);
+    @Query("select r from ProductReview r where r.product.seller.id = :sellerId order by r.createdAt desc")
+    List<ProductReview> findRecentBySellerId(
+            @Param("sellerId") Long sellerId,
+            org.springframework.data.domain.Pageable pageable);
 
     /**
      * Elimina todas las reseñas de un producto.

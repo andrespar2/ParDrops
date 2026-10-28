@@ -384,6 +384,30 @@ export interface AuditLog {
 }
 
 /**
+ * Reseña vista por el administrador para su moderación.
+ *
+ * @interface AdminReview
+ */
+export interface AdminReview {
+  /** Identificador. */
+  id: number;
+  /** Producto reseñado. */
+  productId: string;
+  /** Nombre del producto. */
+  productName: string;
+  /** Estrellas. */
+  rating: number;
+  /** Comentario. */
+  comment: string;
+  /** Autor. */
+  customerName: string;
+  /** Imágenes adjuntas. */
+  images: string[];
+  /** Fecha. */
+  createdAt: string;
+}
+
+/**
  * Códigos de las plantillas de correo.
  *
  * @type EmailTemplateCode

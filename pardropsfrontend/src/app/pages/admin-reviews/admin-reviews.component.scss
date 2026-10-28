@@ -1,0 +1,63 @@
+/**
+ * @file src/app/pages/admin-reviews/admin-reviews.component.scss
+ * @description Estilos de la moderación de reseñas.
+ */
+
+@use '../admin/admin-shared';
+
+.review-admin__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.review-admin {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+}
+
+.review-admin__header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.review-admin__author {
+  margin-left: var(--space-2);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.review-admin__date {
+  margin-left: auto;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.review-admin__comment {
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.review-admin__images {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+
+  img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+  }
+}
+
+.review-admin__actions {
+  margin-top: var(--space-3);
+}

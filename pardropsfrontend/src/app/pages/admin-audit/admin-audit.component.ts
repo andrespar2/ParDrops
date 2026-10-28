@@ -75,6 +75,7 @@ export class AdminAuditComponent {
       PRODUCT_HIDDEN: 'Producto oculto',
       PRODUCT_PUBLISHED: 'Producto publicado',
       PRODUCT_DELETED: 'Producto eliminado',
+      REVIEW_DELETED: 'Reseña eliminada',
       CATEGORY_CREATED: 'Categoría creada',
       CATEGORY_UPDATED: 'Categoría actualizada',
       CATEGORY_DELETED: 'Categoría eliminada',

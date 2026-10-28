@@ -7,6 +7,7 @@ import com.pardorps.pardrops.dto.OrderResponse;
 import com.pardorps.pardrops.dto.OrderSubOrderResponse;
 import com.pardorps.pardrops.exception.ApiException;
 import com.pardorps.pardrops.model.NotificationType;
+import com.pardorps.pardrops.model.FundsStatus;
 import com.pardorps.pardrops.model.Order;
 import com.pardorps.pardrops.model.OrderItem;
 import com.pardorps.pardrops.model.OrderStatus;
@@ -18,6 +19,7 @@ import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.repository.OrderRepository;
 import com.pardorps.pardrops.repository.ProductRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,6 +60,8 @@ public class OrderService {
     private final StoreRepository storeRepository;
     private final NotificationService notificationService;
     private final OrderEmailService orderEmailService;
+    private final SellerBalanceService sellerBalanceService;
+    private final double commissionRate;
 
     /**
      * @param orderRepository      acceso a los pedidos.
@@ -65,19 +69,25 @@ public class OrderService {
      * @param storeRepository      acceso a las tiendas para nombrar cada parte.
      * @param notificationService  avisos dentro de la aplicación.
      * @param orderEmailService    correos del ciclo del pedido.
+     * @param sellerBalanceService saldos y comisiones de los vendedores.
+     * @param commissionRate       comisión de la plataforma.
      */
     public OrderService(
             OrderRepository orderRepository,
             ProductRepository productRepository,
             StoreRepository storeRepository,
             NotificationService notificationService,
-            OrderEmailService orderEmailService
+            OrderEmailService orderEmailService,
+            SellerBalanceService sellerBalanceService,
+            @Value("${app.marketplace.commission-rate:0.05}") double commissionRate
     ) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.storeRepository = storeRepository;
         this.notificationService = notificationService;
         this.orderEmailService = orderEmailService;
+        this.sellerBalanceService = sellerBalanceService;
+        this.commissionRate = commissionRate;
     }
 
     /**
@@ -159,6 +169,9 @@ public class OrderService {
         notifySellers(saved);
         notifyCustomer(saved, user);
         orderEmailService.sendNewOrderToSellers(saved);
+        for (OrderSubOrder subOrder : saved.getSubOrders()) {
+            sellerBalanceService.hold(subOrder);
+        }
 
         return toResponse(saved);
     }
@@ -243,6 +256,12 @@ public class OrderService {
 
             subOrder.setShipping(shipping);
             subOrder.setTotal(round(subOrder.getSubtotal() + tax + shipping));
+
+            double commission = round(subOrder.getSubtotal() * commissionRate);
+            subOrder.setCommissionRate(commissionRate);
+            subOrder.setCommissionAmount(commission);
+            subOrder.setSellerNetAmount(round(subOrder.getTotal() - commission));
+            subOrder.setFundsStatus(FundsStatus.HELD);
 
             distributedTax += tax;
             distributedShipping += shipping;
@@ -362,6 +381,11 @@ public class OrderService {
         for (OrderSubOrder subOrder : order.getSubOrders()) {
             if (!subOrder.getStatus().isTerminal()) {
                 subOrder.setStatus(newStatus);
+                if (newStatus == OrderStatus.DELIVERED) {
+                    sellerBalanceService.release(subOrder);
+                } else if (newStatus == OrderStatus.CANCELLED) {
+                    sellerBalanceService.cancel(subOrder);
+                }
             }
         }
 

@@ -44,6 +44,26 @@ class GoogleSchemaMigrationTest {
     }
 
     @Test
+    @DisplayName("La auditoría admite las acciones del acceso con Google")
+    void auditEnumAcceptsGoogleActions() {
+        jdbcTemplate.update("DELETE FROM audit_logs");
+        jdbcTemplate.execute(
+                "ALTER TABLE audit_logs ALTER COLUMN action ENUM('USER_SUSPENDED')");
+
+        migration.run();
+
+        jdbcTemplate.update("""
+                INSERT INTO audit_logs (action, entity_type, entity_id, details, created_at)
+                VALUES ('GOOGLE_ACCOUNT_CREATED', 'USER', '1', 'Prueba', CURRENT_TIMESTAMP)
+                """);
+
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM audit_logs WHERE action = 'GOOGLE_ACCOUNT_CREATED'",
+                Integer.class);
+        assertTrue(count != null && count == 1);
+    }
+
+    @Test
     @DisplayName("La migración se puede ejecutar varias veces sin errores")
     void isIdempotent() {
         migration.run();

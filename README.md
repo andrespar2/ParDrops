@@ -626,6 +626,7 @@ El acceso con Google añade dos rutas fuera de `/api`:
 | Método | Endpoint | Acceso |
 |---|---|---|
 | `GET` | `/products` | Público |
+| `GET` | `/products/highlights` | Público |
 | `GET` | `/products/{slug}` | Público |
 | `POST` | `/products/...` | ADMIN |
 | `PUT` | `/products/...` | ADMIN |
@@ -639,6 +640,7 @@ El acceso con Google añade dos rutas fuera de `/api`:
 | `GET` | `/stores` | Público |
 | `GET` | `/stores/{slug}` | Público |
 | `GET` | `/stores/{slug}/products` | Público |
+| `GET` | `/stores/{slug}/reviews` | Público |
 | `GET` | `/stores/mine` | SELLER |
 | `PUT` | `/stores/mine` | SELLER |
 | `POST` | `/seller-applications` | Autenticado (CUSTOMER) |
@@ -687,6 +689,13 @@ El acceso con Google añade dos rutas fuera de `/api`:
 | `PUT` | `/admin/email-templates/{code}` | ADMIN |
 | `POST` | `/admin/email-templates/{code}/reset` | ADMIN |
 | `POST` | `/admin/email-templates/{code}/preview` | ADMIN |
+
+## 🛡️ Moderación de reseñas
+
+| Método | Endpoint | Acceso |
+|---|---|---|
+| `GET` | `/admin/reviews` | ADMIN |
+| `DELETE` | `/admin/reviews/{id}` | ADMIN |
 
 <details>
 <summary><b>🧪 Ejemplos de peticiones HTTP</b></summary>
@@ -803,6 +812,26 @@ http://localhost:4200/admin/plantillas-correo
 
 La guía completa, las variables, los placeholders y la solución de problemas
 están en [`docs/correo.md`](docs/correo.md).
+
+### Comisiones, tienda y catálogo
+
+- **Comisión:** ParDrops descuenta el **5% del subtotal de productos** de cada
+  venta. El neto queda retenido hasta que la parte del pedido se entrega; en ese
+  momento pasa al saldo disponible del vendedor. Si se cancela antes de la
+  entrega, la retención se anula.
+- **Tienda:** el perfil público muestra solo los datos comerciales (nombre,
+  descripción, logo, portada, contacto público y ciudad). El nombre legal, el
+  documento, la dirección y el teléfono personal solo los ve el administrador.
+- **Variantes:** cada producto puede tener versiones con talla, color, precio,
+  stock, SKU e imagen. La ficha muestra todas y actualiza precio y stock al
+  elegir.
+- **Reseñas:** los clientes pueden adjuntar hasta tres imágenes. El
+  administrador modera y elimina reseñas desde `/admin/resenas`, recalculando la
+  valoración.
+- **Portada:** se muestran los productos más vendidos y los mejor valorados.
+
+La guía completa está en
+[`docs/comisiones-y-tienda.md`](docs/comisiones-y-tienda.md).
 
 ---
 

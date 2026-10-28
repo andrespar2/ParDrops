@@ -17,12 +17,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { StoreService } from '../../core/services/store.service';
 import { Store } from '../../core/models/store.model';
 import { Product } from '../../core/models/product.model';
+import { ProductReview } from '../../core/models/review.model';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
+import { StarRatingComponent } from '../../shared/components/star-rating/star-rating.component';
 
 @Component({
   selector: 'app-store-public',
   standalone: true,
-  imports: [CommonModule, RouterLink, ProductCardComponent],
+  imports: [CommonModule, RouterLink, ProductCardComponent, StarRatingComponent],
   templateUrl: './store-public.component.html',
   styleUrls: ['./store-public.component.scss']
 })
@@ -35,6 +37,12 @@ export class StorePublicComponent {
 
   /** Productos publicados de la tienda. */
   public readonly products = signal<Product[]>([]);
+
+  /** Reseñas recientes de los productos de la tienda. */
+  public readonly reviews = signal<ProductReview[]>([]);
+
+  /** Indica si las reseñas se están cargando. */
+  public readonly reviewsLoading = signal<boolean>(false);
 
   /** Indica si la página está cargándose. */
   public readonly loading = signal<boolean>(true);
@@ -66,11 +74,13 @@ export class StorePublicComponent {
     this.errorMessage.set(null);
     this.store.set(null);
     this.products.set([]);
+    this.reviews.set([]);
 
     this.storeService.getBySlug(slug).subscribe({
       next: store => {
         this.store.set(store);
         this.loadProducts(slug);
+        this.loadReviews(slug);
       },
       error: (error: HttpErrorResponse) => {
         if (error.status === 404) {
@@ -99,6 +109,26 @@ export class StorePublicComponent {
       error: () => {
         this.products.set([]);
         this.loading.set(false);
+      }
+    });
+  }
+
+  /**
+   * Carga las reseñas recientes de la tienda.
+   *
+   * @param slug slug público de la tienda.
+   * @returns {void}
+   */
+  private loadReviews(slug: string): void {
+    this.reviewsLoading.set(true);
+    this.storeService.getReviews(slug).subscribe({
+      next: reviews => {
+        this.reviews.set(reviews);
+        this.reviewsLoading.set(false);
+      },
+      error: () => {
+        this.reviews.set([]);
+        this.reviewsLoading.set(false);
       }
     });
   }

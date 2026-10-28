@@ -15,15 +15,16 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SellerService } from '../../core/services/seller.service';
-import { Product, ProductImage } from '../../core/models/product.model';
+import { Product, ProductImage, ProductVariant } from '../../core/models/product.model';
 import { ProductRequest } from '../../core/models/product-request.model';
 import { ImageUploaderComponent } from '../../shared/components/image-uploader/image-uploader.component';
+import { VariantEditorComponent } from '../../shared/components/variant-editor/variant-editor.component';
 import { formatCurrency } from '../../core/config/commerce.config';
 
 @Component({
   selector: 'app-seller-products',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ImageUploaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, ImageUploaderComponent, VariantEditorComponent],
   templateUrl: './seller-products.component.html',
   styleUrls: ['./seller-products.component.scss']
 })
@@ -57,6 +58,9 @@ export class SellerProductsComponent {
 
   /** URLs de las imágenes del producto en edición. */
   public readonly imageUrls = signal<string[]>([]);
+
+  /** Variantes del producto en edición. */
+  public readonly variants = signal<ProductVariant[]>([]);
 
   /** Formulario de alta y edición. */
   public readonly form = this.fb.nonNullable.group({
@@ -111,6 +115,7 @@ export class SellerProductsComponent {
   public startCreate(): void {
     this.editingId.set(null);
     this.imageUrls.set([]);
+    this.variants.set([]);
     this.submitted.set(false);
     this.errorMessage.set(null);
     this.successMessage.set(null);
@@ -140,6 +145,7 @@ export class SellerProductsComponent {
   public startEdit(product: Product): void {
     this.editingId.set(product.id);
     this.imageUrls.set(product.images?.map(image => image.url) ?? []);
+    this.variants.set(product.variants ?? []);
     this.submitted.set(false);
     this.errorMessage.set(null);
     this.successMessage.set(null);
@@ -169,6 +175,7 @@ export class SellerProductsComponent {
     this.formOpen.set(false);
     this.editingId.set(null);
     this.imageUrls.set([]);
+    this.variants.set([]);
   }
 
   /**
@@ -247,6 +254,7 @@ export class SellerProductsComponent {
       categories: this.splitList(value.categories),
       tags: this.splitList(value.tags),
       stock: Number(value.stock),
+      variants: this.variants(),
       isNew: value.isNew,
       isFeatured: value.isFeatured,
       onSale: value.onSale

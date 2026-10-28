@@ -202,6 +202,9 @@ public class OrderEmailService {
             return null;
         }
         Store store = storeRepository.findBySellerId(seller.getId()).orElse(null);
+        if (store != null && isValidEmail(store.getNotificationEmail())) {
+            return store.getNotificationEmail().trim();
+        }
         if (store != null && isValidEmail(store.getContactEmail())) {
             return store.getContactEmail().trim();
         }

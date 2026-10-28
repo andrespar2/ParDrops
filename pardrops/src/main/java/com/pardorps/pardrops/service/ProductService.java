@@ -2,10 +2,12 @@ package com.pardorps.pardrops.service;
 
 import com.pardorps.pardrops.dto.AdminProductResponse;
 import com.pardorps.pardrops.dto.PageResponse;
+import com.pardorps.pardrops.dto.ProductHighlightsResponse;
 import com.pardorps.pardrops.dto.ProductRequest;
 import com.pardorps.pardrops.exception.ApiException;
 import com.pardorps.pardrops.model.AuditAction;
 import com.pardorps.pardrops.model.NotificationType;
+import com.pardorps.pardrops.model.OrderStatus;
 import com.pardorps.pardrops.model.Product;
 import com.pardorps.pardrops.model.ProductImage;
 import com.pardorps.pardrops.model.ProductVariant;
@@ -13,6 +15,7 @@ import com.pardorps.pardrops.model.Role;
 import com.pardorps.pardrops.model.Store;
 import com.pardorps.pardrops.model.StoreStatus;
 import com.pardorps.pardrops.model.User;
+import com.pardorps.pardrops.repository.OrderItemRepository;
 import com.pardorps.pardrops.repository.ProductRepository;
 import com.pardorps.pardrops.repository.ProductReviewRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
@@ -48,6 +51,7 @@ public class ProductService {
     private final CategoryService categoryService;
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
+    private final OrderItemRepository orderItemRepository;
 
     /**
      * @param productRepository      acceso a los productos.
@@ -56,6 +60,7 @@ public class ProductService {
      * @param categoryService        validación de categorías asignables.
      * @param auditLogService        bitácora de auditoría.
      * @param notificationService    avisos dentro de la aplicación.
+     * @param orderItemRepository    líneas vendidas para los rankings.
      */
     public ProductService(
             ProductRepository productRepository,
@@ -63,7 +68,8 @@ public class ProductService {
             StoreRepository storeRepository,
             CategoryService categoryService,
             AuditLogService auditLogService,
-            NotificationService notificationService
+            NotificationService notificationService,
+            OrderItemRepository orderItemRepository
     ) {
         this.productRepository = productRepository;
         this.productReviewRepository = productReviewRepository;
@@ -71,6 +77,49 @@ public class ProductService {
         this.categoryService = categoryService;
         this.auditLogService = auditLogService;
         this.notificationService = notificationService;
+        this.orderItemRepository = orderItemRepository;
+    }
+
+    /**
+     * Devuelve los rankings de la portada.
+     *
+     * @return más vendidos y mejor valorados.
+     */
+    @Transactional(readOnly = true)
+    public ProductHighlightsResponse highlights() {
+        List<Object[]> rows = orderItemRepository.findBestSellingProductIds(
+                OrderStatus.CANCELLED, PageRequest.of(0, 8));
+        List<String> ids = rows.stream()
+                .map(row -> (String) row[0])
+                .toList();
+        Map<String, Product> byId = productRepository.findByIdIn(ids).stream()
+                .collect(java.util.stream.Collectors.toMap(Product::getId, product -> product));
+        List<Product> bestSellers = ids.stream()
+                .map(byId::get)
+                .filter(java.util.Objects::nonNull)
+                .filter(this::isAvailable)
+                .toList();
+
+        List<Product> topRated = productRepository.findTopRated(PageRequest.of(0, 8))
+                .stream()
+                .filter(this::isAvailable)
+                .toList();
+
+        enrich(bestSellers);
+        enrich(topRated);
+        return new ProductHighlightsResponse(bestSellers, topRated);
+    }
+
+    /** Indica si el producto se puede comprar. */
+    private boolean isAvailable(Product product) {
+        if (!product.isActive()) {
+            return false;
+        }
+        if (product.getStock() > 0) {
+            return true;
+        }
+        return product.getVariants() != null && product.getVariants().stream()
+                .anyMatch(variant -> variant.getStock() != null && variant.getStock() > 0);
     }
 
     /**
@@ -397,11 +446,18 @@ public class ProductService {
             return;
         }
 
-        Map<Long, String> storeSlugs = storeRepository.findAll().stream()
+        List<Store> stores = storeRepository.findAll().stream()
                 .filter(store -> store.getSeller() != null)
+                .toList();
+        Map<Long, String> storeSlugs = stores.stream()
                 .collect(Collectors.toMap(
                         store -> store.getSeller().getId(),
                         Store::getSlug,
+                        (first, second) -> first));
+        Map<Long, String> storeNames = stores.stream()
+                .collect(Collectors.toMap(
+                        store -> store.getSeller().getId(),
+                        Store::getName,
                         (first, second) -> first));
 
         for (Product product : products) {
@@ -413,7 +469,7 @@ public class ProductService {
                 continue;
             }
             product.setSellerId(seller.getId());
-            product.setSellerName(seller.getFullName());
+            product.setSellerName(storeNames.getOrDefault(seller.getId(), "ParDrops"));
             product.setStoreSlug(storeSlugs.get(seller.getId()));
         }
     }
@@ -464,15 +520,18 @@ public class ProductService {
             product.getTags().addAll(new ArrayList<>(request.tags()));
         }
 
-        product.getVariants().clear();
         if (request.variants() != null) {
+            product.getVariants().clear();
             for (ProductVariant variant : request.variants()) {
                 product.getVariants().add(new ProductVariant(
                         variant.getId(),
                         variant.getName(),
                         variant.getPrice(),
                         variant.getStock(),
-                        variant.getSku()
+                        variant.getSku(),
+                        variant.getSize(),
+                        variant.getColor(),
+                        variant.getImageUrl()
                 ));
             }
         }

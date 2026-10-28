@@ -7,7 +7,9 @@ import com.pardorps.pardrops.exception.ApiException;
 import com.pardorps.pardrops.model.NotificationType;
 import com.pardorps.pardrops.model.Order;
 import com.pardorps.pardrops.model.OrderStatus;
+import com.pardorps.pardrops.model.OrderSubOrder;
 import com.pardorps.pardrops.model.Product;
+import com.pardorps.pardrops.model.ProductVariant;
 import com.pardorps.pardrops.model.Role;
 import com.pardorps.pardrops.model.Store;
 import com.pardorps.pardrops.model.StoreStatus;
@@ -46,13 +48,16 @@ class OrderServiceTest {
     private final StoreRepository storeRepository = mock(StoreRepository.class);
     private final NotificationService notificationService = mock(NotificationService.class);
     private final OrderEmailService orderEmailService = mock(OrderEmailService.class);
+    private final SellerBalanceService sellerBalanceService = mock(SellerBalanceService.class);
 
     private final OrderService orderService = new OrderService(
             orderRepository,
             productRepository,
             storeRepository,
             notificationService,
-            orderEmailService
+            orderEmailService,
+            sellerBalanceService,
+            0.05
     );
 
     @Test
@@ -364,6 +369,64 @@ class OrderServiceTest {
         verify(orderEmailService).sendStatusUpdate(order);
         verify(notificationService).notify(
                 eq(customer), eq(NotificationType.ORDER), any(), any(), eq("/cuenta"));
+    }
+
+    @Test
+    @DisplayName("Calcula la comisión y retiene el saldo del vendedor")
+    void calculatesCommissionAndHoldsFunds() {
+        User seller = seller(3L, "Tienda Comisión");
+        Product product = product("prod-c", "Gorra", 100_000.0, 10, seller);
+        when(productRepository.findById("prod-c")).thenReturn(Optional.of(product));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        orderService.createOrder(request(List.of(item("prod-c", 1))), customer(9L));
+
+        org.mockito.ArgumentCaptor<Order> captor =
+                org.mockito.ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(captor.capture());
+        OrderSubOrder subOrder = captor.getValue().getSubOrders().get(0);
+
+        assertEquals(0.05, subOrder.getCommissionRate());
+        assertEquals(5_000.0, subOrder.getCommissionAmount());
+        assertEquals(139_900.0, subOrder.getSellerNetAmount());
+        assertEquals(com.pardorps.pardrops.model.FundsStatus.HELD, subOrder.getFundsStatus());
+        verify(sellerBalanceService).hold(subOrder);
+    }
+
+    @Test
+    @DisplayName("Usa el precio y el stock de la variante elegida")
+    void usesVariantPriceAndStock() {
+        User seller = seller(4L, "Tienda Variantes");
+        Product product = product("prod-v", "Camiseta", 100_000.0, 10, seller);
+        product.getVariants().add(new ProductVariant(
+                "v-m", "Talla M", 120_000.0, 2, "SKU-M", "M", null, null));
+        when(productRepository.findById("prod-v")).thenReturn(Optional.of(product));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        OrderResponse response = orderService.createOrder(
+                request(List.of(new OrderItemRequest("prod-v", null, "v-m", null, 1))),
+                customer(9L));
+
+        assertEquals(120_000.0, response.items().get(0).unitPrice());
+        assertEquals(1, product.getVariants().get(0).getStock());
+        assertEquals(9, product.getStock());
+    }
+
+    @Test
+    @DisplayName("Rechaza la compra si la variante no tiene stock")
+    void rejectsOutOfStockVariant() {
+        User seller = seller(5L, "Tienda Variantes");
+        Product product = product("prod-v2", "Camiseta", 100_000.0, 10, seller);
+        product.getVariants().add(new ProductVariant(
+                "v-s", "Talla S", 100_000.0, 1, "SKU-S", "S", null, null));
+        when(productRepository.findById("prod-v2")).thenReturn(Optional.of(product));
+
+        ApiException error = assertThrows(ApiException.class,
+                () -> orderService.createOrder(
+                        request(List.of(new OrderItemRequest("prod-v2", null, "v-s", null, 2))),
+                        customer(9L)));
+
+        assertEquals(HttpStatus.CONFLICT, error.getStatus());
     }
 
     /**

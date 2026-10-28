@@ -176,4 +176,25 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     @Query("select count(distinct p) from Product p join p.categories c "
             + "where lower(c) = lower(:name)")
     long countByCategory(@Param("name") String name);
+
+    /**
+     * Productos mejor valorados con al menos una reseña.
+     *
+     * @param pageable límite de resultados.
+     * @return productos ordenados por media y número de reseñas.
+     */
+    @Query("""
+            select p from Product p
+            where p.active = true and p.reviewCount > 0
+            order by p.rating desc, p.reviewCount desc
+            """)
+    List<Product> findTopRated(Pageable pageable);
+
+    /**
+     * Busca productos por una colección de identificadores.
+     *
+     * @param ids identificadores.
+     * @return productos encontrados.
+     */
+    List<Product> findByIdIn(java.util.Collection<String> ids);
 }

@@ -37,12 +37,14 @@ class SellerOrderServiceTest {
     private final OrderRepository orderRepository = mock(OrderRepository.class);
     private final NotificationService notificationService = mock(NotificationService.class);
     private final OrderEmailService orderEmailService = mock(OrderEmailService.class);
+    private final SellerBalanceService sellerBalanceService = mock(SellerBalanceService.class);
 
     private final SellerOrderService service = new SellerOrderService(
             subOrderRepository,
             orderRepository,
             notificationService,
-            orderEmailService
+            orderEmailService,
+            sellerBalanceService
     );
 
     @Test
@@ -190,6 +192,40 @@ class SellerOrderServiceTest {
         service.updateStatus(seller, 11L, OrderStatus.PAID);
 
         verify(orderEmailService).sendPaymentReceipt(order, mine);
+    }
+
+    @Test
+    @DisplayName("Libera el saldo cuando el vendedor entrega su parte")
+    void releasesFundsWhenDelivered() {
+        User seller = seller(1L);
+        Order order = order(102L);
+        OrderSubOrder mine = subOrder(12L, seller, OrderStatus.SHIPPED);
+        order.getSubOrders().add(mine);
+        mine.setOrder(order);
+
+        when(subOrderRepository.findByIdAndSellerId(12L, 1L)).thenReturn(Optional.of(mine));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.updateStatus(seller, 12L, OrderStatus.DELIVERED);
+
+        verify(sellerBalanceService).release(mine);
+    }
+
+    @Test
+    @DisplayName("Anula la retención cuando el vendedor cancela su parte")
+    void cancelsFundsWhenCancelled() {
+        User seller = seller(1L);
+        Order order = order(103L);
+        OrderSubOrder mine = subOrder(13L, seller, OrderStatus.PENDING);
+        order.getSubOrders().add(mine);
+        mine.setOrder(order);
+
+        when(subOrderRepository.findByIdAndSellerId(13L, 1L)).thenReturn(Optional.of(mine));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.updateStatus(seller, 13L, OrderStatus.CANCELLED);
+
+        verify(sellerBalanceService).cancel(mine);
     }
 
     /**

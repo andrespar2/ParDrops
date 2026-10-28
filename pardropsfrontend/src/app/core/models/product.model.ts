@@ -43,11 +43,17 @@ export interface ProductVariant {
   /** Nombre de la variante */
   name: string;
   /** Precio espec√≠fico de la variante (opcional) */
-  price?: number;
+  price?: number | null;
   /** Stock disponible para esta variante (opcional) */
-  stock?: number;
+  stock?: number | null;
   /** C√≥digo SKU de la variante (opcional) */
-  sku?: string;
+  sku?: string | null;
+  /** Talla de la variante (opcional) */
+  size?: string | null;
+  /** Color de la variante (opcional) */
+  color?: string | null;
+  /** Imagen de la variante (opcional) */
+  imageUrl?: string | null;
 }
 
 /**
@@ -127,4 +133,15 @@ export interface Product {
   createdAt?: Date;
   /** Fecha de actualizaci√≥n (opcional) */
   updatedAt?: Date;
-}
+}
+/**
+ * Rankings de la portada.
+ *
+ * @interface ProductHighlights
+ */
+export interface ProductHighlights {
+  /** Productos con m·s unidades vendidas. */
+  bestSellers: Product[];
+  /** Productos con mejor valoraciÛn. */
+  topRated: Product[];
+}

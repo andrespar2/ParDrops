@@ -218,6 +218,18 @@ describe('AdminService', () => {
     request.flush([]);
   });
 
+  it('lista y elimina reseñas desde la moderación', () => {
+    service.listReviews().subscribe();
+    const list = httpMock.expectOne(`${ADMIN}/reviews`);
+    expect(list.request.method).toBe('GET');
+    list.flush([]);
+
+    service.deleteReview(5).subscribe();
+    const remove = httpMock.expectOne(`${ADMIN}/reviews/5`);
+    expect(remove.request.method).toBe('DELETE');
+    remove.flush(null);
+  });
+
   it('lista y consulta las plantillas de correo', () => {
     service.listEmailTemplates().subscribe();
     const list = httpMock.expectOne(`${ADMIN}/email-templates`);

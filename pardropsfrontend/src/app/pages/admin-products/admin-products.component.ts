@@ -17,7 +17,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ProductService } from '../../core/services/product.service';
 import { AdminService } from '../../core/services/admin.service';
 import { ProductRequest } from '../../core/models/product-request.model';
-import { Product, ProductImage } from '../../core/models/product.model';
+import { Product, ProductImage, ProductVariant } from '../../core/models/product.model';
 import {
   AdminCategory,
   AdminProduct,
@@ -27,11 +27,12 @@ import {
 } from '../../core/models/admin.model';
 import { CURRENCY_CODE, formatCurrency } from '../../core/config/commerce.config';
 import { ImageUploaderComponent } from '../../shared/components/image-uploader/image-uploader.component';
+import { VariantEditorComponent } from '../../shared/components/variant-editor/variant-editor.component';
 
 @Component({
   selector: 'app-admin-products',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ImageUploaderComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ImageUploaderComponent, VariantEditorComponent],
   templateUrl: './admin-products.component.html',
   styleUrls: ['./admin-products.component.scss']
 })
@@ -81,6 +82,9 @@ export class AdminProductsComponent {
 
   /** Imágenes que se están editando. */
   public readonly images = signal<ProductImage[]>([]);
+
+  /** Variantes del producto en edición. */
+  public readonly variants = signal<ProductVariant[]>([]);
 
   /** Formulario con los datos principales del producto. */
   public readonly form = this.fb.group({
@@ -290,6 +294,7 @@ export class AdminProductsComponent {
   public openCreate(): void {
     this.editingId.set(null);
     this.images.set([{ url: '', alt: '', isPrimary: true }]);
+    this.variants.set([]);
     this.form.reset({
       name: '', slug: '', description: '', longDescription: '',
       price: 0, originalPrice: null, currency: CURRENCY_CODE, stock: 0,
@@ -308,6 +313,7 @@ export class AdminProductsComponent {
    */
   public openEdit(product: Product): void {
     this.editingId.set(product.id);
+    this.variants.set(product.variants ?? []);
     this.images.set(
       product.images.length > 0
         ? product.images.map(image => ({ ...image }))
@@ -456,6 +462,7 @@ export class AdminProductsComponent {
       originalPrice: raw.originalPrice === null ? null : Number(raw.originalPrice),
       currency: raw.currency || CURRENCY_CODE,
       stock: Number(raw.stock),
+      variants: this.variants(),
       rating: raw.rating === null ? null : Number(raw.rating),
       reviewCount: raw.reviewCount === null ? null : Number(raw.reviewCount),
       categories: this.parseList(raw.categoriesText),

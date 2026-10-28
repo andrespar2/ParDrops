@@ -31,6 +31,14 @@ public record AdminSellerResponse(
         String fullName,
         String email,
         String phone,
+        String legalName,
+        String documentType,
+        String documentNumber,
+        String legalAddress,
+        String taxId,
+        String city,
+        String publicEmail,
+        String publicPhone,
         UserStatus accountStatus,
         Long storeId,
         String storeName,
@@ -39,6 +47,9 @@ public record AdminSellerResponse(
         long productCount,
         long salesCount,
         double salesTotal,
+        double commissionTotal,
+        double pendingBalance,
+        double availableBalance,
         Instant createdAt
 ) {
 }

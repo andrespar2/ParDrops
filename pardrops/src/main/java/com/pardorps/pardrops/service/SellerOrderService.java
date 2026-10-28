@@ -33,23 +33,27 @@ public class SellerOrderService {
     private final OrderRepository orderRepository;
     private final NotificationService notificationService;
     private final OrderEmailService orderEmailService;
+    private final SellerBalanceService sellerBalanceService;
 
     /**
      * @param subOrderRepository acceso a las partes de los pedidos.
      * @param orderRepository    acceso a los pedidos.
      * @param notificationService avisos dentro de la aplicación.
      * @param orderEmailService  correos del ciclo del pedido.
+     * @param sellerBalanceService saldos y comisiones.
      */
     public SellerOrderService(
             OrderSubOrderRepository subOrderRepository,
             OrderRepository orderRepository,
             NotificationService notificationService,
-            OrderEmailService orderEmailService
+            OrderEmailService orderEmailService,
+            SellerBalanceService sellerBalanceService
     ) {
         this.subOrderRepository = subOrderRepository;
         this.orderRepository = orderRepository;
         this.notificationService = notificationService;
         this.orderEmailService = orderEmailService;
+        this.sellerBalanceService = sellerBalanceService;
     }
 
     /**
@@ -95,6 +99,12 @@ public class SellerOrderService {
         }
 
         subOrder.setStatus(newStatus);
+
+        if (newStatus == OrderStatus.DELIVERED) {
+            sellerBalanceService.release(subOrder);
+        } else if (newStatus == OrderStatus.CANCELLED) {
+            sellerBalanceService.cancel(subOrder);
+        }
 
         Order order = subOrder.getOrder();
         updateGlobalStatus(order);

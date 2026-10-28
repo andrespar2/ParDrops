@@ -69,13 +69,29 @@ public class Store {
     @Column(length = 500)
     private String bannerUrl;
 
-    /** Correo de contacto del vendedor. */
+    /** Correo de contacto del vendedor (uso interno y correos transaccionales). */
     @Column(length = 180)
     private String contactEmail;
 
-    /** Teléfono de contacto del vendedor. */
+    /** Teléfono de contacto del vendedor (uso interno). */
     @Column(length = 30)
     private String contactPhone;
+
+    /** Correo público de la tienda, visible para los compradores. */
+    @Column(length = 180)
+    private String publicEmail;
+
+    /** Teléfono público de la tienda, visible para los compradores. */
+    @Column(length = 30)
+    private String publicPhone;
+
+    /** Ciudad pública de la tienda. */
+    @Column(length = 120)
+    private String city;
+
+    /** Correo privado para las notificaciones de pedidos. */
+    @Column(length = 180)
+    private String notificationEmail;
 
     /** WhatsApp del vendedor, en formato internacional. */
     @Column(length = 30)

@@ -1,9 +1,11 @@
 package com.pardorps.pardrops.service;
 
 import com.pardorps.pardrops.dto.CreateReviewRequest;
+import com.pardorps.pardrops.dto.AdminReviewResponse;
 import com.pardorps.pardrops.dto.ProductReviewResponse;
 import com.pardorps.pardrops.dto.ReviewEligibilityResponse;
 import com.pardorps.pardrops.exception.ApiException;
+import com.pardorps.pardrops.model.AuditAction;
 import com.pardorps.pardrops.model.OrderStatus;
 import com.pardorps.pardrops.model.Product;
 import com.pardorps.pardrops.model.ProductReview;
@@ -32,20 +34,24 @@ public class ProductReviewService {
     private final ProductReviewRepository productReviewRepository;
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
+    private final AuditLogService auditLogService;
 
     /**
      * @param productReviewRepository acceso a las reseñas.
      * @param productRepository       acceso al catálogo (valoración media).
      * @param orderRepository         acceso a los pedidos (validación de compra).
+     * @param auditLogService         bitácora de auditoría.
      */
     public ProductReviewService(
             ProductReviewRepository productReviewRepository,
             ProductRepository productRepository,
-            OrderRepository orderRepository
+            OrderRepository orderRepository,
+            AuditLogService auditLogService
     ) {
         this.productReviewRepository = productReviewRepository;
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
+        this.auditLogService = auditLogService;
     }
 
     /**
@@ -126,6 +132,7 @@ public class ProductReviewService {
         review.setUser(user);
         review.setRating(request.rating());
         review.setComment(request.comment().trim());
+        review.setImages(validateImages(request.images()));
 
         ProductReview saved;
         try {
@@ -193,6 +200,82 @@ public class ProductReviewService {
                 review.getRating(),
                 review.getComment(),
                 review.getUser().getFullName(),
+                review.getImages() == null ? List.of() : List.copyOf(review.getImages()),
+                review.getCreatedAt()
+        );
+    }
+
+    /**
+     * Lista todas las reseñas para la moderación del administrador.
+     *
+     * @return reseñas de la más reciente a la más antigua.
+     */
+    @Transactional(readOnly = true)
+    public List<AdminReviewResponse> findAllForAdmin() {
+        return productReviewRepository.findAll(
+                        org.springframework.data.domain.Sort.by(
+                                org.springframework.data.domain.Sort.Direction.DESC, "createdAt"))
+                .stream()
+                .map(this::toAdminResponse)
+                .toList();
+    }
+
+    /**
+     * Elimina una reseña y recalcula la valoración del producto.
+     *
+     * @param admin    administrador que elimina.
+     * @param reviewId identificador de la reseña.
+     */
+    @Transactional
+    public void deleteReview(User admin, Long reviewId) {
+        ProductReview review = productReviewRepository.findById(reviewId)
+                .orElseThrow(() -> ApiException.notFound("Reseña no encontrada: " + reviewId));
+        Product product = review.getProduct();
+        String productName = product.getName();
+        productReviewRepository.delete(review);
+        refreshProductRating(product);
+        auditLogService.record(
+                admin,
+                AuditAction.REVIEW_DELETED,
+                "PRODUCT_REVIEW",
+                String.valueOf(reviewId),
+                "Reseña eliminada del producto " + productName);
+    }
+
+    /**
+     * Valida las URLs de las imágenes adjuntas.
+     *
+     * @param images URLs recibidas.
+     * @return lista normalizada.
+     */
+    private List<String> validateImages(List<String> images) {
+        if (images == null) {
+            return List.of();
+        }
+        if (images.size() > 3) {
+            throw ApiException.badRequest("Puedes adjuntar como máximo 3 imágenes");
+        }
+        return images.stream()
+                .filter(url -> url != null && !url.isBlank())
+                .map(String::trim)
+                .peek(url -> {
+                    if (!(url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/media/"))) {
+                        throw ApiException.badRequest("La URL de la imagen no es válida");
+                    }
+                })
+                .toList();
+    }
+
+    private AdminReviewResponse toAdminResponse(ProductReview review) {
+        Product product = review.getProduct();
+        return new AdminReviewResponse(
+                review.getId(),
+                product.getId(),
+                product.getName(),
+                review.getRating(),
+                review.getComment(),
+                review.getUser().getFullName(),
+                review.getImages() == null ? List.of() : List.copyOf(review.getImages()),
                 review.getCreatedAt()
         );
     }

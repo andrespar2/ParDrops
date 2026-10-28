@@ -109,6 +109,60 @@
                     formControlName="description" maxlength="2000"></textarea>
         </div>
 
+        <h3 class="admin-page__title">Datos públicos de la tienda</h3>
+        <p class="admin-page__subtitle">
+          Estos datos los verán los compradores en tu perfil de tienda.
+        </p>
+        <div class="application-form__row">
+          <div class="admin-field">
+            <label for="public-email">Correo público</label>
+            <input id="public-email" class="admin-input" type="email"
+                   formControlName="publicEmail" maxlength="180" />
+            @if (submitted() && form.controls.publicEmail.invalid) {
+              <span class="application-form__error">Introduce un correo válido.</span>
+            }
+          </div>
+          <div class="admin-field">
+            <label for="public-phone">Teléfono público</label>
+            <input id="public-phone" class="admin-input"
+                   formControlName="publicPhone" maxlength="30" />
+          </div>
+        </div>
+
+        <h3 class="admin-page__title">Datos legales (solo administrador)</h3>
+        <p class="admin-page__subtitle">
+          No se muestran en el perfil público. Se usan para validar la cuenta.
+        </p>
+        <div class="application-form__row">
+          <div class="admin-field">
+            <label for="legal-name">Nombre legal</label>
+            <input id="legal-name" class="admin-input"
+                   formControlName="legalName" maxlength="120" />
+          </div>
+          <div class="admin-field">
+            <label for="document-type">Tipo de documento</label>
+            <input id="document-type" class="admin-input"
+                   formControlName="documentType" maxlength="20" placeholder="CC / NIT" />
+          </div>
+          <div class="admin-field">
+            <label for="document-number">Número de documento</label>
+            <input id="document-number" class="admin-input"
+                   formControlName="documentNumber" maxlength="40" />
+          </div>
+        </div>
+        <div class="application-form__row">
+          <div class="admin-field">
+            <label for="legal-address">Dirección legal</label>
+            <input id="legal-address" class="admin-input"
+                   formControlName="legalAddress" maxlength="300" />
+          </div>
+          <div class="admin-field">
+            <label for="personal-phone">Teléfono personal</label>
+            <input id="personal-phone" class="admin-input"
+                   formControlName="personalPhone" maxlength="30" />
+          </div>
+        </div>
+
         <div class="admin-form__actions">
           <button type="submit" class="admin-btn admin-btn--primary" [disabled]="sending()">
             {{ sending() ? 'Enviando…' : 'Enviar solicitud' }}

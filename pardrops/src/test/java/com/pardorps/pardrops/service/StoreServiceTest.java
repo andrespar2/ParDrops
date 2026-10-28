@@ -8,6 +8,7 @@ import com.pardorps.pardrops.model.Store;
 import com.pardorps.pardrops.model.StoreStatus;
 import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.repository.ProductRepository;
+import com.pardorps.pardrops.repository.ProductReviewRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,8 +33,25 @@ class StoreServiceTest {
 
     private final StoreRepository storeRepository = mock(StoreRepository.class);
     private final ProductRepository productRepository = mock(ProductRepository.class);
+    private final ProductReviewRepository reviewRepository = mock(ProductReviewRepository.class);
 
-    private final StoreService storeService = new StoreService(storeRepository, productRepository);
+    private final StoreService storeService = new StoreService(
+            storeRepository, productRepository, reviewRepository);
+
+    @Test
+    @DisplayName("Calcula el rating y el número de reseñas de la tienda")
+    void calculatesStoreRating() {
+        User seller = user(1L);
+        Store store = store(1L, seller, "estilo-urbano", StoreStatus.ACTIVE);
+        when(storeRepository.findBySlugWithOwner("estilo-urbano")).thenReturn(Optional.of(store));
+        when(reviewRepository.averageRatingBySellerId(1L)).thenReturn(4.5);
+        when(reviewRepository.countByProductSellerId(1L)).thenReturn(8L);
+
+        StoreResponse response = storeService.findPublicBySlug("estilo-urbano");
+
+        assertEquals(4.5, response.rating());
+        assertEquals(8, response.reviewCount());
+    }
 
     @Test
     @DisplayName("Genera un slug normalizado a partir del nombre comercial")
@@ -114,12 +132,12 @@ class StoreServiceTest {
         StoreResponse response = storeService.updateOwnStore(
                 seller,
                 new StoreRequest("  Hola  ", "  ", null, " contacto@pardrops.com ",
-                        "3001112222", "  ", null, null));
+                        "3001112222", "  ", null, null, null));
 
         assertEquals("Hola", response.description());
         assertNull(response.logoUrl());
-        assertEquals("contacto@pardrops.com", response.contactEmail());
-        assertEquals("3001112222", response.contactPhone());
+        assertEquals("contacto@pardrops.com", response.publicEmail());
+        assertEquals("3001112222", response.publicPhone());
         assertNull(response.whatsapp());
         verify(storeRepository).save(store);
     }
@@ -149,7 +167,7 @@ class StoreServiceTest {
                 ApiException.class,
                 () -> storeService.updateOwnStore(
                         seller,
-                        new StoreRequest("Hola", null, null, null, null, null, null, null)));
+                        new StoreRequest("Hola", null, null, null, null, null, null, null, null)));
 
         verify(storeRepository, never()).save(any(Store.class));
     }
@@ -167,7 +185,7 @@ class StoreServiceTest {
         StoreResponse response = storeService.updateOwnStore(
                 seller,
                 new StoreRequest(null, null, null, null, null, null,
-                        "  Moda Urbana  ", "moda-urbana"));
+                        null, "  Moda Urbana  ", "moda-urbana"));
 
         assertEquals("Moda Urbana", response.name());
         assertEquals("moda-urbana", response.slug());
@@ -186,7 +204,7 @@ class StoreServiceTest {
                 ApiException.class,
                 () -> storeService.updateOwnStore(
                         seller,
-                        new StoreRequest(null, null, null, null, null, null, null, "moda-urbana")));
+                        new StoreRequest(null, null, null, null, null, null, null, null, "moda-urbana")));
 
         assertEquals(HttpStatus.CONFLICT, exception.getStatus());
         assertEquals("estilo-urbano", store.getSlug());
@@ -204,7 +222,7 @@ class StoreServiceTest {
 
         StoreResponse response = storeService.updateOwnStore(
                 seller,
-                new StoreRequest(null, null, null, null, null, null, null, "estilo-urbano"));
+                new StoreRequest(null, null, null, null, null, null, null, null, "estilo-urbano"));
 
         assertEquals("estilo-urbano", response.slug());
         verify(storeRepository, never()).existsBySlugAndIdNot(any(), any());

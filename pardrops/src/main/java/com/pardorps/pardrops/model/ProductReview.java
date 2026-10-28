@@ -1,6 +1,8 @@
 package com.pardorps.pardrops.model;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -15,6 +17,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Reseña pública que un cliente deja sobre un producto que ha comprado.
@@ -61,6 +65,14 @@ public class ProductReview {
     /** Comentario escrito por el cliente sobre su experiencia. */
     @Column(nullable = false, length = 2000)
     private String comment;
+
+    /** URLs de las imágenes adjuntas a la reseña. */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "product_review_images",
+            joinColumns = @JoinColumn(name = "review_id"))
+    @Column(name = "image_url", length = 1000)
+    private java.util.List<String> images = new java.util.ArrayList<>();
 
     /** Fecha y hora de publicación de la reseña. */
     @Column(nullable = false, updatable = false)

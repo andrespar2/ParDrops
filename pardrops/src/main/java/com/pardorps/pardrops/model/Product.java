@@ -1,5 +1,6 @@
 package com.pardorps.pardrops.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -131,6 +132,7 @@ public class Product {
     /** Vendedor propietario del producto (nulo en los productos de la tienda propia). */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id")
+    @JsonIgnore
     private User seller;
 
     /**

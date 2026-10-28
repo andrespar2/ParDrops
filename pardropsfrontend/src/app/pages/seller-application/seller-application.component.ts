@@ -62,7 +62,14 @@ export class SellerApplicationComponent {
     taxId: ['', [Validators.maxLength(40)]],
     description: ['', [Validators.maxLength(2000)]],
     phone: ['', [Validators.maxLength(30)]],
-    city: ['', [Validators.maxLength(120)]]
+    city: ['', [Validators.maxLength(120)]],
+    publicEmail: ['', [Validators.email, Validators.maxLength(180)]],
+    publicPhone: ['', [Validators.maxLength(30)]],
+    legalName: ['', [Validators.maxLength(120)]],
+    documentType: ['', [Validators.maxLength(20)]],
+    documentNumber: ['', [Validators.maxLength(40)]],
+    legalAddress: ['', [Validators.maxLength(300)]],
+    personalPhone: ['', [Validators.maxLength(30)]]
   });
 
   constructor() {
@@ -119,7 +126,14 @@ export class SellerApplicationComponent {
       taxId: value.taxId.trim() || null,
       description: value.description.trim() || null,
       phone: value.phone.trim() || null,
-      city: value.city.trim() || null
+      city: value.city.trim() || null,
+      publicEmail: value.publicEmail.trim() || null,
+      publicPhone: value.publicPhone.trim() || null,
+      legalName: value.legalName.trim() || null,
+      documentType: value.documentType.trim() || null,
+      documentNumber: value.documentNumber.trim() || null,
+      legalAddress: value.legalAddress.trim() || null,
+      personalPhone: value.personalPhone.trim() || null
     };
 
     this.sending.set(true);

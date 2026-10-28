@@ -9,12 +9,17 @@ import com.pardorps.pardrops.exception.ApiException;
 import com.pardorps.pardrops.model.AuditAction;
 import com.pardorps.pardrops.model.NotificationType;
 import com.pardorps.pardrops.model.Role;
+import com.pardorps.pardrops.model.SellerApplication;
+import com.pardorps.pardrops.model.SellerApplicationStatus;
+import com.pardorps.pardrops.model.SellerBalance;
 import com.pardorps.pardrops.model.Store;
 import com.pardorps.pardrops.model.StoreStatus;
 import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.model.UserStatus;
 import com.pardorps.pardrops.repository.OrderSubOrderRepository;
 import com.pardorps.pardrops.repository.ProductRepository;
+import com.pardorps.pardrops.repository.SellerApplicationRepository;
+import com.pardorps.pardrops.repository.SellerBalanceRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
 import com.pardorps.pardrops.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -48,6 +53,8 @@ public class AdminUserService {
     private final OrderSubOrderRepository subOrderRepository;
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
+    private final SellerBalanceRepository balanceRepository;
+    private final SellerApplicationRepository sellerApplicationRepository;
 
     /**
      * @param userRepository       acceso a los usuarios.
@@ -56,6 +63,8 @@ public class AdminUserService {
      * @param subOrderRepository   acceso a las partes de pedido (para las ventas).
      * @param auditLogService      bitácora de auditoría.
      * @param notificationService  avisos dentro de la aplicación.
+     * @param balanceRepository    saldo y comisiones del vendedor.
+     * @param sellerApplicationRepository solicitudes para los datos legales.
      */
     public AdminUserService(
             UserRepository userRepository,
@@ -63,7 +72,9 @@ public class AdminUserService {
             ProductRepository productRepository,
             OrderSubOrderRepository subOrderRepository,
             AuditLogService auditLogService,
-            NotificationService notificationService
+            NotificationService notificationService,
+            SellerBalanceRepository balanceRepository,
+            SellerApplicationRepository sellerApplicationRepository
     ) {
         this.userRepository = userRepository;
         this.storeRepository = storeRepository;
@@ -71,6 +82,8 @@ public class AdminUserService {
         this.subOrderRepository = subOrderRepository;
         this.auditLogService = auditLogService;
         this.notificationService = notificationService;
+        this.balanceRepository = balanceRepository;
+        this.sellerApplicationRepository = sellerApplicationRepository;
     }
 
     /**
@@ -354,11 +367,24 @@ public class AdminUserService {
      */
     private AdminSellerResponse toSellerResponse(Store store) {
         User seller = store.getSeller();
+        SellerBalance balance = balanceRepository.findBySellerId(seller.getId()).orElse(null);
+        SellerApplication application = sellerApplicationRepository
+                .findFirstByUserIdAndStatusOrderByCreatedAtDesc(
+                        seller.getId(), SellerApplicationStatus.APPROVED)
+                .orElse(null);
         return new AdminSellerResponse(
                 seller.getId(),
                 seller.getFullName(),
                 seller.getEmail(),
                 seller.getPhone(),
+                application == null ? null : application.getLegalName(),
+                application == null ? null : application.getDocumentType(),
+                application == null ? null : application.getDocumentNumber(),
+                application == null ? null : application.getLegalAddress(),
+                application == null ? null : application.getTaxId(),
+                store.getCity(),
+                store.getPublicEmail(),
+                store.getPublicPhone(),
                 seller.getStatus(),
                 store.getId(),
                 store.getName(),
@@ -367,6 +393,9 @@ public class AdminUserService {
                 productRepository.countBySellerId(seller.getId()),
                 subOrderRepository.countBySellerId(seller.getId()),
                 subOrderRepository.sumTotalBySellerId(seller.getId()),
+                balance == null ? 0.0 : balance.getCommissionTotal(),
+                balance == null ? 0.0 : balance.getPendingAmount(),
+                balance == null ? 0.0 : balance.getAvailableAmount(),
                 seller.getCreatedAt()
         );
     }

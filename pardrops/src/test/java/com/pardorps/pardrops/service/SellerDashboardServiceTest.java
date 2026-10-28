@@ -9,6 +9,7 @@ import com.pardorps.pardrops.model.StoreStatus;
 import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.repository.OrderSubOrderRepository;
 import com.pardorps.pardrops.repository.ProductRepository;
+import com.pardorps.pardrops.repository.SellerBalanceRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,9 +34,10 @@ class SellerDashboardServiceTest {
     private final ProductRepository productRepository = mock(ProductRepository.class);
     private final StoreRepository storeRepository = mock(StoreRepository.class);
     private final NotificationService notificationService = mock(NotificationService.class);
+    private final SellerBalanceRepository balanceRepository = mock(SellerBalanceRepository.class);
 
     private final SellerDashboardService service = new SellerDashboardService(
-            subOrderRepository, productRepository, storeRepository, notificationService);
+            subOrderRepository, productRepository, storeRepository, notificationService, balanceRepository);
 
     @Test
     @DisplayName("Calcula las ventas, los pedidos y los ingresos del vendedor")

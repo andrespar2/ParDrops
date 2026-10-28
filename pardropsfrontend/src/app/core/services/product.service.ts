@@ -15,7 +15,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
-import { Product } from '../models/product.model';
+import { Product, ProductHighlights } from '../models/product.model';
 import { ProductRequest } from '../models/product-request.model';
 
 @Injectable({
@@ -101,6 +101,15 @@ export class ProductService {
    */
   public getProductBySlug(slug: string): Product | undefined {
     return this._products().find(product => product.slug === slug);
+  }
+
+  /**
+   * Obtiene los rankings de la portada.
+   *
+   * @returns observable con los más vendidos y los mejor valorados.
+   */
+  public getHighlights(): Observable<ProductHighlights> {
+    return this.http.get<ProductHighlights>(`${this.productsUrl}/highlights`);
   }
 
   /**

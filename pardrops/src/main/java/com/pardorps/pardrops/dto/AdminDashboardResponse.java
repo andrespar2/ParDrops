@@ -40,6 +40,9 @@ public record AdminDashboardResponse(
         long orderCount,
         long pendingOrderCount,
         double revenue,
+        double commissionRevenue,
+        double retainedBalance,
+        double availableBalance,
         long pendingApplicationCount,
         List<AdminDashboardOrder> recentOrders,
         List<AdminDashboardStore> topStores

@@ -83,6 +83,32 @@ public class OrderSubOrder {
     @Column(nullable = false)
     private Double total;
 
+    /**
+     * Tasa de comisión aplicada a esta venta.
+     *
+     * <p>Se guarda en el subpedido para que un cambio futuro de la tasa no
+     * altere las ventas históricas.</p>
+     */
+    @Column(name = "commission_rate")
+    private Double commissionRate;
+
+    /** Comisión de ParDrops sobre el subtotal de productos. */
+    @Column(name = "commission_amount")
+    private Double commissionAmount;
+
+    /** Neto que corresponde al vendedor: total menos comisión. */
+    @Column(name = "seller_net_amount")
+    private Double sellerNetAmount;
+
+    /** Situación de los fondos de la venta. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "funds_status", length = 20)
+    private FundsStatus fundsStatus;
+
+    /** Fecha en la que el neto pasó a estar disponible. */
+    @Column(name = "released_at")
+    private Instant releasedAt;
+
     /** Fecha y hora de creación de la parte. */
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

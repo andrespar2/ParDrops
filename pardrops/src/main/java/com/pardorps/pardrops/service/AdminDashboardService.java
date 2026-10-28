@@ -14,6 +14,7 @@ import com.pardorps.pardrops.repository.OrderRepository;
 import com.pardorps.pardrops.repository.OrderSubOrderRepository;
 import com.pardorps.pardrops.repository.ProductRepository;
 import com.pardorps.pardrops.repository.SellerApplicationRepository;
+import com.pardorps.pardrops.repository.SellerBalanceRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
 import com.pardorps.pardrops.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -52,6 +53,7 @@ public class AdminDashboardService {
     private final OrderSubOrderRepository subOrderRepository;
     private final SellerApplicationRepository sellerApplicationRepository;
     private final CategoryRepository categoryRepository;
+    private final SellerBalanceRepository balanceRepository;
 
     /**
      * @param userRepository               acceso a las cuentas.
@@ -61,6 +63,7 @@ public class AdminDashboardService {
      * @param subOrderRepository           acceso a las partes de pedido.
      * @param sellerApplicationRepository  acceso a las solicitudes de vendedor.
      * @param categoryRepository           acceso a las categorías.
+     * @param balanceRepository            acceso a los saldos y comisiones.
      */
     public AdminDashboardService(
             UserRepository userRepository,
@@ -69,7 +72,8 @@ public class AdminDashboardService {
             OrderRepository orderRepository,
             OrderSubOrderRepository subOrderRepository,
             SellerApplicationRepository sellerApplicationRepository,
-            CategoryRepository categoryRepository
+            CategoryRepository categoryRepository,
+            SellerBalanceRepository balanceRepository
     ) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
@@ -78,6 +82,7 @@ public class AdminDashboardService {
         this.subOrderRepository = subOrderRepository;
         this.sellerApplicationRepository = sellerApplicationRepository;
         this.categoryRepository = categoryRepository;
+        this.balanceRepository = balanceRepository;
     }
 
     /**
@@ -103,6 +108,9 @@ public class AdminDashboardService {
                 orderRepository.count(),
                 orderRepository.countPending(CLOSED_STATUSES),
                 orderRepository.sumTotal(),
+                nz(balanceRepository.sumCommissionTotal()),
+                nz(balanceRepository.sumPendingAmount()),
+                nz(balanceRepository.sumAvailableAmount()),
                 sellerApplicationRepository.countByStatus(SellerApplicationStatus.PENDING),
                 recentOrders(orders),
                 topStores()
@@ -135,8 +143,7 @@ public class AdminDashboardService {
      *
      * @return las tiendas con mayor volumen de ventas.
      */
-    private List<AdminDashboardResponse.AdminDashboardStore> topStores() {
-        Map<String, double[]> totals = new LinkedHashMap<>();
+    private List<AdminDashboardResponse.AdminDashboardStore> topStores() {        Map<String, double[]> totals = new LinkedHashMap<>();
         Map<String, long[]> counts = new LinkedHashMap<>();
         Map<String, String> slugs = new LinkedHashMap<>();
 
@@ -163,5 +170,9 @@ public class AdminDashboardService {
                         counts.get(entry.getKey())[0],
                         entry.getValue()[0]))
                 .toList();
+    }
+
+    private double nz(Double value) {
+        return value == null ? 0.0 : value;
     }
 }

@@ -130,6 +130,11 @@
         <app-image-uploader (imageUploaded)="addImage($event)" />
       </div>
 
+      <app-variant-editor
+        [variants]="variants()"
+        (variantsChange)="variants.set($event)"
+      />
+
       <div class="admin-form__actions">
         <button type="submit" class="admin-btn admin-btn--primary" [disabled]="saving()">
           {{ saving() ? 'Guardando…' : 'Guardar producto' }}

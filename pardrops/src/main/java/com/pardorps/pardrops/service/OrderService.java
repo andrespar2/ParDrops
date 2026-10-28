@@ -7,6 +7,7 @@ import com.pardorps.pardrops.dto.OrderResponse;
 import com.pardorps.pardrops.dto.OrderSubOrderResponse;
 import com.pardorps.pardrops.exception.ApiException;
 import com.pardorps.pardrops.model.NotificationType;
+import com.pardorps.pardrops.model.FundsStatus;
 import com.pardorps.pardrops.model.Order;
 import com.pardorps.pardrops.model.OrderItem;
 import com.pardorps.pardrops.model.OrderStatus;
@@ -18,6 +19,7 @@ import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.repository.OrderRepository;
 import com.pardorps.pardrops.repository.ProductRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,6 +60,8 @@ public class OrderService {
     private final StoreRepository storeRepository;
     private final NotificationService notificationService;
     private final OrderEmailService orderEmailService;
+    private final SellerBalanceService sellerBalanceService;
+    private final double commissionRate;
 
     /**
      * @param orderRepository      acceso a los pedidos.
@@ -65,19 +69,25 @@ public class OrderService {
      * @param storeRepository      acceso a las tiendas para nombrar cada parte.
      * @param notificationService  avisos dentro de la aplicación.
      * @param orderEmailService    correos del ciclo del pedido.
+     * @param sellerBalanceService saldos y comisiones de los vendedores.
+     * @param commissionRate       comisión de la plataforma.
      */
     public OrderService(
             OrderRepository orderRepository,
             ProductRepository productRepository,
             StoreRepository storeRepository,
             NotificationService notificationService,
-            OrderEmailService orderEmailService
+            OrderEmailService orderEmailService,
+            SellerBalanceService sellerBalanceService,
+            @Value("${app.marketplace.commission-rate:0.05}") double commissionRate
     ) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.storeRepository = storeRepository;
         this.notificationService = notificationService;
         this.orderEmailService = orderEmailService;
+        this.sellerBalanceService = sellerBalanceService;
+        this.commissionRate = commissionRate;
     }
 
     /**
@@ -119,15 +129,19 @@ public class OrderService {
                         "El producto " + product.getName() + " ya no está disponible");
             }
 
-            double unitPrice = resolveUnitPrice(product, itemRequest.variantName());
+            double unitPrice = resolveUnitPrice(product, itemRequest.variantId(), itemRequest.variantName());
             double lineSubtotal = unitPrice * itemRequest.quantity();
             subtotal += lineSubtotal;
+
+            ProductVariant variant = findVariant(product, itemRequest.variantId(), itemRequest.variantName());
 
             OrderItem item = new OrderItem();
             item.setProductId(product.getId());
             item.setProductName(product.getName());
             item.setProductSlug(product.getSlug());
-            item.setVariantName(itemRequest.variantName());
+            item.setVariantId(variant != null ? variant.getId() : null);
+            item.setVariantName(variant != null ? variant.getName() : itemRequest.variantName());
+            item.setVariantSku(variant != null ? variant.getSku() : null);
             item.setUnitPrice(round(unitPrice));
             item.setQuantity(itemRequest.quantity());
             item.setSubtotal(round(lineSubtotal));
@@ -137,7 +151,7 @@ public class OrderService {
             Long sellerId = product.getSeller() != null ? product.getSeller().getId() : null;
             itemsBySeller.computeIfAbsent(sellerId, key -> new ArrayList<>()).add(item);
 
-            decreaseStock(product, itemRequest.quantity());
+            decreaseStock(product, variant, itemRequest.quantity());
         }
 
         double tax = round(subtotal * TAX_RATE);
@@ -159,6 +173,9 @@ public class OrderService {
         notifySellers(saved);
         notifyCustomer(saved, user);
         orderEmailService.sendNewOrderToSellers(saved);
+        for (OrderSubOrder subOrder : saved.getSubOrders()) {
+            sellerBalanceService.hold(subOrder);
+        }
 
         return toResponse(saved);
     }
@@ -244,6 +261,12 @@ public class OrderService {
             subOrder.setShipping(shipping);
             subOrder.setTotal(round(subOrder.getSubtotal() + tax + shipping));
 
+            double commission = round(subOrder.getSubtotal() * commissionRate);
+            subOrder.setCommissionRate(commissionRate);
+            subOrder.setCommissionAmount(commission);
+            subOrder.setSellerNetAmount(round(subOrder.getTotal() - commission));
+            subOrder.setFundsStatus(FundsStatus.HELD);
+
             distributedTax += tax;
             distributedShipping += shipping;
         }
@@ -256,13 +279,48 @@ public class OrderService {
      * @param quantity unidades compradas.
      * @throws ApiException si no hay stock suficiente (409).
      */
-    private void decreaseStock(Product product, int quantity) {
-        if (product.getStock() < quantity) {
-            throw ApiException.conflict(
-                    "No hay stock suficiente de " + product.getName());
+    private void decreaseStock(Product product, ProductVariant variant, int quantity) {
+        int available = variant != null && variant.getStock() != null
+                ? variant.getStock()
+                : product.getStock();
+        if (available < quantity) {
+            String label = variant != null ? product.getName() + " (" + variant.getName() + ")" : product.getName();
+            throw ApiException.conflict("No hay stock suficiente de " + label);
+        }
+        if (variant != null) {
+            variant.setStock(available - quantity);
         }
         product.setStock(product.getStock() - quantity);
         productRepository.save(product);
+    }
+
+    /**
+     * Busca una variante por identificador y, si no llega, por nombre.
+     *
+     * @param product     producto.
+     * @param variantId   identificador de la variante (puede ser nulo).
+     * @param variantName nombre de la variante (puede ser nulo).
+     * @return la variante o {@code null}.
+     */
+    private ProductVariant findVariant(Product product, String variantId, String variantName) {
+        if (product.getVariants() == null) {
+            return null;
+        }
+        if (variantId != null) {
+            for (ProductVariant variant : product.getVariants()) {
+                if (variantId.equals(variant.getId())) {
+                    return variant;
+                }
+            }
+        }
+        if (variantName != null) {
+            for (ProductVariant variant : product.getVariants()) {
+                if (variantName.equals(variant.getName())) {
+                    return variant;
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -362,6 +420,11 @@ public class OrderService {
         for (OrderSubOrder subOrder : order.getSubOrders()) {
             if (!subOrder.getStatus().isTerminal()) {
                 subOrder.setStatus(newStatus);
+                if (newStatus == OrderStatus.DELIVERED) {
+                    sellerBalanceService.release(subOrder);
+                } else if (newStatus == OrderStatus.CANCELLED) {
+                    sellerBalanceService.cancel(subOrder);
+                }
             }
         }
 
@@ -404,13 +467,10 @@ public class OrderService {
      * @param variantName nombre de la variante (puede ser nulo).
      * @return el precio unitario a aplicar.
      */
-    private double resolveUnitPrice(Product product, String variantName) {
-        if (variantName != null && product.getVariants() != null) {
-            for (ProductVariant variant : product.getVariants()) {
-                if (variantName.equals(variant.getName()) && variant.getPrice() != null) {
-                    return variant.getPrice();
-                }
-            }
+    private double resolveUnitPrice(Product product, String variantId, String variantName) {
+        ProductVariant variant = findVariant(product, variantId, variantName);
+        if (variant != null && variant.getPrice() != null) {
+            return variant.getPrice();
         }
         return product.getPrice();
     }

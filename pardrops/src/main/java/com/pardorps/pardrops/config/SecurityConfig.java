@@ -139,6 +139,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/stores/mine").hasRole("SELLER")
                         .requestMatchers(HttpMethod.GET, "/api/stores").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/stores/*/products").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/stores/*/reviews").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/stores/*").permitAll()
 
                         // --- Pedidos: crear es público (invitado o cliente). ---

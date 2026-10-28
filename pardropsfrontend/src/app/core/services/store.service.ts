@@ -16,6 +16,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
 import { Product } from '../models/product.model';
+import { ProductReview } from '../models/review.model';
 import { Store, StoreRequest } from '../models/store.model';
 
 @Injectable({
@@ -55,6 +56,16 @@ export class StoreService {
    */
   public getProducts(slug: string): Observable<Product[]> {
     return this.http.get<Product[]>(`${this.storesUrl}/${slug}/products`);
+  }
+
+  /**
+   * Obtiene las reseñas recientes de los productos de una tienda.
+   *
+   * @param slug slug de la tienda.
+   * @returns observable con las reseñas.
+   */
+  public getReviews(slug: string): Observable<ProductReview[]> {
+    return this.http.get<ProductReview[]>(`${this.storesUrl}/${slug}/reviews`);
   }
 
   /**

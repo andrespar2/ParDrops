@@ -28,6 +28,10 @@ public record SellerDashboardResponse(
         long publishedProductCount,
         long outOfStockCount,
         double revenue,
+        double commissionTotal,
+        double netRevenue,
+        double pendingBalance,
+        double availableBalance,
         List<NotificationResponse> recentNotifications
 ) {
 }

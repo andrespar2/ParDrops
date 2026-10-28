@@ -61,8 +61,9 @@ export class SellerProfileComponent {
     description: [''],
     logoUrl: [''],
     bannerUrl: [''],
-    contactEmail: ['', [Validators.email, Validators.maxLength(180)]],
-    contactPhone: ['', [Validators.maxLength(30)]],
+    publicEmail: ['', [Validators.email, Validators.maxLength(180)]],
+    publicPhone: ['', [Validators.maxLength(30)]],
+    city: ['', [Validators.maxLength(120)]],
     whatsapp: ['', [Validators.maxLength(30)]]
   });
 
@@ -88,8 +89,9 @@ export class SellerProfileComponent {
           description: store.description ?? '',
           logoUrl: store.logoUrl ?? '',
           bannerUrl: store.bannerUrl ?? '',
-          contactEmail: store.contactEmail ?? '',
-          contactPhone: store.contactPhone ?? '',
+          publicEmail: store.publicEmail ?? '',
+          publicPhone: store.publicPhone ?? '',
+          city: store.city ?? '',
           whatsapp: store.whatsapp ?? ''
         });
         this.loading.set(false);
@@ -160,8 +162,9 @@ export class SellerProfileComponent {
       description: value.description.trim() || null,
       logoUrl: value.logoUrl.trim() || null,
       bannerUrl: value.bannerUrl.trim() || null,
-      contactEmail: value.contactEmail.trim() || null,
-      contactPhone: value.contactPhone.trim() || null,
+      publicEmail: value.publicEmail.trim() || null,
+      publicPhone: value.publicPhone.trim() || null,
+      city: value.city.trim() || null,
       whatsapp: value.whatsapp.trim() || null
     };
 

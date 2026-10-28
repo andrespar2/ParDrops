@@ -98,6 +98,22 @@ export interface AdminSeller {
   email: string;
   /** Teléfono del vendedor. */
   phone: string | null;
+  /** Nombre legal del titular (solo admin). */
+  legalName: string | null;
+  /** Tipo de documento (solo admin). */
+  documentType: string | null;
+  /** Número de documento (solo admin). */
+  documentNumber: string | null;
+  /** Dirección legal (solo admin). */
+  legalAddress: string | null;
+  /** NIT o identificación tributaria. */
+  taxId: string | null;
+  /** Ciudad pública de la tienda. */
+  city: string | null;
+  /** Correo público de la tienda. */
+  publicEmail: string | null;
+  /** Teléfono público de la tienda. */
+  publicPhone: string | null;
   /** Estado de la cuenta del vendedor. */
   accountStatus: AdminUserStatus;
   /** Identificador de la tienda. */
@@ -114,6 +130,12 @@ export interface AdminSeller {
   salesCount: number;
   /** Importe total vendido. */
   salesTotal: number;
+  /** Comisión acumulada de la plataforma. */
+  commissionTotal: number;
+  /** Neto retenido hasta la entrega. */
+  pendingBalance: number;
+  /** Neto disponible para el vendedor. */
+  availableBalance: number;
   /** Fecha de alta de la cuenta. */
   createdAt: string;
 }
@@ -276,6 +298,12 @@ export interface AdminDashboard {
   pendingOrderCount: number;
   /** Importe total vendido. */
   revenue: number;
+  /** Comisión acumulada de la plataforma. */
+  commissionRevenue: number;
+  /** Neto retenido a los vendedores. */
+  retainedBalance: number;
+  /** Neto disponible de los vendedores. */
+  availableBalance: number;
   /** Solicitudes de vendedor por revisar. */
   pendingApplicationCount: number;
   /** Últimos pedidos registrados. */
@@ -352,6 +380,30 @@ export interface AuditLog {
   /** Detalle legible de la acción. */
   details: string;
   /** Fecha de la acción. */
+  createdAt: string;
+}
+
+/**
+ * Reseña vista por el administrador para su moderación.
+ *
+ * @interface AdminReview
+ */
+export interface AdminReview {
+  /** Identificador. */
+  id: number;
+  /** Producto reseñado. */
+  productId: string;
+  /** Nombre del producto. */
+  productName: string;
+  /** Estrellas. */
+  rating: number;
+  /** Comentario. */
+  comment: string;
+  /** Autor. */
+  customerName: string;
+  /** Imágenes adjuntas. */
+  images: string[];
+  /** Fecha. */
   createdAt: string;
 }
 

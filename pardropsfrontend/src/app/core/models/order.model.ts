@@ -164,6 +164,8 @@ export interface CreateOrderItemRequest {
   /** Slug del producto (informativo). */
   productSlug?: string | null;
   /** Variante elegida (opcional). */
+  variantId?: string | null;
+  /** Nombre de la variante elegida (opcional). */
   variantName?: string | null;
   /** Unidades compradas. */
   quantity: number;

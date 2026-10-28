@@ -32,6 +32,14 @@ export interface SellerDashboard {
   outOfStockCount: number;
   /** Ingresos acumulados de los subpedidos no cancelados. */
   revenue: number;
+  /** Comisión acumulada de ParDrops. */
+  commissionTotal: number;
+  /** Neto acumulado de las ventas (retenido + disponible). */
+  netRevenue: number;
+  /** Neto retenido hasta la entrega. */
+  pendingBalance: number;
+  /** Neto disponible para el vendedor. */
+  availableBalance: number;
   /** Últimos avisos recibidos. */
   recentNotifications: Notification[];
 }
@@ -95,6 +103,20 @@ export interface SellerApplication {
   phone?: string | null;
   /** Ciudad del negocio. */
   city?: string | null;
+  /** Correo público de la tienda. */
+  publicEmail?: string | null;
+  /** Teléfono público de la tienda. */
+  publicPhone?: string | null;
+  /** Nombre legal del titular. */
+  legalName?: string | null;
+  /** Tipo de documento del titular. */
+  documentType?: string | null;
+  /** Número de documento del titular. */
+  documentNumber?: string | null;
+  /** Dirección legal del titular. */
+  legalAddress?: string | null;
+  /** Teléfono personal del titular. */
+  personalPhone?: string | null;
   /** Estado de la solicitud. */
   status: SellerApplicationStatus;
   /** Comentario del administrador. */
@@ -127,4 +149,18 @@ export interface SellerApplicationRequest {
   phone?: string | null;
   /** Ciudad del negocio. */
   city?: string | null;
+  /** Correo público de la tienda. */
+  publicEmail?: string | null;
+  /** Teléfono público de la tienda. */
+  publicPhone?: string | null;
+  /** Nombre legal del titular. */
+  legalName?: string | null;
+  /** Tipo de documento del titular. */
+  documentType?: string | null;
+  /** Número de documento del titular. */
+  documentNumber?: string | null;
+  /** Dirección legal del titular. */
+  legalAddress?: string | null;
+  /** Teléfono personal del titular. */
+  personalPhone?: string | null;
 }

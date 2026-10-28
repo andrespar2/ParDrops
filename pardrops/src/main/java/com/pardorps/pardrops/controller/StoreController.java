@@ -70,6 +70,19 @@ public class StoreController {
     }
 
     /**
+     * Devuelve las reseñas recientes de los productos de una tienda.
+     *
+     * @param slug slug público de la tienda.
+     * @return 200 con las reseñas.
+     */
+    @GetMapping("/{slug}/reviews")
+    public ResponseEntity<List<com.pardorps.pardrops.dto.ProductReviewResponse>> reviews(
+            @PathVariable String slug
+    ) {
+        return ResponseEntity.ok(storeService.findReviews(slug));
+    }
+
+    /**
      * Devuelve el catálogo público de una tienda.
      *
      * <p>Solo se muestran los productos publicados de la tienda. Si la tienda

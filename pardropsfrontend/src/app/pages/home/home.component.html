@@ -29,6 +29,43 @@
     </div>
   </section>
 
+  <!-- Más vendidos -->
+  @if (bestSellers().length > 0) {
+    <section class="section">
+      <div class="container">
+        <div class="section__header">
+          <h2 class="section__title">Los más vendidos</h2>
+          <p class="section__subtitle">Los productos que más compran nuestros clientes</p>
+        </div>
+        <div class="grid grid--3">
+          @for (product of bestSellers(); track product.id) {
+            <app-product-card [product]="product"></app-product-card>
+          }
+        </div>
+        <div class="section__actions">
+          <a routerLink="/productos" class="section__link">Ver todo el catálogo →</a>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- Mejor valorados -->
+  @if (topRated().length > 0) {
+    <section class="section section--gray">
+      <div class="container">
+        <div class="section__header">
+          <h2 class="section__title">Mejor valorados</h2>
+          <p class="section__subtitle">Las mejores opiniones de la comunidad</p>
+        </div>
+        <div class="grid grid--3">
+          @for (product of topRated(); track product.id) {
+            <app-product-card [product]="product"></app-product-card>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
   <!-- Productos Destacados -->
   @if (featuredProducts().length > 0) {
     <section class="section">

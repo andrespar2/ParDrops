@@ -164,6 +164,11 @@
             <label class="flag"><input type="checkbox" formControlName="onSale"> En oferta</label>
           </div>
 
+          <app-variant-editor
+            [variants]="variants()"
+            (variantsChange)="variants.set($event)"
+          />
+
           <div class="editor__actions">
             <button type="submit" class="btn-primary" [disabled]="saving()">
               {{ saving() ? 'Guardando…' : 'Guardar producto' }}

@@ -5,10 +5,12 @@ import com.pardorps.pardrops.exception.ApiException;
 import com.pardorps.pardrops.model.AuditAction;
 import com.pardorps.pardrops.model.NotificationType;
 import com.pardorps.pardrops.model.Product;
+import com.pardorps.pardrops.model.ProductVariant;
 import com.pardorps.pardrops.model.Role;
 import com.pardorps.pardrops.model.Store;
 import com.pardorps.pardrops.model.StoreStatus;
 import com.pardorps.pardrops.model.User;
+import com.pardorps.pardrops.repository.OrderItemRepository;
 import com.pardorps.pardrops.repository.ProductRepository;
 import com.pardorps.pardrops.repository.ProductReviewRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
@@ -43,6 +45,7 @@ class ProductServiceTest {
     private final CategoryService categoryService = mock(CategoryService.class);
     private final AuditLogService auditLogService = mock(AuditLogService.class);
     private final NotificationService notificationService = mock(NotificationService.class);
+    private final OrderItemRepository orderItemRepository = mock(OrderItemRepository.class);
 
     private final ProductService productService = new ProductService(
             productRepository,
@@ -50,7 +53,8 @@ class ProductServiceTest {
             storeRepository,
             categoryService,
             auditLogService,
-            notificationService);
+            notificationService,
+            orderItemRepository);
 
     @Test
     @DisplayName("Permite que el vendedor propietario edite su producto")
@@ -237,6 +241,64 @@ class ProductServiceTest {
 
         verify(notificationService, never()).notify(any(), any(), anyString(), anyString(), anyString());
         verify(auditLogService, never()).record(any(), any(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("Conserva las variantes si la petición no las envía")
+    void keepsVariantsWhenRequestOmitsThem() {
+        User seller = user(1L, Role.SELLER);
+        Product product = product("prod-1", seller);
+        product.getVariants().add(new ProductVariant(
+                "v1", "Talla M", 100_000.0, 5, "SKU", "M", null, null));
+        when(productRepository.findById("prod-1")).thenReturn(Optional.of(product));
+        when(productRepository.existsBySlugAndIdNot("gorra-urbana", "prod-1")).thenReturn(false);
+        when(productRepository.save(any(Product.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ProductRequest request = new ProductRequest(
+                "Gorra Urbana",
+                "gorra-urbana",
+                "Descripción",
+                "Descripción larga",
+                89_000.0,
+                null,
+                "COP",
+                List.of(),
+                List.of("Accesorios"),
+                List.of("gorra"),
+                10,
+                null,
+                4.5,
+                0,
+                false,
+                false,
+                false);
+
+        productService.update("prod-1", request, seller);
+
+        assertEquals(1, product.getVariants().size());
+        assertEquals("Talla M", product.getVariants().get(0).getName());
+    }
+
+    @Test
+    @DisplayName("Devuelve los más vendidos y los mejor valorados")
+    void returnsHighlights() {
+        Product product = product("prod-1", user(1L, Role.SELLER));
+        product.setActive(true);
+        when(orderItemRepository.findBestSellingProductIds(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any()))
+                .thenReturn(List.<Object[]>of(new Object[]{"prod-1", 5L}));
+        when(productRepository.findByIdIn(List.of("prod-1"))).thenReturn(List.of(product));
+        when(productRepository.findTopRated(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(List.of(product));
+        when(storeRepository.findAll()).thenReturn(List.of());
+
+        com.pardorps.pardrops.dto.ProductHighlightsResponse highlights = productService.highlights();
+
+        assertEquals(1, highlights.bestSellers().size());
+        assertEquals(1, highlights.topRated().size());
+        assertEquals("prod-1", highlights.bestSellers().get(0).getId());
     }
 
     /**

@@ -1,0 +1,59 @@
+<!--
+  @file src/app/pages/admin-reviews/admin-reviews.component.html
+  @description Moderación de reseñas.
+-->
+
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <h1 class="admin-page__title">Reseñas</h1>
+      <p class="admin-page__subtitle">
+        Revisa las opiniones de los compradores y elimina las que incumplan las normas.
+      </p>
+    </div>
+    <button type="button" class="admin-btn" (click)="load()" [disabled]="loading()">
+      Actualizar
+    </button>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</div>
+  }
+  @if (okMessage()) {
+    <div class="admin-alert admin-alert--ok" role="status">{{ okMessage() }}</div>
+  }
+
+  @if (loading()) {
+    <p class="admin-message">Cargando reseñas…</p>
+  } @else if (reviews().length === 0) {
+    <p class="admin-message">No hay reseñas registradas.</p>
+  } @else {
+    <div class="review-admin__list">
+      @for (review of reviews(); track review.id) {
+        <article class="review-admin">
+          <header class="review-admin__header">
+            <div>
+              <strong>{{ review.productName }}</strong>
+              <span class="review-admin__author">por {{ review.customerName }}</span>
+            </div>
+            <app-star-rating [rating]="review.rating" size="sm" />
+            <time class="review-admin__date">{{ review.createdAt | date: 'dd/MM/yyyy' }}</time>
+          </header>
+          <p class="review-admin__comment">{{ review.comment }}</p>
+          @if (review.images.length) {
+            <div class="review-admin__images">
+              @for (image of review.images; track image) {
+                <img [src]="image" alt="Imagen de la reseña" />
+              }
+            </div>
+          }
+          <div class="review-admin__actions">
+            <button type="button" class="admin-btn admin-btn--danger" (click)="remove(review)">
+              Eliminar reseña
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</div>

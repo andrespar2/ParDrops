@@ -102,6 +102,12 @@ export class AdminComponent {
       icon: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM22 6l-10 7L2 6'
     },
     {
+      path: 'resenas',
+      label: 'Reseñas',
+      description: 'Modera las opiniones de los compradores',
+      icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'
+    },
+    {
       path: 'notificaciones',
       label: 'Notificaciones',
       description: 'Actividad que requiere atención',

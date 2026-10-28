@@ -73,7 +73,7 @@
               </span>
             }
             <span class="product-detail__price--current">
-              {{ formatPrice(product()!.price) }}
+              {{ formatPrice(displayPrice()) }}
             </span>
           </div>
 
@@ -115,19 +115,74 @@
             </div>
           </div>
 
+          <!-- Variantes -->
+          @if (product()!.variants?.length) {
+            <div class="product-detail__variants">
+              @if (availableSizes().length) {
+                <div class="variants__group">
+                  <span class="variants__label">Talla</span>
+                  <div class="variants__options">
+                    @for (size of availableSizes(); track size) {
+                      <button
+                        type="button"
+                        class="variants__option"
+                        [class.variants__option--active]="selectedSize() === size"
+                        (click)="selectSize(size)"
+                      >
+                        {{ size }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
+              @if (availableColors().length) {
+                <div class="variants__group">
+                  <span class="variants__label">Color</span>
+                  <div class="variants__options">
+                    @for (color of availableColors(); track color) {
+                      <button
+                        type="button"
+                        class="variants__option"
+                        [class.variants__option--active]="selectedColor() === color"
+                        (click)="selectColor(color)"
+                      >
+                        {{ color }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
+              <p class="variants__selected">
+                Versión: <strong>{{ selectedVariant()?.name }}</strong>
+              </p>
+
+              <div class="variants__list">
+                @for (variant of product()!.variants; track variant.id) {
+                  <span class="variants__item">
+                    {{ variant.name }} ·
+                    {{ formatPrice(variant.price ?? product()!.price) }} ·
+                    {{ (variant.stock ?? product()!.stock) }} uds.
+                  </span>
+                }
+              </div>
+            </div>
+          }
+
           <!-- Stock -->
           <div class="product-detail__stock">
-            @if (product()!.stock > 10) {
-              <span class="stock--available">✓ En stock ({{ product()!.stock }} unidades)</span>
-            } @else if (product()!.stock > 0 && product()!.stock <= 10) {
-              <span class="stock--limited">⚡ Últimas {{ product()!.stock }} unidades</span>
+            @if (displayStock() > 10) {
+              <span class="stock--available">✓ En stock ({{ displayStock() }} unidades)</span>
+            } @else if (displayStock() > 0 && displayStock() <= 10) {
+              <span class="stock--limited">⚡ Últimas {{ displayStock() }} unidades</span>
             } @else {
               <span class="stock--out">✗ Agotado</span>
             }
           </div>
 
           <!-- Selector de cantidad y botón añadir -->
-          @if (product()!.stock > 0) {
+          @if (displayStock() > 0) {
             <div class="product-detail__actions">
               <div class="quantity-selector">
                 <button 
@@ -212,6 +267,13 @@
                 </div>
                 <app-star-rating [rating]="review.rating" size="sm" />
                 <p class="review__comment">{{ review.comment }}</p>
+                @if (review.images?.length) {
+                  <div class="review__images">
+                    @for (image of review.images; track image) {
+                      <img [src]="image" alt="Imagen de la reseña" class="review__image" />
+                    }
+                  </div>
+                }
               </li>
             }
           </ul>
@@ -276,6 +338,23 @@
                   reviewForm.controls.comment.invalid
                 ) {
                   <span class="field__error">Escribe un comentario sobre el producto.</span>
+                }
+              </div>
+
+              <div class="field">
+                <span class="field__label">Fotos (opcional, máximo 3)</span>
+                <app-image-uploader (imageUploaded)="addReviewImage($event)" />
+                @if (reviewImages().length) {
+                  <div class="review-form__images">
+                    @for (image of reviewImages(); track image; let i = $index) {
+                      <div class="review-form__image">
+                        <img [src]="image" alt="Imagen adjunta" />
+                        <button type="button" class="review-form__remove" (click)="removeReviewImage(i)">
+                          Quitar
+                        </button>
+                      </div>
+                    }
+                  </div>
                 }
               </div>
 

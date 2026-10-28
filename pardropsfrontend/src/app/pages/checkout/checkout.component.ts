@@ -90,6 +90,7 @@ export class CheckoutComponent {
     const items: CreateOrderItemRequest[] = this.cart().items.map(item => ({
       productId: item.product.id,
       productSlug: item.product.slug,
+      variantId: item.selectedVariant?.id ?? null,
       variantName: item.selectedVariant?.name ?? null,
       quantity: item.quantity
     }));

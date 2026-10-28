@@ -4,82 +4,78 @@
 
 ### Backend (Maven)
 
-Comando utilizado:
-
 ```powershell
 $env:JAVA_HOME = (Resolve-Path '.\.tools\jdk25').Path
 cd pardrops
 .\mvnw.cmd -o test
 ```
 
-**Resultado de la última ejecución completa:**
+**Resultado:** `Tests run: 235, Failures: 0, Errors: 0, Skipped: 0` · `BUILD SUCCESS`.
 
-- `Tests run: 215, Failures: 0, Errors: 0, Skipped: 0`
-- `BUILD SUCCESS`
-
-### Frontend (Angular/Vitest)
-
-Comando utilizado:
+### Frontend (Vitest)
 
 ```bash
 cd pardropsfrontend
 npx ng test --watch=false
 ```
 
-**Resultado:**
+**Resultado:** `Test Files: 18 passed (18)` · `Tests: 87 passed (87)`.
 
-- `Test Files: 17 passed (17)`
-- `Tests: 83 passed (83)`
-
-### Compilación frontend
+### Compilación
 
 ```bash
 npm run build
 ```
 
-**Resultado:** compilación exitosa con los warnings preexistentes de presupuesto SCSS.
+**Resultado:** compilación correcta con los warnings preexistentes de presupuesto SCSS.
 
-## Pruebas de correo transaccional
+## Comisiones y saldo
 
-| Clase o archivo | Casos relevantes |
+| Clase | Casos |
 |---|---|
-| `EmailTemplateServiceTest` | Plantillas predeterminadas, actualización, restauración, 404, renderizado con escape y plantilla inactiva. |
-| `EmailTemplateRendererTest` | Sustitución de variables, escape de HTML, asunto sin escape, fragmentos seguros y variables desconocidas. |
-| `EmailServiceTest` | Entrega, absorción de fallos y destinatario vacío. |
-| `SmtpMailGatewayTest` | Composición y envío con JavaMail, fallo envuelto. |
-| `OutboxMailGatewayTest` | Archivos `.eml` y `.html`, contenido y nombres únicos. |
-| `OrderEmailServiceTest` | Correo al vendedor, respaldo de correo de tienda, subpedido de plataforma, comprobante global y por parte, avisos de estado, IVA e importes. |
-| `OrderServiceTest` | Envío del comprobante al pagar, aviso de estado y notificación interna. |
-| `SellerOrderServiceTest` | Comprobante y aviso cuando el vendedor cambia su parte. |
-| `AdminEmailTemplateIntegrationTest` | Listado, edición, restauración, vista previa y 403 para clientes. |
-| `admin.service.spec.ts` | Endpoints de plantillas: listar, consultar, actualizar, restaurar y previsualizar. |
-| `admin-email-templates.component.spec.ts` | Carga, selección, guardado, restauración y vista previa. |
-| `admin.component.spec.ts` | Shell con once secciones, incluida `plantillas-correo`. |
+| `SellerBalanceTest` | Valores iniciales y actualización de importes. |
+| `SellerBalanceServiceTest` | Retención, liberación, cancelación, idempotencia y subpedidos de plataforma. |
+| `FinanceSchemaMigrationTest` | Columnas financieras y migración idempotente. |
+| `OrderServiceTest` | Comisión del 5%, neto, estado `HELD`, retención y variantes. |
+| `SellerOrderServiceTest` | Liberación al entregar y anulación al cancelar. |
+| `AdminUserServiceTest` / `SellerDashboardServiceTest` | Saldos y comisiones en los paneles. |
 
-## Pruebas del marketplace multivendedor
+## Tienda y privacidad
 
-| Clase | Casos relevantes |
+| Clase | Casos |
 |---|---|
-| `SellerDashboardServiceTest` | Resumen con aislamiento por vendedor, conteos correctos, ingresos y notificaciones recientes. |
-| `SellerOrderServiceTest` | Listado solo de subpedidos propios, cambio de estado con validación de transiciones y notificación al cliente. |
-| `SellerApplicationServiceTest` | Envío, validación de rol/estado, reintento tras rechazo, aprobación/rechazo y creación de tienda al aprobar. |
-| `StoreServiceTest` | Edición de ficha propia, validación de nombre/slug, unicidad de slug y restricciones por propietario. |
-| `OrderMultivendorIntegrationTest` | Creación de pedido con múltiples vendedores, subpedidos por tienda y distribución de importes. |
-| `SecurityPermissionsTest` | Permisos: cliente no puede acceder a `/api/seller/**` (403), vendedor sí (200). |
+| `StoreServiceTest` | Datos públicos, rating y reseñas, tienda suspendida. |
+| `StorePrivacySchemaMigrationTest` | Columnas nuevas e idempotencia. |
+| `SellerApplicationServiceTest` | Datos públicos y legales de la solicitud. |
+| `SecurityPermissionsTest` | Catálogo público y paneles protegidos. |
 
-## Verificación manual del correo
+## Variantes
 
-Con `MAIL_ENABLED=false` (modo outbox):
+| Clase | Casos |
+|---|---|
+| `ProductServiceTest` | Conservación de variantes al editar, categorías y rankings. |
+| `OrderServiceTest` | Precio y stock por variante, variante agotada y comisión. |
 
-1. Crear un pedido con productos de una tienda.
-2. Revisar en `./data/mail-outbox` el `.eml` y el `.html` del vendedor.
-3. Entrar como administrador y cambiar el pedido a `PAID`.
-4. Revisar el comprobante del comprador.
-5. Cambiar a `PREPARED` o `SHIPPED` y revisar el aviso de estado.
-6. Editar una plantilla en `/admin/plantillas-correo`, guardar y crear otro pedido para comprobar el texto nuevo.
+## Reseñas con imágenes y moderación
+
+| Clase o archivo | Casos |
+|---|---|
+| `ProductReviewServiceTest` | Creación, valoración media y borrado por el administrador con auditoría. |
+| `AdminReviewController` | Listado y borrado bajo `/api/admin/reviews`. |
+| `admin.service.spec.ts` | Listar y eliminar reseñas desde el panel. |
+| `admin-reviews.component.spec.ts` | Carga y borrado con confirmación. |
+| `product-detail` | Subida de hasta tres imágenes y galería. |
+| `store-public` | Reseñas e imágenes en el perfil de tienda. |
+
+## Portada
+
+| Clase | Casos |
+|---|---|
+| `ProductServiceTest` | Más vendidos por unidades y mejor valorados por estrellas. |
+| `ProductController` | Endpoint público `/api/products/highlights`. |
 
 ## Notas
 
-- Las pruebas no necesitan SMTP ni credenciales reales: usan el outbox en una carpeta temporal.
-- Los tests de seguridad validan tanto el acceso (guards del frontend) como los permisos (reglas del backend).
-- No existe una suite E2E con Playwright en el repositorio; el recorrido principal se verifica manualmente.
+- Las pruebas no necesitan SMTP ni credenciales reales.
+- Las variantes, comisiones y reseñas se validan en el servidor; la interfaz solo refleja el resultado.
+- No hay suite E2E con Playwright; el recorrido principal se verifica manualmente.

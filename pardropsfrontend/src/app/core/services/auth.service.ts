@@ -97,7 +97,18 @@ export class AuthService {
     if (redirect) {
       sessionStorage.setItem(OAUTH_REDIRECT_KEY, redirect);
     }
-    window.location.assign(GOOGLE_AUTH_URL);
+    this.navigateTo(GOOGLE_AUTH_URL);
+  }
+
+  /**
+   * Navega a una URL externa. Se aísla para poder sustituirlo en las pruebas.
+   *
+   * @param url destino de la navegación.
+   * @returns {void}
+   * @protected
+   */
+  protected navigateTo(url: string): void {
+    window.location.assign(url);
   }
 
   /**

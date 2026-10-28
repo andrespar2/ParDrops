@@ -1,6 +1,7 @@
 package com.pardorps.pardrops.controller;
 
 import com.pardorps.pardrops.dto.AuthResponse;
+import com.pardorps.pardrops.dto.GoogleExchangeRequest;
 import com.pardorps.pardrops.dto.LoginRequest;
 import com.pardorps.pardrops.dto.RegisterRequest;
 import com.pardorps.pardrops.dto.UserResponse;
@@ -50,6 +51,19 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    /**
+     * Canjea el código temporal que entrega el callback de Google.
+     *
+     * @param request código de un solo uso.
+     * @return 200 con el token y el usuario.
+     */
+    @PostMapping("/google/exchange")
+    public ResponseEntity<AuthResponse> exchangeGoogleCode(
+            @Valid @RequestBody GoogleExchangeRequest request
+    ) {
+        return ResponseEntity.ok(authService.exchangeGoogleCode(request.code()));
     }
 
     /**

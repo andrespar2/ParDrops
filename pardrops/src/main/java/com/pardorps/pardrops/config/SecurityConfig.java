@@ -1,8 +1,12 @@
 package com.pardorps.pardrops.config;
 
 import com.pardorps.pardrops.security.JwtAuthenticationFilter;
+import com.pardorps.pardrops.security.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.pardorps.pardrops.security.OAuth2AuthenticationFailureHandler;
+import com.pardorps.pardrops.security.OAuth2AuthenticationSuccessHandler;
 import com.pardorps.pardrops.security.RestAccessDeniedHandler;
 import com.pardorps.pardrops.security.RestAuthenticationEntryPoint;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +21,9 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.AuthenticatedPrincipalOAuth2AuthorizedClientRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -50,22 +57,46 @@ public class SecurityConfig {
     /** Orígenes permitidos para CORS, separados por comas. */
     private final String allowedOrigins;
 
+    /** Registro de Google, presente solo si hay credenciales configuradas. */
+    private final ObjectProvider<ClientRegistrationRepository> clientRegistrations;
+
+    /** Repositorio que conserva el estado del flujo OAuth2 en una cookie. */
+    private final HttpCookieOAuth2AuthorizationRequestRepository authorizationRequestRepository;
+
+    /** Manejador que completa la cuenta y entrega el código al frontend. */
+    private final OAuth2AuthenticationSuccessHandler oauth2SuccessHandler;
+
+    /** Manejador que redirige al frontend cuando Google rechaza el acceso. */
+    private final OAuth2AuthenticationFailureHandler oauth2FailureHandler;
+
     /**
-     * @param jwtAuthenticationFilter    filtro que valida el JWT de cada petición.
-     * @param authenticationEntryPoint   respuesta JSON para peticiones sin sesión.
-     * @param accessDeniedHandler        respuesta JSON para peticiones sin permisos.
-     * @param allowedOrigins             orígenes permitidos (config de la app).
+     * @param jwtAuthenticationFilter       filtro que valida el JWT de cada petición.
+     * @param authenticationEntryPoint      respuesta JSON para peticiones sin sesión.
+     * @param accessDeniedHandler           respuesta JSON para peticiones sin permisos.
+     * @param allowedOrigins                orígenes permitidos (config de la app).
+     * @param clientRegistrations           registro de Google, si está configurado.
+     * @param authorizationRequestRepository repositorio del estado OAuth2 en cookie.
+     * @param oauth2SuccessHandler          manejador de éxito del acceso con Google.
+     * @param oauth2FailureHandler          manejador de error del acceso con Google.
      */
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
             RestAuthenticationEntryPoint authenticationEntryPoint,
             RestAccessDeniedHandler accessDeniedHandler,
-            @Value("${app.cors.allowed-origins}") String allowedOrigins
+            @Value("${app.cors.allowed-origins}") String allowedOrigins,
+            ObjectProvider<ClientRegistrationRepository> clientRegistrations,
+            HttpCookieOAuth2AuthorizationRequestRepository authorizationRequestRepository,
+            OAuth2AuthenticationSuccessHandler oauth2SuccessHandler,
+            OAuth2AuthenticationFailureHandler oauth2FailureHandler
     ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.accessDeniedHandler = accessDeniedHandler;
         this.allowedOrigins = allowedOrigins;
+        this.clientRegistrations = clientRegistrations;
+        this.authorizationRequestRepository = authorizationRequestRepository;
+        this.oauth2SuccessHandler = oauth2SuccessHandler;
+        this.oauth2FailureHandler = oauth2FailureHandler;
     }
 
     /**
@@ -91,8 +122,10 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // --- Autenticación: registro y login son públicos. ---
+                        // --- Autenticación: registro, login y Google son públicos. ---
                         .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/google/exchange").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
 
                         // --- Catálogo: lectura pública del catálogo publicado. ---
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
@@ -152,6 +185,22 @@ public class SecurityConfig {
                 // Registra nuestro filtro JWT antes del filtro estándar de login.
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
+        // El acceso con Google solo se activa cuando hay credenciales configuradas.
+        ClientRegistrationRepository registrations = clientRegistrations.getIfAvailable();
+        if (registrations != null) {
+            http.oauth2Login(oauth2 -> oauth2
+                    .clientRegistrationRepository(registrations)
+                    // Evita abrir una sesión HTTP para recordar el cliente autorizado.
+                    .authorizedClientRepository(
+                            new AuthenticatedPrincipalOAuth2AuthorizedClientRepository(
+                                    new InMemoryOAuth2AuthorizedClientService(registrations)))
+                    // El state y el PKCE viajan en una cookie, no en la sesión.
+                    .authorizationEndpoint(endpoint -> endpoint
+                            .authorizationRequestRepository(authorizationRequestRepository))
+                    .successHandler(oauth2SuccessHandler)
+                    .failureHandler(oauth2FailureHandler));
+        }
+
         return http.build();
     }
 
@@ -198,16 +247,6 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
-    }
-
-    /**
-     * Cifrador de contraseñas basado en BCrypt.
-     *
-     * @return el codificador a usar al guardar y comprobar contraseñas.
-     */
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 
     /**

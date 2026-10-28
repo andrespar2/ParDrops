@@ -46,5 +46,11 @@ public enum AuditAction {
     GOOGLE_ACCOUNT_CREATED,
 
     /** Cuenta local vinculada con Google. */
-    GOOGLE_ACCOUNT_LINKED
+    GOOGLE_ACCOUNT_LINKED,
+
+    /** Plantilla de correo actualizada por el administrador. */
+    EMAIL_TEMPLATE_UPDATED,
+
+    /** Plantilla de correo restaurada a sus valores predeterminados. */
+    EMAIL_TEMPLATE_RESET
 }

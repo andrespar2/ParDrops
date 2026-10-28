@@ -198,3 +198,27 @@ catÃ¡logo.
 | ReseÃ±as | #65 |
 | Portada | #66 |
 | Pruebas y documentaciÃ³n | #67, #68 |
+
+## 9. Estado de la implementación
+
+| Elemento | Estado |
+|---|---|
+| Comisión del 5% sobre el subtotal | Implementado |
+| Saldo retenido y disponible | Implementado |
+| Liberación al entregar y anulación al cancelar | Implementado |
+| Paneles de vendedor y administrador | Implementado |
+| Datos públicos y privados de la tienda | Implementado |
+| Perfil público con estrellas y reseñas | Implementado |
+| Variantes con talla, color, precio y stock | Implementado |
+| Editor de variantes en ambos paneles | Implementado |
+| Imágenes en reseñas | Implementado |
+| Moderación de reseñas por el administrador | Implementado |
+| Más vendidos y mejor valorados en portada | Implementado |
+| Pruebas de backend | 235 en verde |
+| Pruebas de frontend | 87 en verde |
+
+### Notas
+
+- Los pedidos históricos se rellenan en la migración y los saldos se reconstruyen una sola vez.
+- La comisión es contable: no hay pasarela de pago real, por lo que el saldo refleja lo registrado en la plataforma.
+- Las imágenes de reseña no se borran del almacén al eliminar la reseña para no romper enlaces compartidos; se puede añadir una limpieza posterior.

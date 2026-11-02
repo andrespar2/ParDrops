@@ -14,6 +14,8 @@ import { ProductService } from '../../core/services/product.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Product } from '../../core/models/product.model';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
+import { CategoryService } from '../../core/services/category.service';
+import { Category } from '../../core/models/category.model';
 import { formatCurrency } from '../../core/config/commerce.config';
 
 /** Opciones de orden del catálogo. */
@@ -38,6 +40,9 @@ export class HomeComponent {
 
   /** Ruta actual, para leer búsqueda y filtros de la URL. */
   private readonly route = inject(ActivatedRoute);
+
+  /** Categorías del backend. */
+  private readonly categoryService = inject(CategoryService);
 
   /** Productos cargados. */
   public readonly products = this.productService.products;
@@ -72,16 +77,13 @@ export class HomeComponent {
   /** Estado de la barra lateral en escritorio. */
   public readonly sidebarOpen = signal<boolean>(true);
 
-  /** Categorías reales del catálogo. */
-  public readonly categories = computed(() => {
-    const names = new Set<string>();
-    for (const product of this.products()) {
-      for (const name of product.categories ?? []) {
-        names.add(name);
-      }
-    }
-    return [...names].sort((a, b) => a.localeCompare(b, 'es'));
-  });
+  /** Categorías reales del catálogo (desde la API). */
+  public readonly categories = signal<Category[]>([]);
+
+  /** Categorías destacadas para la portada. */
+  public readonly featuredCategories = computed(() =>
+    this.categories().filter(category => category.featured && !category.collection).slice(0, 8)
+  );
 
   /** Catálogo filtrado y ordenado. */
   public readonly filtered = computed(() => {
@@ -133,6 +135,11 @@ export class HomeComponent {
   public readonly hasMore = computed(() => this.visibleCount() < this.filtered().length);
 
   constructor() {
+    this.categoryService.list().subscribe({
+      next: categories => this.categories.set(categories.filter(category => !category.collection)),
+      error: () => this.categories.set([])
+    });
+
     this.route.queryParamMap.subscribe(params => {
       this.searchTerm.set(params.get('search') ?? '');
       this.category.set(params.get('category') ?? 'all');

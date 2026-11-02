@@ -64,6 +64,23 @@ public class Category {
     @Column(nullable = false)
     private boolean featured;
 
+    /** Categoría padre, para organizar subcategorías. */
+    @jakarta.persistence.ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @jakarta.persistence.JoinColumn(name = "parent_id")
+    private Category parent;
+
+    /** Orden de aparición en el catálogo. */
+    @Column(name = "sort_order", nullable = false)
+    private int sortOrder = 0;
+
+    /** Imagen representativa de la categoría. */
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
+    /** Indica si es una colección (ofertas, novedades, temporadas). */
+    @Column(nullable = false)
+    private boolean collection = false;
+
     /** Fecha de alta de la categoría. */
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

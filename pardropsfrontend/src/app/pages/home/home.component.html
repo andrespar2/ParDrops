@@ -25,11 +25,11 @@
                       [class.filters__option--active]="category() === 'all'"
                       (click)="selectCategory('all')">Todas</button>
             </li>
-            @for (name of categories(); track name) {
+            @for (cat of categories(); track cat.id) {
               <li>
                 <button type="button" class="filters__option"
-                        [class.filters__option--active]="category() === name"
-                        (click)="selectCategory(name)">{{ name }}</button>
+                        [class.filters__option--active]="category() === cat.name"
+                        (click)="selectCategory(cat.name)">{{ cat.name }}</button>
               </li>
             }
           </ul>
@@ -91,6 +91,17 @@
           </label>
         </div>
       </header>
+
+      @if (featuredCategories().length > 0) {
+        <div class="category-strip" aria-label="Categorías destacadas">
+          @for (cat of featuredCategories(); track cat.id) {
+            <button type="button" class="category-chip" (click)="selectCategory(cat.name)">
+              <span class="category-chip__name">{{ cat.name }}</span>
+              <span class="category-chip__count">{{ cat.productCount }}</span>
+            </button>
+          }
+        </div>
+      }
 
       @if (loading() && products().length === 0) {
         <div class="results__grid" aria-busy="true">

@@ -107,6 +107,7 @@ public class CategoryService {
         category.setDescription(trimToNull(request.description()));
         category.setActive(request.active() == null || request.active());
         category.setFeatured(Boolean.TRUE.equals(request.featured()));
+        applyHierarchy(category, request);
 
         Category saved = categoryRepository.save(category);
         auditLogService.record(admin, AuditAction.CATEGORY_CREATED, ENTITY_TYPE,
@@ -142,6 +143,7 @@ public class CategoryService {
         if (request.featured() != null) {
             category.setFeatured(request.featured());
         }
+        applyHierarchy(category, request);
 
         Category saved = categoryRepository.save(category);
         auditLogService.record(admin, AuditAction.CATEGORY_UPDATED, ENTITY_TYPE,
@@ -306,9 +308,37 @@ public class CategoryService {
                 category.getDescription(),
                 category.isActive(),
                 category.isFeatured(),
+                category.getParent() == null ? null : category.getParent().getId(),
+                category.getParent() == null ? null : category.getParent().getName(),
+                category.getSortOrder(),
+                category.getImageUrl(),
+                category.isCollection(),
                 productRepository.countByCategory(category.getName()),
                 category.getCreatedAt(),
                 category.getUpdatedAt()
         );
+    }
+
+    /**
+     * Aplica la jerarquía y la presentación de la categoría.
+     *
+     * @param category categoría a modificar.
+     * @param request  datos recibidos.
+     */
+    private void applyHierarchy(Category category, CategoryRequest request) {
+        if (request.sortOrder() != null) {
+            category.setSortOrder(request.sortOrder());
+        }
+        category.setImageUrl(trimToNull(request.imageUrl()));
+        if (request.collection() != null) {
+            category.setCollection(request.collection());
+        }
+        if (request.parentId() != null) {
+            Category parent = require(request.parentId());
+            if (parent.getId().equals(category.getId())) {
+                throw ApiException.badRequest("Una categoría no puede ser su propio padre");
+            }
+            category.setParent(parent);
+        }
     }
 }

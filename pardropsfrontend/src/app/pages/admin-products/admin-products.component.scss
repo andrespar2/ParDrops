@@ -49,6 +49,8 @@
 
 .btn-primary {
   background-color: var(--color-primary);
+
+  color: var(--color-on-primary);
   color: #ffffff;
 
   &:disabled { opacity: 0.6; cursor: not-allowed; }

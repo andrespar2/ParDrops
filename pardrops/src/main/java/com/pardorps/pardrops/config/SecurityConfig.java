@@ -129,6 +129,7 @@ public class SecurityConfig {
 
                         // --- Catálogo: lectura pública del catálogo publicado. ---
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
 
                         // --- Reseñas: publicar requiere sesión (la compra se valida en el servicio). ---
                         .requestMatchers(HttpMethod.POST, "/api/products/*/reviews").authenticated()

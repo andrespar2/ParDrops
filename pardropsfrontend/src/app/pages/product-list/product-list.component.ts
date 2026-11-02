@@ -1,9 +1,9 @@
-/**
+﻿/**
  * @file src/app/pages/product-list/product-list.component.ts
- * @description Página para listar y filtrar productos.
+ * @description PÃ¡gina para listar y filtrar productos.
  * 
- * Muestra catálogo completo con filtros por categoría, estado (nuevo/oferta)
- * y búsqueda. Incluye vista de cuadrícula.
+ * Muestra catÃ¡logo completo con filtros por categorÃ­a, estado (nuevo/oferta)
+ * y bÃºsqueda. Incluye vista de cuadrÃ­cula.
  * 
  * @author ParDrops E-commerce
  * @version 1.0.0
@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../core/services/product.service';
+import { CategoryService } from '../../core/services/category.service';
 import { Product } from '../../core/models/product.model';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 
@@ -29,23 +30,26 @@ export class ProductListComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  /** Término de búsqueda */
+  /** Categorias del backend. */
+  private readonly categoryService = inject(CategoryService);
+
+  /** TÃ©rmino de bÃºsqueda */
   public searchQuery = signal<string>('');
 
-  /** Categoría seleccionada */
+  /** CategorÃ­a seleccionada */
   public selectedCategory = signal<string>('all');
 
   /** Filtro activo (all, nuevos, ofertas) */
   public activeFilter = signal<string>('all');
 
-  /** Categorías disponibles */
-  public categories = ['Ropa', 'Calzado', 'Accesorios', 'Camisetas', 'Pantalones', 'Mochilas', 'Bufandas', 'Chaquetas', 'Zapatillas'];
+  /** Categorias disponibles (desde la API). */
+  public categories: string[] = [];
 
   /** Productos filtrados computados */
   public readonly filteredProducts = computed(() => {
     let products: Product[] = this.productService.products();
 
-    // Filtrar por búsqueda
+    // Filtrar por bÃºsqueda
     const query = this.searchQuery().toLowerCase().trim();
     if (query) {
       products = products.filter(product => 
@@ -55,7 +59,7 @@ export class ProductListComponent {
       );
     }
 
-    // Filtrar por categoría
+    // Filtrar por categorÃ­a
     const category = this.selectedCategory();
     if (category !== 'all') {
       products = products.filter(product => 
@@ -77,6 +81,15 @@ export class ProductListComponent {
   });
 
   constructor() {
+    this.categoryService.list().subscribe({
+      next: categories => {
+        this.categories = categories.filter(category => !category.collection).map(category => category.name);
+      },
+      error: () => {
+        this.categories = [];
+      }
+    });
+
     // Suscribirse a los query params
     this.route.queryParams.subscribe(params => {
       if (params['category']) {
@@ -95,8 +108,8 @@ export class ProductListComponent {
   }
 
   /**
-   * Actualiza el filtro de categoría.
-   * @param {string} category - Categoría seleccionada.
+   * Actualiza el filtro de categorÃ­a.
+   * @param {string} category - CategorÃ­a seleccionada.
    */
   public setCategory(category: string): void {
     this.selectedCategory.set(category);
@@ -113,8 +126,8 @@ export class ProductListComponent {
   }
 
   /**
-   * Actualiza la búsqueda.
-   * @param {string} query - Término de búsqueda.
+   * Actualiza la bÃºsqueda.
+   * @param {string} query - TÃ©rmino de bÃºsqueda.
    */
   public setSearch(query: string): void {
     this.searchQuery.set(query);
@@ -135,8 +148,8 @@ export class ProductListComponent {
   }
 
   /**
-   * Actualiza los query params sin recargar la página.
-   * @param params - Parámetros a actualizar.
+   * Actualiza los query params sin recargar la pÃ¡gina.
+   * @param params - ParÃ¡metros a actualizar.
    */
   private updateQueryParams(params: any): void {
     this.router.navigate([], {
@@ -146,3 +159,4 @@ export class ProductListComponent {
     });
   }
 }
+

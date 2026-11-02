@@ -234,14 +234,6 @@ body {
   transition: background-color var(--transition-base), color var(--transition-base);
 }
 
-/* Botones y controles con fondo primario: texto legible en ambos temas. */
-html[data-theme='dark'] [class*='__button'],
-html[data-theme='dark'] [class*='__submit'],
-html[data-theme='dark'] [class*='__cta'],
-html[data-theme='dark'] .btn-primary {
-  color: var(--color-on-primary);
-}
-
 /* Las imágenes no deben brillar de más sobre superficies oscuras. */
 [data-theme='dark'] img {
   color-scheme: only light;

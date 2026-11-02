@@ -117,6 +117,8 @@
   border: none;
   border-radius: var(--radius-md);
   background-color: var(--color-primary);
+
+  color: var(--color-on-primary);
   color: #ffffff;
   font-size: var(--font-size-lg);
   font-weight: 600;
@@ -230,6 +232,8 @@
   padding: var(--space-3) var(--space-6);
   border-radius: var(--radius-md);
   background-color: var(--color-primary);
+
+  color: var(--color-on-primary);
   color: #ffffff;
   font-weight: 600;
   text-decoration: none;

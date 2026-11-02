@@ -132,6 +132,8 @@
   
   &--new {
     background-color: var(--color-primary);
+
+    color: var(--color-on-primary);
     color: white;
   }
   
@@ -263,6 +265,8 @@
   &--active {
     border-color: var(--color-primary);
     background: var(--color-primary);
+
+    color: var(--color-on-primary);
     color: #fff;
   }
 }
@@ -603,6 +607,8 @@
   border: none;
   border-radius: var(--radius-md);
   background-color: var(--color-primary);
+
+  color: var(--color-on-primary);
   color: #ffffff;
   font-size: var(--font-size-base);
   font-weight: 600;

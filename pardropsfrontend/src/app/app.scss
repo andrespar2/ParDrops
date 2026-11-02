@@ -352,3 +352,34 @@ body {
     color: var(--color-text-tertiary);
   }
 }
+
+/* Etiquetas y botones de la ficha de producto en modo oscuro */
+[data-theme='dark'] {
+  .badge:not([class*='--sale']),
+  .product-detail__badge {
+    background-color: var(--color-surface-secondary) !important;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary) !important;
+  }
+
+  .badge--sale {
+    background-color: var(--color-accent) !important;
+    color: #ffffff !important;
+  }
+
+  .add-to-cart-btn {
+    background-color: var(--color-primary) !important;
+    color: var(--color-on-primary) !important;
+  }
+
+  .star-rating__icon {
+    color: var(--color-warning) !important;
+  }
+
+  .product-detail__stock,
+  .product-detail__meta,
+  .product-detail__availability,
+  .product-detail__label {
+    color: var(--color-text-secondary) !important;
+  }
+}

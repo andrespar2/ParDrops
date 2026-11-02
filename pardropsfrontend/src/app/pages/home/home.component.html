@@ -19,20 +19,36 @@
       @if (sidebarOpen()) {
         <section class="filters__group">
           <h3 class="filters__heading">Categorías</h3>
+          <input
+            type="search"
+            class="filters__search"
+            placeholder="Buscar categoría"
+            aria-label="Buscar categoría"
+            [ngModel]="categorySearch()"
+            (ngModelChange)="categorySearch.set($event)"
+          />
           <ul class="filters__list">
             <li>
               <button type="button" class="filters__option"
                       [class.filters__option--active]="category() === 'all'"
                       (click)="selectCategory('all')">Todas</button>
             </li>
-            @for (cat of categories(); track cat.id) {
+            @for (cat of visibleCategories(); track cat.id) {
               <li>
                 <button type="button" class="filters__option"
                         [class.filters__option--active]="category() === cat.name"
                         (click)="selectCategory(cat.name)">{{ cat.name }}</button>
               </li>
             }
+            @if (visibleCategories().length === 0) {
+              <li class="filters__empty">Sin resultados</li>
+            }
           </ul>
+          @if (hasMoreCategories()) {
+            <button type="button" class="filters__toggle" (click)="categoriesExpanded.set(!categoriesExpanded())">
+              {{ categoriesExpanded() ? 'Ver menos' : 'Ver todas (' + categories().length + ')' }}
+            </button>
+          }
         </section>
 
         <section class="filters__group">

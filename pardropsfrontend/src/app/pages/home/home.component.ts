@@ -80,6 +80,28 @@ export class HomeComponent {
   /** Categorías reales del catálogo (desde la API). */
   public readonly categories = signal<Category[]>([]);
 
+  /** Texto del buscador de categorías. */
+  public readonly categorySearch = signal<string>('');
+
+  /** Indica si se muestran todas las categorías. */
+  public readonly categoriesExpanded = signal<boolean>(false);
+
+  /** Categorías visibles según búsqueda y despliegue. */
+  public readonly visibleCategories = computed(() => {
+    const term = this.categorySearch().trim().toLowerCase();
+    const all = this.categories();
+    if (term) {
+      return all.filter(category => category.name.toLowerCase().includes(term));
+    }
+    return this.categoriesExpanded() ? all : all.slice(0, 8);
+  });
+
+  /** Indica si hay más categorías de las visibles. */
+  public readonly hasMoreCategories = computed(
+    () => !this.categorySearch().trim() && this.categories().length > 8
+  );
+
+
   /** Categorías destacadas para la portada. */
   public readonly featuredCategories = computed(() =>
     this.categories().filter(category => category.featured && !category.collection).slice(0, 8)

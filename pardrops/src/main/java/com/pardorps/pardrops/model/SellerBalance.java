@@ -59,6 +59,14 @@ public class SellerBalance {
     @Column(nullable = false)
     private Double commissionTotal = 0.0;
 
+    /** Dinero reservado por solicitudes de retiro en curso. */
+    @Column(name = "reserved_amount", nullable = false)
+    private Double reservedAmount = 0.0;
+
+    /** Total retirado históricamente. */
+    @Column(name = "withdrawn_total", nullable = false)
+    private Double withdrawnTotal = 0.0;
+
     /** Subtotal de productos vendidos, sin IVA ni envío. */
     @Column(nullable = false)
     private Double totalSales = 0.0;

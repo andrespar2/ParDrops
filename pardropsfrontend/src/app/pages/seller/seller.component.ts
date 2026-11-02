@@ -63,6 +63,11 @@ export class SellerComponent {
       description: 'Prepara tus subpedidos'
     },
     {
+      path: 'saldo',
+      label: 'Mi saldo',
+      description: 'Ganancias, movimientos y retiros'
+    },
+    {
       path: 'perfil',
       label: 'Mi tienda',
       description: 'Ficha, logo, portada y contacto'

@@ -1,0 +1,67 @@
+<!--
+  @file src/app/pages/admin-withdrawals/admin-withdrawals.component.html
+  @description Gestión de solicitudes de retiro.
+-->
+
+<section class="finance">
+  <header class="finance__header">
+    <h1 class="finance__title">Solicitudes de retiro</h1>
+    <p class="finance__subtitle">Revisa, completa o rechaza los retiros de los vendedores.</p>
+  </header>
+
+  @if (error()) {
+    <p class="finance__alert">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p class="finance__ok">{{ success() }}</p>
+  }
+
+  <div class="finance__panel">
+    @if (withdrawals().length === 0) {
+      <p class="finance__hint">No hay solicitudes de retiro.</p>
+    } @else {
+      <table class="finance__table">
+        <thead>
+          <tr>
+            <th>Vendedor</th>
+            <th>Fecha</th>
+            <th>Valor</th>
+            <th>Neto</th>
+            <th>Método</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (w of withdrawals(); track w.id) {
+            <tr>
+              <td>{{ w.sellerName }}</td>
+              <td>{{ w.createdAt | date:'short' }}</td>
+              <td>{{ money(w.amount) }}</td>
+              <td>{{ money(w.netAmount) }}</td>
+              <td>
+                {{ w.method === 'BRE_B' ? 'Bre-B' : 'Banco' }}
+                <small class="finance__hint">{{ w.method === 'BRE_B' ? w.breBKey : (w.bankName + ' · ' + w.accountNumber) }}</small>
+              </td>
+              <td><span class="finance__tag">{{ w.status }}</span></td>
+              <td class="admin-w__actions">
+                @if (w.status !== 'COMPLETED' && w.status !== 'REJECTED') {
+                  <select class="finance__input" (change)="setStatus(w, $any($event.target).value)">
+                    <option value="REVIEW">En revisión</option>
+                    <option value="PROCESSING">En proceso</option>
+                  </select>
+                  <input class="finance__input" placeholder="Referencia" (input)="setReference(w.id, $any($event.target).value)" />
+                  <button type="button" class="finance__button" (click)="complete(w)">Completar</button>
+                  <input class="finance__input" placeholder="Motivo de rechazo" (input)="setReason(w.id, $any($event.target).value)" />
+                  <button type="button" class="finance__button" (click)="reject(w)">Rechazar</button>
+                } @else {
+                  <span class="finance__hint">{{ w.reference || w.notes || 'Cerrada' }}</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</section>

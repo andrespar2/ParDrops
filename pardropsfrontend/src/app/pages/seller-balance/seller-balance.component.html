@@ -1,0 +1,140 @@
+<!--
+  @file src/app/pages/seller-balance/seller-balance.component.html
+  @description Saldo, movimientos y retiros del vendedor.
+-->
+
+<section class="finance">
+  <header class="finance__header">
+    <h1 class="finance__title">Mi saldo</h1>
+    <p class="finance__subtitle">Consulta tus ganancias y solicita retiros.</p>
+  </header>
+
+  @if (error()) {
+    <p class="finance__alert">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p class="finance__ok">{{ success() }}</p>
+  }
+
+  @if (finance(); as data) {
+    <div class="finance__cards">
+      <article class="finance__card finance__card--main">
+        <span class="finance__label">Disponible para retirar</span>
+        <strong class="finance__value">{{ money(data.available) }}</strong>
+      </article>
+      <article class="finance__card">
+        <span class="finance__label">Pendiente de liberación</span>
+        <strong class="finance__value">{{ money(data.pending) }}</strong>
+      </article>
+      <article class="finance__card">
+        <span class="finance__label">Reservado en retiros</span>
+        <strong class="finance__value">{{ money(data.reserved) }}</strong>
+      </article>
+      <article class="finance__card">
+        <span class="finance__label">Total retirado</span>
+        <strong class="finance__value">{{ money(data.withdrawnTotal) }}</strong>
+      </article>
+      <article class="finance__card">
+        <span class="finance__label">Ventas netas</span>
+        <strong class="finance__value">{{ money(data.totalSales) }}</strong>
+      </article>
+      <article class="finance__card">
+        <span class="finance__label">Comisiones ParDrops</span>
+        <strong class="finance__value">{{ money(data.commissionTotal) }}</strong>
+      </article>
+    </div>
+
+    <div class="finance__grid">
+      <form class="finance__panel" [formGroup]="form" (ngSubmit)="submit()">
+        <h2 class="finance__panel-title">Solicitar retiro</h2>
+        <p class="finance__hint">Mínimo {{ money(data.minWithdrawal) }}.</p>
+
+        <label class="finance__field">
+          <span>Valor a retirar</span>
+          <input type="number" class="finance__input" formControlName="amount" step="1000" />
+        </label>
+
+        <label class="finance__field">
+          <span>Método</span>
+          <select class="finance__input" formControlName="method">
+            <option value="BRE_B">Bre-B</option>
+            <option value="BANK_ACCOUNT">Cuenta bancaria</option>
+          </select>
+        </label>
+
+        @if (form.controls.method.value === 'BRE_B') {
+          <label class="finance__field">
+            <span>Llave Bre-B</span>
+            <input class="finance__input" formControlName="breBKey" placeholder="Tu llave Bre-B" />
+          </label>
+          <p class="finance__hint">Bre-B no tiene comisiones adicionales.</p>
+        } @else {
+          <label class="finance__field"><span>Banco</span><input class="finance__input" formControlName="bankName" /></label>
+          <label class="finance__field">
+            <span>Tipo de cuenta</span>
+            <select class="finance__input" formControlName="accountType">
+              <option value="Ahorros">Ahorros</option>
+              <option value="Corriente">Corriente</option>
+            </select>
+          </label>
+          <label class="finance__field"><span>Número de cuenta</span><input class="finance__input" formControlName="accountNumber" /></label>
+          <label class="finance__field"><span>Titular</span><input class="finance__input" formControlName="accountHolder" /></label>
+          <p class="finance__hint">Pueden existir costos adicionales del banco.</p>
+        }
+
+        <div class="finance__summary">
+          <div><span>Solicitado</span><strong>{{ money(amount()) }}</strong></div>
+          <div><span>Comisión ParDrops</span><strong>{{ money(fee()) }}</strong></div>
+          <div><span>Recibirás</span><strong>{{ money(net()) }}</strong></div>
+        </div>
+
+        <button type="submit" class="finance__button">Enviar solicitud</button>
+      </form>
+
+      <div class="finance__panel">
+        <h2 class="finance__panel-title">Solicitudes</h2>
+        @if (data.withdrawals.length === 0) {
+          <p class="finance__hint">Todavía no has solicitado retiros.</p>
+        } @else {
+          <table class="finance__table">
+            <thead><tr><th>Fecha</th><th>Valor</th><th>Neto</th><th>Estado</th></tr></thead>
+            <tbody>
+              @for (w of data.withdrawals; track w.id) {
+                <tr>
+                  <td>{{ w.createdAt | date:'short' }}</td>
+                  <td>{{ money(w.amount) }}</td>
+                  <td>{{ money(w.netAmount) }}</td>
+                  <td><span class="finance__tag">{{ w.status }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </div>
+
+    <div class="finance__panel">
+      <h2 class="finance__panel-title">Movimientos</h2>
+      @if (data.movements.length === 0) {
+        <p class="finance__hint">Sin movimientos todavía.</p>
+      } @else {
+        <table class="finance__table">
+          <thead><tr><th>Fecha</th><th>Concepto</th><th>Valor</th><th>Comisión</th><th>Saldo</th></tr></thead>
+          <tbody>
+            @for (m of data.movements; track m.id) {
+              <tr>
+                <td>{{ m.createdAt | date:'short' }}</td>
+                <td>{{ m.description }}</td>
+                <td>{{ money(m.amount) }}</td>
+                <td>{{ money(m.commission) }}</td>
+                <td>{{ money(m.balanceAfter) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  } @else if (!error()) {
+    <p class="finance__hint">Cargando saldo…</p>
+  }
+</section>

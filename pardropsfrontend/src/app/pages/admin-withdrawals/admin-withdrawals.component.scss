@@ -1,0 +1,18 @@
+/** Acciones de la tabla de retiros. */
+
+.admin-w__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-width: 320px;
+
+  .finance__input {
+    max-width: 150px;
+  }
+
+  .finance__button {
+    padding: 6px 12px;
+    font-size: var(--font-size-xs);
+  }
+}

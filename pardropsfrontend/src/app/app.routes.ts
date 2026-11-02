@@ -112,6 +112,11 @@ export const routes: Routes = [
         title: 'ParDrops - Pedidos de mi tienda'
       },
       {
+        path: 'saldo',
+        loadComponent: () => import('./pages/seller-balance/seller-balance.component').then(m => m.SellerBalanceComponent),
+        title: 'ParDrops - Mi saldo'
+      },
+      {
         path: 'perfil',
         loadComponent: () => import('./pages/seller-profile/seller-profile.component').then(m => m.SellerProfileComponent),
         title: 'ParDrops - Mi tienda'
@@ -188,6 +193,11 @@ export const routes: Routes = [
         path: 'auditoria',
         loadComponent: () => import('./pages/admin-audit/admin-audit.component').then(m => m.AdminAuditComponent),
         title: 'ParDrops - Auditoría'
+      },
+      {
+        path: 'retiros',
+        loadComponent: () => import('./pages/admin-withdrawals/admin-withdrawals.component').then(m => m.AdminWithdrawalsComponent),
+        title: 'ParDrops - Retiros'
       },
       {
         path: 'soporte',

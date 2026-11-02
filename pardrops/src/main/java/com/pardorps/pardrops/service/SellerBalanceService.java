@@ -1,10 +1,13 @@
 package com.pardorps.pardrops.service;
 
 import com.pardorps.pardrops.model.FundsStatus;
+import com.pardorps.pardrops.model.LedgerEntryType;
 import com.pardorps.pardrops.model.OrderSubOrder;
 import com.pardorps.pardrops.model.SellerBalance;
+import com.pardorps.pardrops.model.SellerLedgerEntry;
 import com.pardorps.pardrops.repository.OrderSubOrderRepository;
 import com.pardorps.pardrops.repository.SellerBalanceRepository;
+import com.pardorps.pardrops.repository.SellerLedgerEntryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,17 +28,21 @@ public class SellerBalanceService {
 
     private final SellerBalanceRepository balanceRepository;
     private final OrderSubOrderRepository subOrderRepository;
+    private final SellerLedgerEntryRepository ledgerRepository;
 
     /**
      * @param balanceRepository  acceso a los saldos.
      * @param subOrderRepository acceso a las partes de pedido.
+     * @param ledgerRepository   acceso al historial de movimientos.
      */
     public SellerBalanceService(
             SellerBalanceRepository balanceRepository,
-            OrderSubOrderRepository subOrderRepository
+            OrderSubOrderRepository subOrderRepository,
+            SellerLedgerEntryRepository ledgerRepository
     ) {
         this.balanceRepository = balanceRepository;
         this.subOrderRepository = subOrderRepository;
+        this.ledgerRepository = ledgerRepository;
     }
 
     /**
@@ -82,6 +89,9 @@ public class SellerBalanceService {
         balance.setAvailableAmount(round(balance.getAvailableAmount() + net));
         balance.setCommissionTotal(round(balance.getCommissionTotal() + nz(subOrder.getCommissionAmount())));
         balanceRepository.save(balance);
+        ledger(balance, LedgerEntryType.SALE,
+                subOrder.getId() == null ? null : "SUB-" + subOrder.getId(),
+                "Venta liberada", net, nz(subOrder.getCommissionAmount()), balance.getAvailableAmount());
 
         subOrder.setFundsStatus(FundsStatus.RELEASED);
         subOrder.setReleasedAt(Instant.now());
@@ -127,6 +137,37 @@ public class SellerBalanceService {
 
     private double round(double value) {
         return Math.round(value * 100.0) / 100.0;
+    }
+
+    /**
+     * Registra un movimiento en el ledger del vendedor.
+     *
+     * @param balance     saldo del vendedor.
+     * @param type        tipo de movimiento.
+     * @param reference   referencia.
+     * @param description descripción.
+     * @param amount      importe.
+     * @param commission  comisión.
+     * @param balanceAfter saldo resultante.
+     */
+    private void ledger(
+            SellerBalance balance,
+            LedgerEntryType type,
+            String reference,
+            String description,
+            double amount,
+            double commission,
+            double balanceAfter
+    ) {
+        SellerLedgerEntry entry = new SellerLedgerEntry();
+        entry.setSeller(balance.getSeller());
+        entry.setType(type);
+        entry.setReference(reference);
+        entry.setDescription(description);
+        entry.setAmount(round(amount));
+        entry.setCommission(round(commission));
+        entry.setBalanceAfter(round(balanceAfter));
+        ledgerRepository.save(entry);
     }
 
     private double nz(Double value) {

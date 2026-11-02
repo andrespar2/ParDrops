@@ -6,6 +6,7 @@ import com.pardorps.pardrops.model.SellerBalance;
 import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.repository.OrderSubOrderRepository;
 import com.pardorps.pardrops.repository.SellerBalanceRepository;
+import com.pardorps.pardrops.repository.SellerLedgerEntryRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -26,8 +27,9 @@ class SellerBalanceServiceTest {
 
     private final SellerBalanceRepository balanceRepository = mock(SellerBalanceRepository.class);
     private final OrderSubOrderRepository subOrderRepository = mock(OrderSubOrderRepository.class);
+    private final SellerLedgerEntryRepository ledgerRepository = mock(SellerLedgerEntryRepository.class);
     private final SellerBalanceService service = new SellerBalanceService(
-            balanceRepository, subOrderRepository);
+            balanceRepository, subOrderRepository, ledgerRepository);
 
     @Test
     @DisplayName("Al crear la venta retiene el neto y suma las ventas")

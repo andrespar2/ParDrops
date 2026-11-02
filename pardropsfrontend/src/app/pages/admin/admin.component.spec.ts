@@ -29,11 +29,11 @@ describe('AdminComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('expone las catorce secciones del centro de administracion', () => {
+  it('expone las quince secciones del centro de administracion', () => {
     const fixture = TestBed.createComponent(AdminComponent);
     const sections = fixture.componentInstance.sections;
 
-    expect(sections.length).toBe(14);
+    expect(sections.length).toBe(15);
     expect(sections.map(section => section.path)).toEqual([
       'resumen',
       'usuarios',
@@ -46,6 +46,7 @@ describe('AdminComponent', () => {
       'resenas',
       'notificaciones',
       'auditoria',
+      'retiros',
       'soporte',
       'administradores',
       'configuracion'
@@ -68,4 +69,5 @@ describe('AdminComponent', () => {
     expect(component.menuOpen()).toBe(false);
   });
 });
+
 

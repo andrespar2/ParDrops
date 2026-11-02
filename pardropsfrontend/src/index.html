@@ -8,6 +8,19 @@
   <meta name="description" content="ParDrops - Plataforma de e-commerce minimalista y elegante con productos seleccionados de calidad premium.">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://images.unsplash.com">
+  <!-- Aplica el tema guardado antes de renderizar para evitar el destello. -->
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('pardrops_theme') || 'system';
+        var dark = stored === 'dark' ||
+          (stored === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
   <!-- Configuración de ejecución: se sustituye en el despliegue sin recompilar. -->
   <script src="config.js"></script>
 </head>

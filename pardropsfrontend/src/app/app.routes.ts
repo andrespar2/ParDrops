@@ -39,6 +39,11 @@ export const routes: Routes = [
     title: 'ParDrops - Detalle de producto'
   },
   {
+    path: 'favoritos',
+    loadComponent: () => import('./pages/favorites/favorites.component').then(m => m.FavoritesComponent),
+    title: 'ParDrops - Mis favoritos'
+  },
+  {
     path: 'carrito',
     loadComponent: () => import('./pages/cart/cart.component').then(m => m.CartComponent),
     title: 'ParDrops - Carrito de compras'

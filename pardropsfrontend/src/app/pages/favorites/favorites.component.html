@@ -1,0 +1,26 @@
+<!--
+  @file src/app/pages/favorites/favorites.component.html
+  @description Productos guardados en favoritos.
+-->
+
+<main class="favorites container">
+  <header class="favorites__header">
+    <h1 class="favorites__title">Mis favoritos</h1>
+    <p class="favorites__subtitle">Los productos que guardaste para revisar más tarde.</p>
+  </header>
+
+  @if (loading() && products().length === 0) {
+    <p class="favorites__status">Cargando favoritos…</p>
+  } @else if (products().length === 0) {
+    <div class="favorites__empty">
+      <p>Todavía no guardaste productos.</p>
+      <a routerLink="/productos" class="favorites__action">Explorar productos</a>
+    </div>
+  } @else {
+    <div class="favorites__grid">
+      @for (product of products(); track product.id) {
+        <app-product-card [product]="product"></app-product-card>
+      }
+    </div>
+  }
+</main>

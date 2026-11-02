@@ -1,27 +1,27 @@
 /**
  * @file src/app/shared/components/header/header.component.ts
- * @description Componente de cabecera para la navegación principal.
+ * @description Cabecera principal: marca, buscador, accesos y sesión.
  *
- * Muestra la marca/logo, el menú de navegación, el buscador, el acceso a la
- * cuenta del usuario y el indicador del carrito de compras con el contador de
- * ítems. Para el administrador incluye además el aviso de pedidos por gestionar.
- *
- * @author ParDrops E-commerce
- * @version 1.0.0
+ * Mantiene el menú móvil, el desplegable de usuario, el contador del carrito,
+ * las notificaciones y el aviso de pedidos pendientes para administración.
+ * Añade el buscador global, los favoritos y el selector de tema.
  */
 
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CartService } from '../../../core/services/cart.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { OrderService } from '../../../core/services/order.service';
+import { FavoritesService } from '../../../core/services/favorites.service';
+import { ThemeService } from '../../../core/services/theme.service';
 import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, NotificationBellComponent],
+  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive, NotificationBellComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
@@ -35,7 +35,13 @@ export class HeaderComponent {
   /** Servicio de pedidos para avisar de las compras nuevas. */
   private readonly orderService = inject(OrderService);
 
-  /** Router para redirigir tras cerrar sesión. */
+  /** Favoritos guardados en el navegador. */
+  private readonly favoritesService = inject(FavoritesService);
+
+  /** Preferencia de tema. */
+  private readonly themeService = inject(ThemeService);
+
+  /** Router para redirigir tras buscar o cerrar sesión. */
   private readonly router = inject(Router);
 
   /** Referencia de destrucción para detener el sondeo de pedidos. */
@@ -43,6 +49,9 @@ export class HeaderComponent {
 
   /** Contador computado de ítems en el carrito. */
   public readonly itemCount = computed(() => this.cartService.itemCount());
+
+  /** Número de favoritos guardados. */
+  public readonly favoritesCount = this.favoritesService.count;
 
   /** Pedidos pendientes de gestión (aviso para el administrador). */
   public readonly pendingCount = this.orderService.pendingCount;
@@ -58,6 +67,15 @@ export class HeaderComponent {
 
   /** Indica si el usuario es vendedor. */
   public readonly isSeller = this.authService.isSeller;
+
+  /** Texto del buscador. */
+  public readonly searchTerm = signal<string>('');
+
+  /** Etiqueta accesible del tema actual. */
+  public readonly themeLabel = computed(() => this.themeService.label());
+
+  /** Modo de tema actual, usado para elegir el icono. */
+  public readonly themeMode = this.themeService.mode;
 
   /** Estado del menú móvil (expandido/colapsado). */
   public isMobileMenuOpen = false;
@@ -79,9 +97,23 @@ export class HeaderComponent {
   }
 
   /**
+   * Envía la búsqueda al catálogo.
+   */
+  public search(): void {
+    const term = this.searchTerm().trim();
+    this.router.navigate(['/productos'], {
+      queryParams: term ? { search: term } : {}
+    });
+    this.closeMobileMenu();
+  }
+
+  /** Cambia entre tema automático, claro y oscuro. */
+  public toggleTheme(): void {
+    this.themeService.cycle();
+  }
+
+  /**
    * Alterna el estado del menú móvil.
-   *
-   * @returns {void}
    */
   public toggleMobileMenu(): void {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
@@ -89,8 +121,6 @@ export class HeaderComponent {
 
   /**
    * Cierra el menú móvil.
-   *
-   * @returns {void}
    */
   public closeMobileMenu(): void {
     this.isMobileMenuOpen = false;
@@ -98,8 +128,6 @@ export class HeaderComponent {
 
   /**
    * Alterna el desplegable del usuario.
-   *
-   * @returns {void}
    */
   public toggleUserMenu(): void {
     this.isUserMenuOpen.update(open => !open);
@@ -107,8 +135,6 @@ export class HeaderComponent {
 
   /**
    * Cierra la sesión, cierra los menús y vuelve al inicio.
-   *
-   * @returns {void}
    */
   public logout(): void {
     this.authService.logout();

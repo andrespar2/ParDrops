@@ -1,8 +1,8 @@
-/**
+﻿/**
  * @file src/app/core/services/cart.service.ts
- * @description Servicio para la gestión del carrito de compras.
+ * @description Servicio para la gestiÃ³n del carrito de compras.
  * 
- * Este servicio maneja toda la lógica del carrito: añadir productos, eliminar,
+ * Este servicio maneja toda la lÃ³gica del carrito: aÃ±adir productos, eliminar,
  * actualizar cantidades, vaciar carrito y calcular totales. Utiliza signals
  * para un estado reactivo y gestiona la persistencia en localStorage.
  * 
@@ -17,7 +17,7 @@ import {
   CURRENCY_CODE,
   FREE_SHIPPING_THRESHOLD,
   SHIPPING_COST,
-  TAX_RATE
+  includedTax
 } from '../config/commerce.config';
 
 @Injectable({
@@ -32,25 +32,25 @@ export class CartService {
   private readonly STORAGE_KEY = 'pardrops_cart';
 
   /**
-   * Signal privado que almacena los ítems del carrito.
+   * Signal privado que almacena los Ã­tems del carrito.
    * @private
    */
   private readonly _items = signal<CartItem[]>(this.loadFromStorage());
 
   /**
-   * Signal computado que expone todos los ítems del carrito.
-   * @returns {CartItem[]} Lista de ítems en el carrito.
+   * Signal computado que expone todos los Ã­tems del carrito.
+   * @returns {CartItem[]} Lista de Ã­tems en el carrito.
    */
   public readonly items = computed(() => this._items());
 
   /**
-   * Signal computado que indica si el carrito está vacío.
-   * @returns {boolean} True si no hay ítems, false en caso contrario.
+   * Signal computado que indica si el carrito estÃ¡ vacÃ­o.
+   * @returns {boolean} True si no hay Ã­tems, false en caso contrario.
    */
   public readonly isEmpty = computed(() => this._items().length === 0);
 
   /**
-   * Signal computado que cuenta el número total de unidades en el carrito.
+   * Signal computado que cuenta el nÃºmero total de unidades en el carrito.
    * @returns {number} Total de unidades.
    */
   public readonly itemCount = computed(() => 
@@ -59,7 +59,7 @@ export class CartService {
 
   /**
    * Signal computado que calcula el subtotal del carrito.
-   * @returns {number} Subtotal antes de impuestos y envío.
+   * @returns {number} Subtotal antes de impuestos y envÃ­o.
    */
   public readonly subtotal = computed(() => 
     this._items().reduce((total, item) => {
@@ -69,8 +69,8 @@ export class CartService {
   );
 
   /**
-   * Signal computado con los costes de envío (gratis desde el umbral de COP).
-   * @returns {number} Coste de envío.
+   * Signal computado con los costes de envÃ­o (gratis desde el umbral de COP).
+   * @returns {number} Coste de envÃ­o.
    */
   public readonly shipping = computed(() => {
     const subtotal = this.subtotal();
@@ -78,20 +78,20 @@ export class CartService {
   });
 
   /**
-   * Signal computado con los impuestos (IVA 19% en Colombia).
-   * @returns {number} Importe de impuestos.
+   * IVA incluido en los precios (informativo). No se suma al total.
+   * @returns {number} Porción de impuesto incluida en el subtotal.
    */
-  public readonly tax = computed(() => Math.round(this.subtotal() * TAX_RATE));
+  public readonly tax = computed(() => includedTax(this.subtotal()));
 
   /**
    * Signal computado con el total final.
    * @returns {number} Total a pagar.
    */
   public readonly total = computed(() =>
-    Math.round(this.subtotal() + this.tax() + this.shipping())
+    Math.round(this.subtotal() + this.shipping())
   );
 
-  /** Subtotal a partir del cual el envío es gratuito. */
+  /** Subtotal a partir del cual el envÃ­o es gratuito. */
   public readonly freeShippingThreshold = FREE_SHIPPING_THRESHOLD;
 
   /**
@@ -118,11 +118,11 @@ export class CartService {
   }
 
   /**
-   * Añade un producto al carrito.
+   * AÃ±ade un producto al carrito.
    * Si el producto ya existe (misma variante), incrementa la cantidad.
    * 
-   * @param {Product} product - Producto a añadir.
-   * @param {number} [quantity=1] - Cantidad a añadir.
+   * @param {Product} product - Producto a aÃ±adir.
+   * @param {number} [quantity=1] - Cantidad a aÃ±adir.
    * @param {ProductVariant} [selectedVariant] - Variante seleccionada.
    * @returns {void}
    */
@@ -133,7 +133,7 @@ export class CartService {
     );
 
     if (existingItemIndex > -1) {
-      // Actualizar cantidad del ítem existente
+      // Actualizar cantidad del Ã­tem existente
       const updatedItems = [...this._items()];
       const newQuantity = updatedItems[existingItemIndex].quantity + quantity;
       // Verificar stock disponible
@@ -141,7 +141,7 @@ export class CartService {
       updatedItems[existingItemIndex].quantity = Math.min(newQuantity, maxStock);
       this._items.set(updatedItems);
     } else {
-      // Crear nuevo ítem
+      // Crear nuevo Ã­tem
       const maxStock = selectedVariant?.stock ?? product.stock;
       const finalQuantity = Math.min(quantity, maxStock);
       
@@ -160,9 +160,9 @@ export class CartService {
   }
 
   /**
-   * Actualiza la cantidad de un ítem específico del carrito.
+   * Actualiza la cantidad de un Ã­tem especÃ­fico del carrito.
    * 
-   * @param {string} itemId - ID del ítem a actualizar.
+   * @param {string} itemId - ID del Ã­tem a actualizar.
    * @param {number} quantity - Nueva cantidad.
    * @returns {void}
    */
@@ -190,9 +190,9 @@ export class CartService {
   }
 
   /**
-   * Elimina un ítem del carrito.
+   * Elimina un Ã­tem del carrito.
    * 
-   * @param {string} itemId - ID del ítem a eliminar.
+   * @param {string} itemId - ID del Ã­tem a eliminar.
    * @returns {void}
    */
   removeItem(itemId: string): void {
@@ -200,9 +200,9 @@ export class CartService {
   }
 
   /**
-   * Incrementa la cantidad de un ítem en 1 unidad.
+   * Incrementa la cantidad de un Ã­tem en 1 unidad.
    * 
-   * @param {string} itemId - ID del ítem.
+   * @param {string} itemId - ID del Ã­tem.
    * @returns {void}
    */
   increaseQuantity(itemId: string): void {
@@ -213,9 +213,9 @@ export class CartService {
   }
 
   /**
-   * Decrementa la cantidad de un ítem en 1 unidad.
+   * Decrementa la cantidad de un Ã­tem en 1 unidad.
    * 
-   * @param {string} itemId - ID del ítem.
+   * @param {string} itemId - ID del Ã­tem.
    * @returns {void}
    */
   decreaseQuantity(itemId: string): void {
@@ -226,7 +226,7 @@ export class CartService {
   }
 
   /**
-   * Vacía completamente el carrito de compras.
+   * VacÃ­a completamente el carrito de compras.
    * 
    * @returns {void}
    */
@@ -254,7 +254,7 @@ export class CartService {
   /**
    * Carga el carrito desde localStorage.
    * 
-   * @returns {CartItem[]} Lista de ítems almacenados.
+   * @returns {CartItem[]} Lista de Ã­tems almacenados.
    * @private
    */
   private loadFromStorage(): CartItem[] {
@@ -272,7 +272,7 @@ export class CartService {
   /**
    * Guarda el carrito en localStorage.
    * 
-   * @param {CartItem[]} items - Ítems a guardar.
+   * @param {CartItem[]} items - Ãtems a guardar.
    * @returns {void}
    * @private
    */

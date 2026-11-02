@@ -1,122 +1,126 @@
-<!-- 
+<!--
   @file src/app/pages/home/home.component.html
-  @description Plantilla HTML de la página de inicio.
+  @description Escaparate: filtros a la izquierda y productos en primer plano.
 -->
 
-<main>
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="container">
-      <div class="hero__content">
-        <span class="hero__tag">Colección Minimalista</span>
-        <h1 class="hero__title">
-          Diseño elegante. <br>
-          Calidad excepcional.
-        </h1>
-        <p class="hero__description">
-          Descubre nuestra selección curada de productos con un enfoque 
-          minimalista y atemporal.
-        </p>
-        <div class="hero__actions">
-          <a routerLink="/productos" class="hero__button hero__button--primary">
-            Ver productos
-          </a>
-          <a routerLink="/productos" [queryParams]="{ filter: 'ofertas' }" class="hero__button hero__button--secondary">
-            Ver ofertas
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
+<main class="market">
+  <div class="market__layout container" [class.market__layout--collapsed]="!sidebarOpen()">
 
-  <!-- Más vendidos -->
-  @if (bestSellers().length > 0) {
-    <section class="section">
-      <div class="container">
-        <div class="section__header">
-          <h2 class="section__title">Los más vendidos</h2>
-          <p class="section__subtitle">Los productos que más compran nuestros clientes</p>
+    <!-- Filtros -->
+    <aside class="filters" [attr.aria-label]="'Filtros del catálogo'">
+      <div class="filters__header">
+        <h2 class="filters__title">Filtros</h2>
+        <button type="button" class="filters__collapse" (click)="toggleSidebar()"
+                [attr.aria-expanded]="sidebarOpen()" aria-label="Contraer filtros">
+          {{ sidebarOpen() ? '‹' : '›' }}
+        </button>
+      </div>
+
+      @if (sidebarOpen()) {
+        <section class="filters__group">
+          <h3 class="filters__heading">Categorías</h3>
+          <ul class="filters__list">
+            <li>
+              <button type="button" class="filters__option"
+                      [class.filters__option--active]="category() === 'all'"
+                      (click)="selectCategory('all')">Todas</button>
+            </li>
+            @for (name of categories(); track name) {
+              <li>
+                <button type="button" class="filters__option"
+                        [class.filters__option--active]="category() === name"
+                        (click)="selectCategory(name)">{{ name }}</button>
+              </li>
+            }
+          </ul>
+        </section>
+
+        <section class="filters__group">
+          <h3 class="filters__heading">Precio</h3>
+          <ul class="filters__list">
+            <li><button type="button" class="filters__option" [class.filters__option--active]="priceRange() === 'all'" (click)="selectRange('all')">Cualquier precio</button></li>
+            <li><button type="button" class="filters__option" [class.filters__option--active]="priceRange() === 'lt100'" (click)="selectRange('lt100')">Menos de {{ formatPrice(100000) }}</button></li>
+            <li><button type="button" class="filters__option" [class.filters__option--active]="priceRange() === '100-300'" (click)="selectRange('100-300')">{{ formatPrice(100000) }} – {{ formatPrice(300000) }}</button></li>
+            <li><button type="button" class="filters__option" [class.filters__option--active]="priceRange() === '300-1000'" (click)="selectRange('300-1000')">{{ formatPrice(300000) }} – {{ formatPrice(1000000) }}</button></li>
+            <li><button type="button" class="filters__option" [class.filters__option--active]="priceRange() === 'gt1000'" (click)="selectRange('gt1000')">Más de {{ formatPrice(1000000) }}</button></li>
+          </ul>
+        </section>
+
+        <section class="filters__group">
+          <h3 class="filters__heading">Atajos</h3>
+          <ul class="filters__list">
+            <li><a class="filters__option" routerLink="/favoritos">Mis favoritos</a></li>
+            @if (isSeller()) {
+              <li><a class="filters__option" routerLink="/vendedor/productos">Mis publicaciones</a></li>
+            } @else {
+              <li><a class="filters__option" routerLink="/vender">Publicar un producto</a></li>
+            }
+            <li><a class="filters__option" routerLink="/productos" [queryParams]="{ filter: 'nuevos' }">Recién publicado</a></li>
+          </ul>
+        </section>
+
+        <button type="button" class="filters__clear" (click)="clearFilters()">Limpiar filtros</button>
+      }
+    </aside>
+
+    <!-- Resultados -->
+    <section class="results">
+      <header class="results__bar">
+        <div class="results__summary">
+          <h1 class="results__title">Productos</h1>
+          <p class="results__count">
+            {{ filtered().length }} {{ filtered().length === 1 ? 'resultado' : 'resultados' }}
+            @if (quickFilter() !== 'all') {
+              · {{ quickFilter() === 'nuevos' ? 'recién publicado' : 'ofertas' }}
+            }
+          </p>
         </div>
-        <div class="grid grid--3">
-          @for (product of bestSellers(); track product.id) {
+
+        <div class="results__controls">
+          <button type="button" class="results__filter-toggle" (click)="toggleSidebar()">
+            {{ sidebarOpen() ? 'Ocultar filtros' : 'Filtros' }}
+          </button>
+          <label class="results__sort">
+            <span>Ordenar por</span>
+            <select [ngModel]="sort()" (ngModelChange)="selectSort($event)">
+              <option value="relevance">Relevancia</option>
+              <option value="price-asc">Precio: menor a mayor</option>
+              <option value="price-desc">Precio: mayor a menor</option>
+              <option value="recent">Más recientes</option>
+            </select>
+          </label>
+        </div>
+      </header>
+
+      @if (loading() && products().length === 0) {
+        <div class="results__grid" aria-busy="true">
+          @for (item of [1,2,3,4,5,6,7,8]; track item) {
+            <div class="skeleton-card" aria-hidden="true"></div>
+          }
+        </div>
+      } @else if (error()) {
+        <div class="results__empty">
+          <p>No pudimos cargar el catálogo.</p>
+          <button type="button" class="results__action" (click)="retry()">Reintentar</button>
+        </div>
+      } @else if (filtered().length === 0) {
+        <div class="results__empty">
+          <p>No encontramos productos con esos filtros.</p>
+          <button type="button" class="results__action" (click)="clearFilters()">Ver todo el catálogo</button>
+        </div>
+      } @else {
+        <div class="results__grid">
+          @for (product of visible(); track product.id) {
             <app-product-card [product]="product"></app-product-card>
           }
         </div>
-        <div class="section__actions">
-          <a routerLink="/productos" class="section__link">Ver todo el catálogo →</a>
-        </div>
-      </div>
-    </section>
-  }
 
-  <!-- Mejor valorados -->
-  @if (topRated().length > 0) {
-    <section class="section section--gray">
-      <div class="container">
-        <div class="section__header">
-          <h2 class="section__title">Mejor valorados</h2>
-          <p class="section__subtitle">Las mejores opiniones de la comunidad</p>
-        </div>
-        <div class="grid grid--3">
-          @for (product of topRated(); track product.id) {
-            <app-product-card [product]="product"></app-product-card>
-          }
-        </div>
-      </div>
+        @if (hasMore()) {
+          <div class="results__more">
+            <button type="button" class="results__action" (click)="loadMore()">Ver más productos</button>
+          </div>
+        }
+      }
     </section>
-  }
-
-  <!-- Productos Destacados -->
-  @if (featuredProducts().length > 0) {
-    <section class="section">
-      <div class="container">
-        <div class="section__header">
-          <h2 class="section__title">Productos destacados</h2>
-          <p class="section__subtitle">Nuestra selección más popular</p>
-        </div>
-        <div class="grid grid--3">
-          @for (product of featuredProducts(); track product.id) {
-            <app-product-card [product]="product"></app-product-card>
-          }
-        </div>
-        <div class="section__actions">
-          <a routerLink="/productos" class="section__link">Ver todos los productos →</a>
-        </div>
-      </div>
-    </section>
-  }
-
-  <!-- Productos Nuevos -->
-  @if (newProducts().length > 0) {
-    <section class="section section--gray">
-      <div class="container">
-        <div class="section__header">
-          <h2 class="section__title">Novedades</h2>
-          <p class="section__subtitle">Lo último que hemos añadido</p>
-        </div>
-        <div class="grid grid--3">
-          @for (product of newProducts(); track product.id) {
-            <app-product-card [product]="product"></app-product-card>
-          }
-        </div>
-      </div>
-    </section>
-  }
-
-  <!-- Productos en Oferta -->
-  @if (saleProducts().length > 0) {
-    <section class="section">
-      <div class="container">
-        <div class="section__header">
-          <h2 class="section__title">Ofertas</h2>
-          <p class="section__subtitle">No te pierdas estas oportunidades</p>
-        </div>
-        <div class="grid grid--3">
-          @for (product of saleProducts(); track product.id) {
-            <app-product-card [product]="product"></app-product-card>
-          }
-        </div>
-      </div>
-    </section>
-  }
-</main>
+  </div>
+</main>

@@ -1,79 +1,79 @@
-<!-- 
+<!--
   @file src/app/shared/components/product-card/product-card.component.html
-  @description Plantilla HTML del componente product-card.
-  
-  Tarjeta minimalista con imagen, información y acciones.
+  @description Tarjeta de producto orientada a la compra.
 -->
 
 <article class="product-card">
-  <!-- Enlace a detalle del producto -->
-  <a 
-    [routerLink]="['/productos', product.slug]" 
-    class="product-card__link"
-    [attr.aria-label]="'Ver detalles de ' + product.name"
-  >
-    <!-- Imagen del producto -->
-    <div class="product-card__image-wrapper">
-      <img 
-        [src]="getPrimaryImage()" 
-        [alt]="product.name"
-        class="product-card__image"
-        loading="lazy"
-      >
-      
-      <!-- Etiquetas -->
+  <div class="product-card__media">
+    <a
+      [routerLink]="['/productos', product.slug]"
+      class="product-card__media-link"
+      [attr.aria-label]="'Ver ' + product.name"
+    >
+      @if (getPrimaryImage()) {
+        <img
+          [src]="getPrimaryImage()"
+          [alt]="product.name"
+          class="product-card__image"
+          width="400"
+          height="400"
+          loading="lazy"
+          decoding="async"
+        >
+      } @else {
+        <div class="product-card__placeholder" aria-hidden="true">Sin foto</div>
+      }
+    </a>
+
+    <button
+      type="button"
+      class="product-card__favorite"
+      [class.product-card__favorite--active]="isFavorite()"
+      [attr.aria-pressed]="isFavorite()"
+      [attr.aria-label]="isFavorite() ? 'Quitar de favoritos' : 'Guardar en favoritos'"
+      (click)="toggleFavorite($event)"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24"
+           [attr.fill]="isFavorite() ? 'currentColor' : 'none'"
+           stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"></path>
+      </svg>
+    </button>
+
+    @if (product.isNew || (product.onSale && product.originalPrice)) {
       <div class="product-card__badges">
         @if (product.isNew) {
-          <span class="product-card__badge product-card__badge--new">Nuevo</span>
+          <span class="product-card__badge">Nuevo</span>
         }
         @if (product.onSale && product.originalPrice) {
           <span class="product-card__badge product-card__badge--sale">Oferta</span>
         }
       </div>
-    </div>
-
-    <!-- Información del producto -->
-    <div class="product-card__info">
-      <h3 class="product-card__name">{{ product.name }}</h3>
-      <p class="product-card__description">{{ product.description }}</p>
-      
-      <!-- Precios -->
-      <div class="product-card__price">
-        @if (product.onSale && product.originalPrice) {
-          <span class="product-card__price--original">
-            {{ formatPrice(product.originalPrice) }}
-          </span>
-        }
-        <span class="product-card__price--current">
-          {{ formatPrice(product.price) }}
-        </span>
-      </div>
-    </div>
-  </a>
-
-  @if (product.storeSlug) {
-    <a
-      [routerLink]="['/tiendas', product.storeSlug]"
-      class="product-card__store"
-    >
-      Ver tienda{{ product.sellerName ? ': ' + product.sellerName : '' }}
-    </a>
-  }
-
-  <!-- Acciones -->
-  <div class="product-card__actions">
-    <button 
-      type="button"
-      class="product-card__button"
-      (click)="addToCart()"
-      [disabled]="product.stock === 0"
-      [attr.aria-label]="'Añadir ' + product.name + ' al carrito'"
-    >
-      @if (product.stock > 0) {
-        Añadir al carrito
-      } @else {
-        Agotado
-      }
-    </button>
+    }
   </div>
-</article>
+
+  <div class="product-card__body">
+    <p class="product-card__price">
+      {{ formatPrice(product.price) }}
+      @if (product.onSale && product.originalPrice) {
+        <span class="product-card__price-old">{{ formatPrice(product.originalPrice) }}</span>
+      }
+    </p>
+
+    <h3 class="product-card__name">
+      <a [routerLink]="['/productos', product.slug]">{{ product.name }}</a>
+    </h3>
+
+    <p class="product-card__seller">
+      @if (product.storeSlug) {
+        <a [routerLink]="['/tiendas', product.storeSlug]">{{ product.sellerName || 'Ver tienda' }}</a>
+      } @else {
+        {{ product.sellerName || 'ParDrops' }}
+      }
+    </p>
+
+    <p class="product-card__availability" [class.product-card__availability--out]="product.stock === 0">
+      {{ availability }}
+    </p>
+  </div>
+</article>

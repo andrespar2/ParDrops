@@ -1,203 +1,153 @@
-<!-- 
+<!--
   @file src/app/shared/components/header/header.component.html
-  @description Plantilla HTML del componente de cabecera.
-  
-  Estructura: Logo, navegación, buscador y carrito.
-  Diseño responsive con menú móvil.
+  @description Cabecera: marca, buscador, accesos rápidos y sesión.
 -->
 
 <header class="header">
-  <nav class="nav container">
-    <!-- Logo/Marca -->
-    <div class="nav__brand">
-      <a routerLink="/" class="nav__logo" (click)="closeMobileMenu()">
-        ParDrops
+  <div class="header__top container">
+    <a routerLink="/" class="header__logo" (click)="closeMobileMenu()">ParDrops</a>
+
+    <!-- Buscador principal -->
+    <form class="header__search" role="search" (ngSubmit)="search()">
+      <label class="sr-only" for="header-search">Buscar productos</label>
+      <input
+        id="header-search"
+        name="q"
+        type="search"
+        class="header__search-input"
+        placeholder="Buscar productos, marcas y categorías"
+        autocomplete="off"
+        [ngModel]="searchTerm()"
+        (ngModelChange)="searchTerm.set($event)"
+      >
+      <button type="submit" class="header__search-button" aria-label="Buscar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m20 20-3.5-3.5"></path>
+        </svg>
+      </button>
+    </form>
+
+    <div class="header__actions">
+      <!-- Tema -->
+      <button
+        type="button"
+        class="header__icon"
+        (click)="toggleTheme()"
+        [attr.aria-label]="themeLabel()"
+        [title]="themeLabel()"
+      >
+        @switch (themeMode()) {
+          @case ('light') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"></circle>
+              <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+            </svg>
+          }
+          @case ('dark') {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"></path>
+            </svg>
+          }
+          @default {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 3v18"></path>
+              <path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor" stroke="none"></path>
+            </svg>
+          }
+        }
+      </button>
+
+      <!-- Favoritos -->
+      <a routerLink="/favoritos" class="header__icon" aria-label="Mis favoritos" title="Mis favoritos" (click)="closeMobileMenu()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"></path>
+        </svg>
+        @if (favoritesCount() > 0) {
+          <span class="header__badge">{{ favoritesCount() }}</span>
+        }
       </a>
-    </div>
 
-    <!-- Botón menú móvil -->
-    <button 
-      class="nav__toggle" 
-      type="button"
-      (click)="toggleMobileMenu()"
-      [attr.aria-expanded]="isMobileMenuOpen"
-      aria-label="Abrir menú de navegación"
-    >
-      <span class="nav__toggle-bar"></span>
-      <span class="nav__toggle-bar"></span>
-      <span class="nav__toggle-bar"></span>
-    </button>
+      <!-- Notificaciones -->
+      <app-notification-bell></app-notification-bell>
 
-    <!-- Menú de navegación -->
-    <ul class="nav__menu" [class.nav__menu--open]="isMobileMenuOpen">
-      <li class="nav__item">
-        <a 
-          routerLink="/" 
-          routerLinkActive="nav__link--active"
-          [routerLinkActiveOptions]="{ exact: true }"
-          class="nav__link"
-          (click)="closeMobileMenu()"
-        >
-          Inicio
-        </a>
-      </li>
-      <li class="nav__item">
-        <a 
-          routerLink="/productos" 
-          routerLinkActive="nav__link--active"
-          class="nav__link"
-          (click)="closeMobileMenu()"
-        >
-          Productos
-        </a>
-      </li>
-      <li class="nav__item">
-        <a 
-          routerLink="/productos" 
-          [queryParams]="{ filter: 'nuevos' }"
-          class="nav__link nav__link--secondary"
-          (click)="closeMobileMenu()"
-        >
-          Nuevos
-        </a>
-      </li>
-      <li class="nav__item">
-        <a 
-          routerLink="/productos" 
-          [queryParams]="{ filter: 'ofertas' }"
-          class="nav__link nav__link--secondary"
-          (click)="closeMobileMenu()"
-        >
-          Ofertas
-        </a>
-      </li>
-    </ul>
+      <!-- Carrito -->
+      <a routerLink="/carrito" class="header__icon" aria-label="Carrito de compras" title="Carrito" (click)="closeMobileMenu()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M3 3h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"></path>
+          <circle cx="10" cy="20" r="1"></circle>
+          <circle cx="18" cy="20" r="1"></circle>
+        </svg>
+        @if (itemCount() > 0) {
+          <span class="header__badge">{{ itemCount() }}</span>
+        }
+      </a>
 
-    <!-- Acciones: cuenta de usuario y carrito -->
-    <div class="nav__actions">
+      <!-- Sesión -->
       @if (isAuthenticated()) {
-        <!-- Menú de usuario autenticado -->
-        <div class="nav__user">
+        <div class="header__user">
           <button
             type="button"
-            class="nav__user-button"
+            class="header__user-button"
             (click)="toggleUserMenu()"
             [attr.aria-expanded]="isUserMenuOpen()"
-            aria-label="Abrir menú de usuario"
+            aria-haspopup="menu"
           >
-            @if (user()?.avatarUrl) {
-              <img
-                class="nav__user-avatar"
-                [src]="user()?.avatarUrl"
-                [alt]="'Foto de ' + user()?.fullName"
-                referrerpolicy="no-referrer"
-              >
-            } @else {
-              <span class="nav__user-avatar">{{ user()?.fullName?.charAt(0)?.toUpperCase() }}</span>
-            }
-            <span class="nav__user-name">{{ user()?.fullName }}</span>
+            <span class="header__avatar" aria-hidden="true">{{ user()?.fullName?.charAt(0) || 'U' }}</span>
+            <span class="header__user-name">{{ user()?.fullName }}</span>
           </button>
 
           @if (isUserMenuOpen()) {
-            <div class="nav__user-menu">
-              <a routerLink="/cuenta" class="nav__user-link" (click)="toggleUserMenu()">
-                Mi cuenta
-              </a>
-              <a routerLink="/cuenta" class="nav__user-link" (click)="toggleUserMenu()">
-                Mis pedidos
-              </a>
+            <div class="header__menu" role="menu">
+              <a routerLink="/cuenta" role="menuitem" (click)="toggleUserMenu()">Mi cuenta</a>
+              <a routerLink="/cuenta" role="menuitem" (click)="toggleUserMenu()">Mis compras</a>
+              <a routerLink="/favoritos" role="menuitem" (click)="toggleUserMenu()">Mis favoritos</a>
               @if (isSeller()) {
-                <a routerLink="/vendedor" class="nav__user-link" (click)="toggleUserMenu()">
-                  Panel de vendedor
-                </a>
-              } @else if (!isAdmin()) {
-                <a routerLink="/vender" class="nav__user-link" (click)="toggleUserMenu()">
-                  Vender en ParDrops
-                </a>
+                <a routerLink="/vendedor" role="menuitem" (click)="toggleUserMenu()">Mis ventas</a>
               }
               @if (isAdmin()) {
-                <a routerLink="/admin" class="nav__user-link" (click)="toggleUserMenu()">
-                  Panel de administración
-                </a>
+                <a routerLink="/admin" role="menuitem" (click)="toggleUserMenu()">Administración</a>
               }
-              <button
-                type="button"
-                class="nav__user-link nav__user-link--danger"
-                (click)="logout()"
-              >
-                Cerrar sesión
-              </button>
+              <button type="button" role="menuitem" class="header__menu-logout" (click)="logout()">Cerrar sesión</button>
             </div>
           }
         </div>
       } @else {
-        <!-- Acceso para invitados -->
-        <a routerLink="/login" class="nav__login" (click)="closeMobileMenu()">
-          Iniciar sesión
-        </a>
+        <a routerLink="/login" class="header__login" (click)="closeMobileMenu()">Ingresar</a>
       }
 
-      <!-- Aviso de pedidos por gestionar (solo administradores) -->
-      @if (isAdmin()) {
-        <a
-          routerLink="/admin/pedidos"
-          class="nav__cart"
-          (click)="closeMobileMenu()"
-          aria-label="Pedidos recibidos"
-        >
-          <svg
-            class="nav__cart-icon"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
-          @if (pendingCount() > 0) {
-            <span class="nav__cart-badge nav__cart-badge--alert">{{ pendingCount() }}</span>
-          }
-        </a>
-      }
+      <a routerLink="/vender" class="header__sell" (click)="closeMobileMenu()">Vender</a>
 
-      <!-- Campanilla de notificaciones (solo usuarios con sesión) -->
-      @if (isAuthenticated()) {
-        <app-notification-bell />
-      }
-
-      <!-- Carrito -->
-      <a 
-        routerLink="/carrito" 
-        class="nav__cart"
-        (click)="closeMobileMenu()"
-        aria-label="Ver carrito de compras"
+      <button
+        type="button"
+        class="header__toggle"
+        (click)="toggleMobileMenu()"
+        [attr.aria-expanded]="isMobileMenuOpen"
+        aria-label="Abrir menú"
       >
-        <svg 
-          class="nav__cart-icon" 
-          width="24" 
-          height="24" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          stroke-width="2" 
-          stroke-linecap="round" 
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="9" cy="21" r="1"></circle>
-          <circle cx="20" cy="21" r="1"></circle>
-          <path d="M1 1h4l2.68 13.39A2 2 0 0 0 9.66 17h8.66a2 2 0 0 0 1.97-1.61L23 6H6"></path>
-        </svg>
-        @if (itemCount() > 0) {
-          <span class="nav__cart-badge">{{ itemCount() }}</span>
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Navegación secundaria -->
+  <nav class="header__nav container" [class.header__nav--open]="isMobileMenuOpen">
+    <a routerLink="/productos" routerLinkActive="header__link--active" (click)="closeMobileMenu()">Explorar</a>
+    <a routerLink="/productos" [queryParams]="{ filter: 'nuevos' }" (click)="closeMobileMenu()">Recién publicado</a>
+    <a routerLink="/productos" [queryParams]="{ filter: 'ofertas' }" (click)="closeMobileMenu()">Ofertas</a>
+    @if (isSeller()) {
+      <a routerLink="/vendedor" (click)="closeMobileMenu()">Mis ventas</a>
+    } @else {
+      <a routerLink="/vender" (click)="closeMobileMenu()">Cómo vender</a>
+    }
+    @if (isAdmin()) {
+      <a routerLink="/admin" (click)="closeMobileMenu()">
+        Administración
+        @if (pendingCount() > 0) {
+          <span class="header__nav-badge">{{ pendingCount() }}</span>
         }
       </a>
-    </div>
+    }
   </nav>
-</header>
+</header>

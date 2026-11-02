@@ -1,12 +1,12 @@
-/**
+﻿/**
  * @file src/app/pages/admin-settings/admin-settings.component.ts
- * @description Sección "Configuración" del panel de administración.
+ * @description SecciÃ³n "ConfiguraciÃ³n" del panel de administraciÃ³n.
  *
- * Muestra la configuración general de la plataforma tal y como la aplica el
- * frontend (moneda, impuesto, envío y umbral de envío gratuito) y el estado del
- * catálogo y de las categorías, leído de la API real. La configuración de
- * negocio es de solo lectura: vive en el código y en la base de datos, no se
- * edita desde aquí para no falsear cobros ni envíos.
+ * Muestra la configuraciÃ³n general de la plataforma tal y como la aplica el
+ * frontend (moneda, impuesto, envÃ­o y umbral de envÃ­o gratuito) y el estado del
+ * catÃ¡logo y de las categorÃ­as, leÃ­do de la API real. La configuraciÃ³n de
+ * negocio es de solo lectura: vive en el cÃ³digo y en la base de datos, no se
+ * edita desde aquÃ­ para no falsear cobros ni envÃ­os.
  *
  * @author ParDrops E-commerce
  * @version 1.0.0
@@ -22,7 +22,7 @@ import {
   DEFAULT_COUNTRY,
   FREE_SHIPPING_THRESHOLD,
   SHIPPING_COST,
-  TAX_RATE,
+  INCLUDED_TAX_RATE,
   formatCurrency
 } from '../../core/config/commerce.config';
 
@@ -36,25 +36,25 @@ import {
 export class AdminSettingsComponent {
   private readonly adminService = inject(AdminService);
 
-  /** Código de moneda de la plataforma. */
+  /** CÃ³digo de moneda de la plataforma. */
   public readonly currencyCode = CURRENCY_CODE;
 
-  /** País de la tienda. */
+  /** PaÃ­s de la tienda. */
   public readonly country = DEFAULT_COUNTRY;
 
   /** Porcentaje de IVA aplicado. */
-  public readonly taxRate = TAX_RATE;
+  public readonly taxRate = INCLUDED_TAX_RATE;
 
-  /** Coste de envío. */
+  /** Coste de envÃ­o. */
   public readonly shippingCost = SHIPPING_COST;
 
-  /** Umbral de envío gratuito. */
+  /** Umbral de envÃ­o gratuito. */
   public readonly freeShippingThreshold = FREE_SHIPPING_THRESHOLD;
 
-  /** Resumen de la plataforma, usado para mostrar el estado del catálogo. */
+  /** Resumen de la plataforma, usado para mostrar el estado del catÃ¡logo. */
   public readonly dashboard = signal<AdminDashboard | null>(null);
 
-  /** Indica si el resumen está cargándose. */
+  /** Indica si el resumen estÃ¡ cargÃ¡ndose. */
   public readonly loading = signal<boolean>(true);
 
   /** Mensaje de error visible. */
@@ -65,7 +65,7 @@ export class AdminSettingsComponent {
   }
 
   /**
-   * Carga el estado actual del catálogo y las categorías.
+   * Carga el estado actual del catÃ¡logo y las categorÃ­as.
    *
    * @returns {void}
    */
@@ -107,3 +107,4 @@ export class AdminSettingsComponent {
     return formatCurrency(amount);
   }
 }
+

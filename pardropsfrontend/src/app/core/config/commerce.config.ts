@@ -12,8 +12,21 @@ export const APP_LOCALE = 'es-CO';
 /** Código ISO 4217 de la moneda de la tienda. */
 export const CURRENCY_CODE = 'COP';
 
-/** Porcentaje de IVA aplicado en Colombia. */
-export const TAX_RATE = 0.19;
+/** Porcentaje de IVA incluido en los precios publicados (Colombia). */
+export const INCLUDED_TAX_RATE = 0.19;
+
+/**
+ * Calcula la porción de IVA incluida en un importe.
+ *
+ * Los vendedores publican el precio final; este valor solo sirve para
+ * discriminar el impuesto en la factura y nunca se suma al total.
+ *
+ * @param amount importe con IVA incluido.
+ * @returns la parte correspondiente al impuesto.
+ */
+export function includedTax(amount: number): number {
+  return Math.round(amount - amount / (1 + INCLUDED_TAX_RATE));
+}
 
 /** Coste de envío cuando no se alcanza el mínimo. */
 export const SHIPPING_COST = 25_900;

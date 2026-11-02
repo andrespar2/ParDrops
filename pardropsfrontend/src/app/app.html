@@ -1,9 +1,6 @@
-<!-- 
+<!--
   @file src/app/app.html
-  @description Plantilla principal de la aplicación.
-  
-  Estructura: Cabecera, contenido principal con router-outlet, pie de página.
-  Diseño minimalista y responsive.
+  @description Estructura principal: cabecera, contenido, pie y navegación móvil.
 -->
 
 <app-header></app-header>
@@ -12,4 +9,42 @@
   <router-outlet></router-outlet>
 </main>
 
-<app-footer></app-footer>
+<app-footer></app-footer>
+
+<!-- Navegación inferior compacta (solo móvil) -->
+<nav class="mobile-nav" aria-label="Navegación principal">
+  <a routerLink="/" routerLinkActive="mobile-nav__link--active" [routerLinkActiveOptions]="{ exact: true }" class="mobile-nav__link">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"></path>
+    </svg>
+    <span>Inicio</span>
+  </a>
+  <a routerLink="/productos" routerLinkActive="mobile-nav__link--active" class="mobile-nav__link">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"></circle>
+      <path d="m20 20-3.5-3.5"></path>
+    </svg>
+    <span>Explorar</span>
+  </a>
+  <a routerLink="/favoritos" routerLinkActive="mobile-nav__link--active" class="mobile-nav__link">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"></path>
+    </svg>
+    <span>Favoritos</span>
+  </a>
+  <a routerLink="/carrito" routerLinkActive="mobile-nav__link--active" class="mobile-nav__link">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M3 3h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 7H6"></path>
+      <circle cx="10" cy="20" r="1"></circle>
+      <circle cx="18" cy="20" r="1"></circle>
+    </svg>
+    <span>Carrito</span>
+  </a>
+  <a routerLink="/cuenta" routerLinkActive="mobile-nav__link--active" class="mobile-nav__link">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <circle cx="12" cy="8" r="4"></circle>
+      <path d="M4 21a8 8 0 0 1 16 0"></path>
+    </svg>
+    <span>Cuenta</span>
+  </a>
+</nav>

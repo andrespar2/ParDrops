@@ -186,4 +186,111 @@ button {
       grid-template-columns: 1fr;
     }
   }
-}
+}
+/* ============================================================================
+   Temas: claro (por defecto) y oscuro
+   ----------------------------------------------------------------------------
+   El modo oscuro define su propia paleta (no invierte la clara). Los
+   componentes usan las mismas variables, así que el cambio es inmediato.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+  --color-on-primary: #ffffff;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-primary: #f1f5f9;
+  --color-on-primary: #0b0f14;
+  --color-secondary: #94a3b8;
+  --color-accent: #f87171;
+  --color-success: #4ade80;
+  --color-warning: #fb923c;
+  --color-danger: #f87171;
+
+  --color-background: #0b0f14;
+  --color-surface: #121821;
+  --color-surface-secondary: #171f2a;
+
+  --color-text-primary: #eef2f7;
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #94a3b8;
+
+  --color-border: #24303f;
+  --color-border-light: #1c2531;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --shadow-md: 0 6px 16px -4px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 24px 48px -12px rgb(0 0 0 / 0.6);
+}
+
+html {
+  background-color: var(--color-background);
+}
+
+body {
+  transition: background-color var(--transition-base), color var(--transition-base);
+}
+
+/* Botones y controles con fondo primario: texto legible en ambos temas. */
+html[data-theme='dark'] [class*='__button'],
+html[data-theme='dark'] [class*='__submit'],
+html[data-theme='dark'] [class*='__cta'],
+html[data-theme='dark'] .btn-primary {
+  color: var(--color-on-primary);
+}
+
+/* Las imágenes no deben brillar de más sobre superficies oscuras. */
+[data-theme='dark'] img {
+  color-scheme: only light;
+}
+
+/* ============================================================================
+   Navegación inferior (móvil)
+   ========================================================================== */
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 780px) {
+  .mobile-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 45;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--color-border-light);
+  }
+
+  .mobile-nav__link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    color: var(--color-text-tertiary);
+    font-size: 0.6875rem;
+    text-decoration: none;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .mobile-nav__link--active {
+    color: var(--color-text-primary);
+    font-weight: 600;
+  }
+
+  .main-content {
+    padding-bottom: 76px;
+  }
+}

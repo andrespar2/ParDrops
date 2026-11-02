@@ -1,4 +1,4 @@
-﻿package com.pardorps.pardrops.config;
+package com.pardorps.pardrops.config;
 
 import com.pardorps.pardrops.model.AdminLevel;
 import com.pardorps.pardrops.model.Role;

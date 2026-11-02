@@ -44,7 +44,7 @@ import java.util.Map;
 public class OrderService {
 
     /** Porcentaje de IVA aplicado en Colombia (19%). */
-    private static final double TAX_RATE = 0.19;
+    private static final double INCLUDED_TAX_RATE = 0.19;
 
     /** Importe a partir del cual el envío es gratuito (400.000 COP). */
     private static final double FREE_SHIPPING_THRESHOLD = 400_000.0;
@@ -154,13 +154,15 @@ public class OrderService {
             decreaseStock(product, variant, itemRequest.quantity());
         }
 
-        double tax = round(subtotal * TAX_RATE);
+        // El precio publicado por el vendedor es el precio final: el IVA va
+        // incluido y solo se calcula la porción informativa para la factura.
+        double tax = round(subtotal - (subtotal / (1 + INCLUDED_TAX_RATE)));
         double shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0.0 : SHIPPING_COST;
 
         order.setSubtotal(round(subtotal));
         order.setTax(tax);
         order.setShipping(shipping);
-        order.setTotal(round(subtotal + tax + shipping));
+        order.setTotal(round(subtotal + shipping));
 
         createSubOrders(order, itemsBySeller);
         OrderStatus globalStatus = OrderStatus.aggregate(
@@ -183,9 +185,9 @@ public class OrderService {
     /**
      * Crea una parte del pedido por cada grupo de líneas.
      *
-     * <p>Los impuestos se reparten en proporción al importe de cada parte y el
-     * envío se divide a partes iguales, de modo que la suma de las partes sea
-     * exactamente el total del pedido.</p>
+     * <p>El envío se divide a partes iguales y el IVA ya está incluido en los
+     * precios, de modo que la suma de las partes coincida con el total del
+     * pedido sin añadir impuestos encima.</p>
      *
      * @param order        pedido al que pertenecen las partes.
      * @param itemsBySeller líneas agrupadas por vendedor (la clave nula es la
@@ -232,7 +234,7 @@ public class OrderService {
     }
 
     /**
-     * Reparte los impuestos y el envío entre las partes del pedido.
+     * Reparte el envío entre las partes del pedido.
      *
      * @param order    pedido con los importes globales ya calculados.
      * @param subOrders partes del pedido.
@@ -242,8 +244,6 @@ public class OrderService {
             return;
         }
 
-        double orderSubtotal = order.getSubtotal();
-        double distributedTax = 0.0;
         double distributedShipping = 0.0;
         int shippingParts = subOrders.size();
 
@@ -251,15 +251,12 @@ public class OrderService {
             OrderSubOrder subOrder = subOrders.get(index);
             boolean last = index == subOrders.size() - 1;
 
-            double tax = last
-                    ? round(order.getTax() - distributedTax)
-                    : round(order.getTax() * subOrder.getSubtotal() / orderSubtotal);
             double shipping = last
                     ? round(order.getShipping() - distributedShipping)
                     : round(order.getShipping() / shippingParts);
 
             subOrder.setShipping(shipping);
-            subOrder.setTotal(round(subOrder.getSubtotal() + tax + shipping));
+            subOrder.setTotal(round(subOrder.getSubtotal() + shipping));
 
             double commission = round(subOrder.getSubtotal() * commissionRate);
             subOrder.setCommissionRate(commissionRate);
@@ -267,7 +264,6 @@ public class OrderService {
             subOrder.setSellerNetAmount(round(subOrder.getTotal() - commission));
             subOrder.setFundsStatus(FundsStatus.HELD);
 
-            distributedTax += tax;
             distributedShipping += shipping;
         }
     }

@@ -144,10 +144,10 @@ class OrderServiceTest {
         assertEquals(100_000.0, response.subOrders().get(0).subtotal(), 0.001);
         assertEquals(50_000.0, response.subOrders().get(1).subtotal(), 0.001);
 
-        // Los impuestos se reparten en proporción al importe de cada parte y el
-        // envío a partes iguales: la suma coincide con el total del pedido.
-        assertEquals(19_000.0, response.subOrders().get(0).total() - 100_000.0 - 12_950.0, 0.001);
-        assertEquals(9_500.0, response.subOrders().get(1).total() - 50_000.0 - 12_950.0, 0.001);
+        // El IVA va incluido en el precio publicado: la parte suma subtotal y
+        // su envío, sin añadir impuestos encima.
+        assertEquals(112_950.0, response.subOrders().get(0).total(), 0.001);
+        assertEquals(62_950.0, response.subOrders().get(1).total(), 0.001);
         assertEquals(12_950.0, response.subOrders().get(0).shipping(), 0.001);
         assertEquals(12_950.0, response.subOrders().get(1).shipping(), 0.001);
 
@@ -388,7 +388,8 @@ class OrderServiceTest {
 
         assertEquals(0.05, subOrder.getCommissionRate());
         assertEquals(5_000.0, subOrder.getCommissionAmount());
-        assertEquals(139_900.0, subOrder.getSellerNetAmount());
+        // 100.000 + 25.900 de envío - 5.000 de comisión (sin sumar IVA encima).
+        assertEquals(120_900.0, subOrder.getSellerNetAmount());
         assertEquals(com.pardorps.pardrops.model.FundsStatus.HELD, subOrder.getFundsStatus());
         verify(sellerBalanceService).hold(subOrder);
     }

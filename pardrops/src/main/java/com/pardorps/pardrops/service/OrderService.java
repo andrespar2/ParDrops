@@ -61,6 +61,7 @@ public class OrderService {
     private final NotificationService notificationService;
     private final OrderEmailService orderEmailService;
     private final SellerBalanceService sellerBalanceService;
+    private final AdminAlertService adminAlertService;
     private final double commissionRate;
 
     /**
@@ -79,6 +80,7 @@ public class OrderService {
             NotificationService notificationService,
             OrderEmailService orderEmailService,
             SellerBalanceService sellerBalanceService,
+            AdminAlertService adminAlertService,
             @Value("${app.marketplace.commission-rate:0.05}") double commissionRate
     ) {
         this.orderRepository = orderRepository;
@@ -87,6 +89,7 @@ public class OrderService {
         this.notificationService = notificationService;
         this.orderEmailService = orderEmailService;
         this.sellerBalanceService = sellerBalanceService;
+        this.adminAlertService = adminAlertService;
         this.commissionRate = commissionRate;
     }
 
@@ -179,6 +182,7 @@ public class OrderService {
         notifySellers(saved);
         notifyCustomer(saved, user);
         orderEmailService.sendNewOrderToSellers(saved);
+        adminAlertService.newSale(saved);
         for (OrderSubOrder subOrder : saved.getSubOrders()) {
             sellerBalanceService.hold(subOrder);
         }

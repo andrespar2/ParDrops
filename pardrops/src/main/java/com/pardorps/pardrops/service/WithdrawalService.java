@@ -39,7 +39,7 @@ public class WithdrawalService {
     private final SellerLedgerEntryRepository ledgerRepository;
     private final UserRepository userRepository;
     private final AuthService authService;
-    private final NotificationService notificationService;
+    private final AdminAlertService adminAlertService;
     private final double minAmount;
     private final double bankFee;
 
@@ -59,7 +59,7 @@ public class WithdrawalService {
             SellerLedgerEntryRepository ledgerRepository,
             UserRepository userRepository,
             AuthService authService,
-            NotificationService notificationService,
+            AdminAlertService adminAlertService,
             @Value("${app.withdrawals.min-amount:50000}") double minAmount,
             @Value("${app.withdrawals.bank-fee:0}") double bankFee
     ) {
@@ -68,7 +68,7 @@ public class WithdrawalService {
         this.ledgerRepository = ledgerRepository;
         this.userRepository = userRepository;
         this.authService = authService;
-        this.notificationService = notificationService;
+        this.adminAlertService = adminAlertService;
         this.minAmount = minAmount;
         this.bankFee = bankFee;
     }
@@ -155,10 +155,10 @@ public class WithdrawalService {
         ledger(balance, LedgerEntryType.WITHDRAWAL_RESERVED, "RET-" + saved.getId(),
                 "Retiro solicitado", 0.0, fee, balance.getAvailableAmount());
 
-        notificationService.notify(seller, NotificationType.ACCOUNT, "Solicitud de retiro registrada",
+        adminAlertService.notifyUser(seller, NotificationType.ACCOUNT, "Solicitud de retiro registrada",
                 "Tu solicitud por " + amount + " quedó reservada y está pendiente de revisión.",
                 "/vendedor/saldo");
-        notifyAdmins("Nueva solicitud de retiro",
+        adminAlertService.notifyAdmins("Nueva solicitud de retiro",
                 seller.getFullName() + " solicitó un retiro por " + amount + ".", "/admin/retiros");
 
         return toResponse(saved);
@@ -215,7 +215,7 @@ public class WithdrawalService {
         }
         WithdrawalRequest saved = withdrawalRepository.save(withdrawal);
 
-        notificationService.notify(withdrawal.getSeller(), NotificationType.ACCOUNT,
+        adminAlertService.notifyUser(withdrawal.getSeller(), NotificationType.ACCOUNT,
                 "Solicitud de retiro en " + status.name().toLowerCase(),
                 "Tu solicitud de retiro cambió de estado.", "/vendedor/saldo");
         return toResponse(saved);
@@ -256,7 +256,7 @@ public class WithdrawalService {
         ledger(balance, LedgerEntryType.WITHDRAWAL_COMPLETED, "RET-" + saved.getId(),
                 "Retiro completado", -amount, nz(withdrawal.getFee()), balance.getAvailableAmount());
 
-        notificationService.notify(withdrawal.getSeller(), NotificationType.ACCOUNT,
+        adminAlertService.notifyUser(withdrawal.getSeller(), NotificationType.ACCOUNT,
                 "Retiro completado",
                 "Transferimos " + withdrawal.getNetAmount() + " con referencia " + saved.getTransferReference() + ".",
                 "/vendedor/saldo");
@@ -291,7 +291,7 @@ public class WithdrawalService {
         ledger(balance, LedgerEntryType.WITHDRAWAL_RELEASED, "RET-" + saved.getId(),
                 "Retiro rechazado", amount, 0.0, balance.getAvailableAmount());
 
-        notificationService.notify(withdrawal.getSeller(), NotificationType.ACCOUNT,
+        adminAlertService.notifyUser(withdrawal.getSeller(), NotificationType.ACCOUNT,
                 "Solicitud de retiro rechazada",
                 "El dinero volvió a tu saldo disponible." + (notes == null ? "" : " Motivo: " + notes),
                 "/vendedor/saldo");
@@ -351,15 +351,6 @@ public class WithdrawalService {
         if (withdrawal.getStatus() == WithdrawalStatus.COMPLETED
                 || withdrawal.getStatus() == WithdrawalStatus.REJECTED) {
             throw ApiException.conflict("La solicitud ya está cerrada");
-        }
-    }
-
-    /** Avisa a todos los administradores. */
-    private void notifyAdmins(String title, String message, String link) {
-        for (User admin : userRepository.findAll()) {
-            if (admin.getRole() == Role.ADMIN) {
-                notificationService.notify(admin, NotificationType.ACCOUNT, title, message, link);
-            }
         }
     }
 

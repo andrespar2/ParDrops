@@ -49,6 +49,7 @@ class OrderServiceTest {
     private final NotificationService notificationService = mock(NotificationService.class);
     private final OrderEmailService orderEmailService = mock(OrderEmailService.class);
     private final SellerBalanceService sellerBalanceService = mock(SellerBalanceService.class);
+    private final AdminAlertService adminAlertService = mock(AdminAlertService.class);
 
     private final OrderService orderService = new OrderService(
             orderRepository,
@@ -57,6 +58,7 @@ class OrderServiceTest {
             notificationService,
             orderEmailService,
             sellerBalanceService,
+            adminAlertService,
             0.05
     );
 

@@ -137,14 +137,16 @@ compilado sin errores (solo avisos de presupuesto de estilos preexistentes).
 
 ## 5. Pendientes conocidos
 
-1. **DNS del dominio**: `pardrops.qd.je` es una zona delegada cuyo apex no puede
-   ser CNAME en DigitalPlat; requiere un proveedor con alias en el apex. Ver
-   `DEPLOYMENT.md` §7.
-2. **Google OAuth2 en producción**: hay que registrar en Google Cloud Console el
+1. **Google OAuth2 en producción**: hay que registrar en Google Cloud Console el
    nuevo `redirect_uri` (`https://pardrops-api.onrender.com/login/oauth2/code/google`).
-3. **Contraseña del administrador heredado**: la cuenta `admin@pardrops.com`
+2. **Contraseña del administrador heredado**: la cuenta `admin@pardrops.com`
    conserva la contraseña de desarrollo. Debe cambiarse.
-4. **Rotación de credenciales**: los tokens de Cloudflare, Render, Neon y GitHub
+3. **Rotación de credenciales**: los tokens de Cloudflare, Render, Neon y GitHub
    usados en esta entrega deben rotarse tras el despliegue.
-5. **Worker `pardrops`**: resto del despliegue fallido anterior, sin rutas; puede
+4. **Worker `pardrops`**: resto del despliegue fallido anterior, sin rutas; puede
    eliminarse manualmente.
+5. **Apex vs. www**: `https://pardrops.qd.je` responde 301 hacia
+   `https://www.pardrops.qd.je` porque el apex de una zona delegada no admite
+   CNAME hacia Pages. Si en el futuro se usa un DNS con ALIAS en el apex, se
+   puede servir el apex directamente desde Cloudflare y retirar el dominio de
+   Render.

@@ -120,6 +120,18 @@ export class AdminComponent {
       icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8'
     },
     {
+      path: 'soporte',
+      label: 'Soporte',
+      description: 'Conversaciones de soporte con usuarios',
+      icon: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'
+    },
+    {
+      path: 'administradores',
+      label: 'Administradores',
+      description: 'Cuentas administrativas y permisos',
+      icon: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm7 4 2 2 4-4'
+    },
+    {
       path: 'configuracion',
       label: 'Configuración',
       description: 'Opciones generales de la plataforma',

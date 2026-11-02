@@ -1,0 +1,81 @@
+<!--
+  @file src/app/pages/support/support.component.html
+  @description Soporte: conversaciones del usuario.
+-->
+
+<main class="support container">
+  <header class="support__header">
+    <h1 class="support__title">Soporte</h1>
+    <p class="support__subtitle">Escríbenos y te responderemos lo antes posible.</p>
+  </header>
+
+  @if (error()) {
+    <p class="support__alert">{{ error() }}</p>
+  }
+
+  <div class="support__layout">
+    <section class="support__list" aria-label="Conversaciones">
+      @if (loading() && conversations().length === 0) {
+        <p class="support__muted">Cargando…</p>
+      } @else if (conversations().length === 0) {
+        <p class="support__muted">Todavía no tienes conversaciones.</p>
+      } @else {
+        <ul class="support__items">
+          @for (conversation of conversations(); track conversation.id) {
+            <li>
+              <button type="button" class="support__item"
+                      [class.support__item--active]="active()?.id === conversation.id"
+                      (click)="open(conversation)">
+                <span class="support__item-subject">
+                  {{ conversation.subject }}
+                  @if (conversation.unread) {
+                    <span class="support__dot" aria-label="Sin leer"></span>
+                  }
+                </span>
+                <span class="support__item-meta">
+                  {{ conversation.status === 'RESOLVED' ? 'Resuelta' : 'Abierta' }}
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+
+      <form class="support__new" [formGroup]="form" (ngSubmit)="create()">
+        <h2 class="support__new-title">Nueva conversación</h2>
+        <input class="support__input" formControlName="subject" placeholder="Asunto" maxlength="160" />
+        <textarea class="support__input" formControlName="message" rows="4"
+                  placeholder="Cuéntanos qué necesitas" maxlength="2000"></textarea>
+        <button type="submit" class="support__button">Enviar</button>
+      </form>
+    </section>
+
+    <section class="support__thread" aria-label="Conversación">
+      @if (!active()) {
+        <p class="support__muted">Selecciona una conversación o crea una nueva.</p>
+      } @else {
+        <header class="support__thread-header">
+          <h2 class="support__thread-title">{{ active()!.subject }}</h2>
+          <span class="support__item-meta">
+            {{ active()!.status === 'RESOLVED' ? 'Resuelta' : 'Abierta' }}
+          </span>
+        </header>
+
+        <div class="support__messages">
+          @for (message of messages(); track message.id) {
+            <article class="support__message" [class.support__message--staff]="message.fromStaff">
+              <p class="support__message-author">{{ message.authorName }}</p>
+              <p class="support__message-body">{{ message.body }}</p>
+            </article>
+          }
+        </div>
+
+        <form class="support__reply" (ngSubmit)="send()">
+          <textarea class="support__input" [formControl]="reply" rows="3"
+                    placeholder="Escribe un mensaje" maxlength="2000"></textarea>
+          <button type="submit" class="support__button">Enviar</button>
+        </form>
+      }
+    </section>
+  </div>
+</main>

@@ -1,0 +1,163 @@
+/**
+ * @file src/app/pages/admin-accounts/admin-accounts.component.scss
+ * @description Estilos de la gestión de administradores.
+ */
+
+.admin-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.admin-section__title {
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.admin-section__subtitle {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+.admin-card {
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+}
+
+.admin-card__title {
+  margin: 0 0 var(--space-4);
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.admin-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+}
+
+.admin-input {
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: var(--font-size-sm);
+
+  &:focus-visible {
+    outline: 2px solid var(--color-text-primary);
+    outline-offset: 1px;
+  }
+}
+
+.admin-input--compact {
+  padding: 5px 8px;
+  font-size: var(--font-size-xs);
+}
+
+.admin-button {
+  padding: 10px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.admin-button--ghost {
+  background: transparent;
+  color: var(--color-text-primary);
+  padding: 6px 12px;
+  font-size: var(--font-size-xs);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+
+  th,
+  td {
+    padding: 10px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border-light);
+    color: var(--color-text-secondary);
+  }
+
+  th {
+    color: var(--color-text-tertiary);
+    font-weight: 600;
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
+
+.admin-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-xs);
+}
+
+.admin-badge--owner {
+  border-color: var(--color-text-primary);
+  color: var(--color-text-primary);
+}
+
+.admin-badge--active {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.admin-badge--off {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.admin-alert {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
+.admin-alert--error {
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  color: var(--color-danger);
+}
+
+.admin-alert--success {
+  background: color-mix(in srgb, var(--color-success) 12%, transparent);
+  color: var(--color-success);
+}
+
+.admin-muted {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}

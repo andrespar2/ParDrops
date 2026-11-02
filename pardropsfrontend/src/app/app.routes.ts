@@ -39,6 +39,12 @@ export const routes: Routes = [
     title: 'ParDrops - Detalle de producto'
   },
   {
+    path: 'soporte',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/support/support.component').then(m => m.SupportComponent),
+    title: 'ParDrops - Soporte'
+  },
+  {
     path: 'favoritos',
     loadComponent: () => import('./pages/favorites/favorites.component').then(m => m.FavoritesComponent),
     title: 'ParDrops - Mis favoritos'
@@ -182,6 +188,16 @@ export const routes: Routes = [
         path: 'auditoria',
         loadComponent: () => import('./pages/admin-audit/admin-audit.component').then(m => m.AdminAuditComponent),
         title: 'ParDrops - Auditoría'
+      },
+      {
+        path: 'soporte',
+        loadComponent: () => import('./pages/admin-support/admin-support.component').then(m => m.AdminSupportComponent),
+        title: 'ParDrops - Soporte'
+      },
+      {
+        path: 'administradores',
+        loadComponent: () => import('./pages/admin-accounts/admin-accounts.component').then(m => m.AdminAccountsComponent),
+        title: 'ParDrops - Administradores'
       },
       {
         path: 'configuracion',

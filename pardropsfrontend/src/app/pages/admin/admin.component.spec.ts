@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file src/app/pages/admin/admin.component.spec.ts
  * @description Prueba de humo del armazon del centro de administracion.
  *
@@ -29,11 +29,11 @@ describe('AdminComponent', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('expone las doce secciones del centro de administracion', () => {
+  it('expone las catorce secciones del centro de administracion', () => {
     const fixture = TestBed.createComponent(AdminComponent);
     const sections = fixture.componentInstance.sections;
 
-    expect(sections.length).toBe(12);
+    expect(sections.length).toBe(14);
     expect(sections.map(section => section.path)).toEqual([
       'resumen',
       'usuarios',
@@ -46,6 +46,8 @@ describe('AdminComponent', () => {
       'resenas',
       'notificaciones',
       'auditoria',
+      'soporte',
+      'administradores',
       'configuracion'
     ]);
   });
@@ -66,3 +68,4 @@ describe('AdminComponent', () => {
     expect(component.menuOpen()).toBe(false);
   });
 });
+

@@ -87,6 +87,11 @@ public class User {
     @Builder.Default
     private UserStatus status = UserStatus.ACTIVE;
 
+    /** Nivel administrativo (solo para usuarios con rol ADMIN). */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "admin_level", length = 20)
+    private AdminLevel adminLevel;
+
     /**
      * Origen de la autenticación de la cuenta.
      *

@@ -55,5 +55,17 @@ public enum AuditAction {
     EMAIL_TEMPLATE_RESET,
 
     /** Reseña eliminada por el administrador. */
-    REVIEW_DELETED
+    REVIEW_DELETED,
+
+    /** Cuenta administrativa creada por el propietario. */
+    ADMIN_CREATED,
+
+    /** Nivel de una cuenta administrativa modificado. */
+    ADMIN_LEVEL_CHANGED,
+
+    /** Cuenta administrativa desactivada. */
+    ADMIN_DEACTIVATED,
+
+    /** Cuenta administrativa reactivada. */
+    ADMIN_REACTIVATED
 }

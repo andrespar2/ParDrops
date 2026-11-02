@@ -1,0 +1,110 @@
+<!--
+  @file src/app/pages/admin-accounts/admin-accounts.component.html
+  @description Gestión de cuentas administrativas.
+-->
+
+<section class="admin-section">
+  <header class="admin-section__header">
+    <div>
+      <h1 class="admin-section__title">Administradores</h1>
+      <p class="admin-section__subtitle">
+        Crea cuentas de gestor o soporte y controla su acceso. Solo el administrador
+        principal puede hacer cambios.
+      </p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <p class="admin-alert admin-alert--error">{{ error() }}</p>
+  }
+  @if (success()) {
+    <p class="admin-alert admin-alert--success">{{ success() }}</p>
+  }
+
+  <form class="admin-card" [formGroup]="form" (ngSubmit)="create()">
+    <h2 class="admin-card__title">Nueva cuenta</h2>
+
+    <div class="admin-grid">
+      <div class="admin-field">
+        <label for="admin-email">Correo</label>
+        <input id="admin-email" type="email" class="admin-input" formControlName="email" />
+      </div>
+      <div class="admin-field">
+        <label for="admin-name">Nombre</label>
+        <input id="admin-name" class="admin-input" formControlName="fullName" />
+      </div>
+      <div class="admin-field">
+        <label for="admin-password">Contraseña temporal</label>
+        <input id="admin-password" type="password" class="admin-input" formControlName="password" />
+      </div>
+      <div class="admin-field">
+        <label for="admin-level">Nivel</label>
+        <select id="admin-level" class="admin-input" formControlName="level">
+          <option value="MANAGER">Gestor</option>
+          <option value="SUPPORT">Soporte</option>
+        </select>
+      </div>
+    </div>
+
+    <button type="submit" class="admin-button">Crear administrador</button>
+  </form>
+
+  <div class="admin-card">
+    <h2 class="admin-card__title">Cuentas existentes</h2>
+
+    @if (loading()) {
+      <p class="admin-muted">Cargando cuentas…</p>
+    } @else if (accounts().length === 0) {
+      <p class="admin-muted">No hay cuentas administrativas.</p>
+    } @else {
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Nivel</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (account of accounts(); track account.id) {
+            <tr>
+              <td>{{ account.fullName }}</td>
+              <td>{{ account.email }}</td>
+              <td>
+                @if (account.level === 'OWNER') {
+                  <span class="admin-badge admin-badge--owner">Principal</span>
+                } @else {
+                  <select class="admin-input admin-input--compact"
+                          [value]="account.level"
+                          (change)="changeLevel(account, $any($event.target).value)">
+                    <option value="MANAGER">Gestor</option>
+                    <option value="SUPPORT">Soporte</option>
+                  </select>
+                }
+              </td>
+              <td>
+                <span class="admin-badge"
+                      [class.admin-badge--active]="account.status === 'ACTIVE'"
+                      [class.admin-badge--off]="account.status !== 'ACTIVE'">
+                  {{ account.status === 'ACTIVE' ? 'Activa' : 'Desactivada' }}
+                </span>
+              </td>
+              <td>
+                @if (account.level !== 'OWNER') {
+                  <button type="button" class="admin-button admin-button--ghost"
+                          (click)="toggleStatus(account)">
+                    {{ account.status === 'ACTIVE' ? 'Desactivar' : 'Reactivar' }}
+                  </button>
+                } @else {
+                  <span class="admin-muted">Protegida</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</section>

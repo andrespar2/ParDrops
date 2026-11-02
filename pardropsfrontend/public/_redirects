@@ -1,0 +1,6 @@
+# Rutas de la aplicación Angular (SPA).
+#
+# Cloudflare Pages sirve primero los ficheros existentes; cualquier ruta que no
+# corresponda a un asset se entrega como index.html para que el router de
+# Angular resuelva la pantalla (recarga directa de /productos, /admin, etc.).
+/*    /index.html   200

@@ -5,6 +5,10 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build:spa": "ng build",
+    "build:ssr": "ng build --configuration ssr",
+    "build:pages": "node scripts/write-runtime-config.mjs && ng build",
+    "config:runtime": "node scripts/write-runtime-config.mjs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:pardropsfrontend": "node dist/pardropsfrontend/server/server.mjs"

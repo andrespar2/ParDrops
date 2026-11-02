@@ -1,0 +1,10 @@
+# Cabeceras de Cloudflare Pages.
+
+# La configuración de ejecución debe revalidarse siempre: si cambia la URL de
+# la API, el navegador no puede seguir usando una copia antigua.
+/config.js
+  Cache-Control: no-cache
+
+# Los assets con hash del build son inmutables.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

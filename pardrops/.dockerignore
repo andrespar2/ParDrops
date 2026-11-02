@@ -1,0 +1,11 @@
+# Artefactos y configuración local que no deben entrar en la imagen
+target/
+data/
+.mvn/
+.git/
+.gitignore
+*.iml
+.idea/
+.vscode/
+Dockerfile
+.dockerignore

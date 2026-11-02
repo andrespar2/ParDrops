@@ -2,6 +2,7 @@ package com.pardorps.pardrops.storage;
 
 import com.pardorps.pardrops.exception.ApiException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -19,6 +20,7 @@ import java.nio.file.StandardCopyOption;
  * como recursos estáticos desde la ruta pública configurada.</p>
  */
 @Component
+@Profile("!prod")
 public class FileSystemMediaStorage implements MediaStorage {
 
     /** Directorio del sistema de archivos donde se guardan los ficheros. */

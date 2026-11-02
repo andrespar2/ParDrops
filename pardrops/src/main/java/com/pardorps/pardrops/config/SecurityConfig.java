@@ -180,6 +180,10 @@ public class SecurityConfig {
                         // La consola H2 queda abierta para inspeccionar datos en desarrollo.
                         .requestMatchers("/h2-console/**").permitAll()
 
+                        // Salud del servicio: público para la plataforma de despliegue.
+                        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info")
+                        .permitAll()
+
                         // Cualquier otra ruta exige una sesión válida.
                         .anyRequest().authenticated()
                 )

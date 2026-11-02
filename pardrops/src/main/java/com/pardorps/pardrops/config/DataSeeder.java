@@ -11,6 +11,9 @@ import com.pardorps.pardrops.repository.CategoryRepository;
 import com.pardorps.pardrops.repository.ProductRepository;
 import com.pardorps.pardrops.repository.StoreRepository;
 import com.pardorps.pardrops.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -33,11 +36,43 @@ import java.util.Locale;
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class DataSeeder implements CommandLineRunner {
 
+    private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
+
     /** Correo de la cuenta de administrador inicial. */
-    private static final String ADMIN_EMAIL = "admin@pardrops.com";
+    private static final String DEFAULT_ADMIN_EMAIL = "admin@pardrops.com";
 
     /** Contraseña de la cuenta de administrador inicial (solo para desarrollo). */
-    private static final String ADMIN_PASSWORD = "admin123";
+    private static final String DEFAULT_ADMIN_PASSWORD = "admin123";
+
+    /**
+     * Correo del administrador inicial. En producción se define con
+     * {@code APP_SEED_ADMIN_EMAIL} para no exponer siempre la misma cuenta.
+     */
+    @Value("${app.seed.admin-email:admin@pardrops.com}")
+    private String adminEmail;
+
+    /**
+     * Contraseña del administrador inicial. En producción debe definirse
+     * {@code APP_SEED_ADMIN_PASSWORD} con un valor propio.
+     */
+    @Value("${app.seed.admin-password:admin123}")
+    private String adminPassword;
+
+    /**
+     * Interruptor general de la semilla. Permite crear el esquema sin datos
+     * (por ejemplo antes de importar una base de datos existente) con
+     * {@code APP_SEED_ENABLED=false}.
+     */
+    @Value("${app.seed.enabled:true}")
+    private boolean seedEnabled;
+
+    /**
+     * Indica si se carga el catálogo de demostración. En producción conviene
+     * desactivarlo ({@code APP_SEED_DEMO_DATA=false}) y dejar solo la cuenta de
+     * administrador.
+     */
+    @Value("${app.seed.demo-data:true}")
+    private boolean demoData;
 
     /** Correo de la cuenta de vendedor de ejemplo. */
     private static final String SELLER_EMAIL = "vendedor@pardrops.com";
@@ -85,20 +120,30 @@ public class DataSeeder implements CommandLineRunner {
      */
     @Override
     public void run(String... args) {
+        if (!seedEnabled) {
+            log.info("Semilla de datos desactivada (app.seed.enabled=false)");
+            return;
+        }
         seedAdmin();
         seedCategories();
-        seedProducts();
-        seedSeller();
+        if (demoData) {
+            seedProducts();
+            seedSeller();
+        }
     }
 
     /** Crea la cuenta de administrador si todavía no existe. */
     private void seedAdmin() {
-        if (userRepository.existsByEmail(ADMIN_EMAIL)) {
+        if (userRepository.existsByEmail(adminEmail)) {
             return;
         }
+        if (DEFAULT_ADMIN_PASSWORD.equals(adminPassword)) {
+            log.warn("La cuenta {} se crea con la contraseña de desarrollo. "
+                    + "Define APP_SEED_ADMIN_PASSWORD en producción.", adminEmail);
+        }
         User admin = User.builder()
-                .email(ADMIN_EMAIL)
-                .password(passwordEncoder.encode(ADMIN_PASSWORD))
+                .email(adminEmail)
+                .password(passwordEncoder.encode(adminPassword))
                 .fullName("Administrador ParDrops")
                 .phone("+57 300 000 0000")
                 .role(Role.ADMIN)

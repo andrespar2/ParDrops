@@ -26,3 +26,5 @@ build.log
 # --- Configuración local y secretos ---------------------------
 # Credenciales locales (Google, etc.). No se versionan.
 .env.local
+.env
+.env.*.local

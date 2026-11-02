@@ -1,5 +1,6 @@
 package com.pardorps.pardrops.config;
 
+import com.pardorps.pardrops.storage.FileSystemMediaStorage;
 import com.pardorps.pardrops.storage.MediaStorage;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -32,7 +33,11 @@ public class WebConfig implements WebMvcConfigurer {
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler(mediaStorage.basePublicPath() + "/**")
-                .addResourceLocations(mediaStorage.storageLocation());
+        // En producción el contenido vive en PostgreSQL y lo sirve
+        // MediaFileController; aquí solo se publica el almacén en disco.
+        if (mediaStorage instanceof FileSystemMediaStorage fileSystemStorage) {
+            registry.addResourceHandler(fileSystemStorage.basePublicPath() + "/**")
+                    .addResourceLocations(fileSystemStorage.storageLocation());
+        }
     }
 }

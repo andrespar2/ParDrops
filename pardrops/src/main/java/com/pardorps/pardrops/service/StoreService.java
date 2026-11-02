@@ -113,6 +113,12 @@ public class StoreService {
         store.setPublicPhone(trimToNull(request.publicPhone()));
         store.setCity(trimToNull(request.city()));
         store.setWhatsapp(trimToNull(request.whatsapp()));
+        if (request.shippingCost() != null) {
+            store.setShippingCost(request.shippingCost());
+        }
+        if (request.freeShippingThreshold() != null) {
+            store.setFreeShippingThreshold(request.freeShippingThreshold());
+        }
 
         String name = trimToNull(request.name());
         if (name != null) {
@@ -229,6 +235,8 @@ public class StoreService {
                 store.getPublicPhone(),
                 store.getCity(),
                 store.getWhatsapp(),
+                store.getShippingCost() == null ? 25_900.0 : store.getShippingCost(),
+                store.getFreeShippingThreshold() == null ? 400_000.0 : store.getFreeShippingThreshold(),
                 store.getStatus(),
                 rating,
                 reviewCount,

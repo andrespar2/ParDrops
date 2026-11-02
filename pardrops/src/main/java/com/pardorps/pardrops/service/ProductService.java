@@ -459,6 +459,11 @@ public class ProductService {
                         store -> store.getSeller().getId(),
                         Store::getName,
                         (first, second) -> first));
+        Map<Long, Store> storesBySeller = stores.stream()
+                .collect(Collectors.toMap(
+                        store -> store.getSeller().getId(),
+                        store -> store,
+                        (first, second) -> first));
 
         for (Product product : products) {
             User seller = product.getSeller();
@@ -466,11 +471,20 @@ public class ProductService {
                 product.setSellerId(null);
                 product.setSellerName(null);
                 product.setStoreSlug(null);
+                product.setShippingCost(null);
+                product.setFreeShippingThreshold(null);
                 continue;
             }
             product.setSellerId(seller.getId());
             product.setSellerName(storeNames.getOrDefault(seller.getId(), "ParDrops"));
             product.setStoreSlug(storeSlugs.get(seller.getId()));
+
+            Store store = storesBySeller.get(seller.getId());
+            if (store != null) {
+                product.setShippingCost(store.getShippingCost() == null ? 25_900.0 : store.getShippingCost());
+                product.setFreeShippingThreshold(
+                        store.getFreeShippingThreshold() == null ? 400_000.0 : store.getFreeShippingThreshold());
+            }
         }
     }
 

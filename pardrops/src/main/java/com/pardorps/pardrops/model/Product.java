@@ -173,6 +173,14 @@ public class Product {
     @Transient
     private String storeSlug;
 
+    /** Coste de envío de la tienda del vendedor (COP, no persistido). */
+    @Transient
+    private Double shippingCost;
+
+    /** Subtotal desde el que el envío es gratuito en su tienda (no persistido). */
+    @Transient
+    private Double freeShippingThreshold;
+
     /** Constructor vacío requerido por JPA. */
     public Product() {
     }

@@ -157,14 +157,18 @@ public class OrderService {
         // El precio publicado por el vendedor es el precio final: el IVA va
         // incluido y solo se calcula la porción informativa para la factura.
         double tax = round(subtotal - (subtotal / (1 + INCLUDED_TAX_RATE)));
-        double shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0.0 : SHIPPING_COST;
 
         order.setSubtotal(round(subtotal));
         order.setTax(tax);
-        order.setShipping(shipping);
-        order.setTotal(round(subtotal + shipping));
 
+        // El envío se calcula por tienda al crear cada parte del pedido.
         createSubOrders(order, itemsBySeller);
+
+        double orderShipping = round(order.getSubOrders().stream()
+                .mapToDouble(OrderSubOrder::getShipping)
+                .sum());
+        order.setShipping(orderShipping);
+        order.setTotal(round(subtotal + orderShipping));
         OrderStatus globalStatus = OrderStatus.aggregate(
                 order.getSubOrders().stream().map(OrderSubOrder::getStatus).toList());
         if (globalStatus != null) {
@@ -194,16 +198,15 @@ public class OrderService {
      *                     tienda propia de la plataforma).
      */
     private void createSubOrders(Order order, Map<Long, List<OrderItem>> itemsBySeller) {
-        List<OrderSubOrder> subOrders = new ArrayList<>();
-
         for (Map.Entry<Long, List<OrderItem>> entry : itemsBySeller.entrySet()) {
             User seller = null;
+            Store store = null;
             String storeName = PLATFORM_STORE_NAME;
             String storeSlug = null;
 
             if (entry.getKey() != null) {
                 seller = entry.getValue().get(0).getSeller();
-                Store store = storeRepository.findBySellerId(seller.getId()).orElse(null);
+                store = storeRepository.findBySellerId(seller.getId()).orElse(null);
                 if (store != null) {
                     storeName = store.getName();
                     storeSlug = store.getSlug();
@@ -226,45 +229,24 @@ public class OrderService {
                 subOrder.addItem(item);
             }
 
+            // Cada tienda define su envío y su umbral de envío gratuito.
+            double shippingCost = store != null && store.getShippingCost() != null
+                    ? store.getShippingCost()
+                    : SHIPPING_COST;
+            double threshold = store != null && store.getFreeShippingThreshold() != null
+                    ? store.getFreeShippingThreshold()
+                    : FREE_SHIPPING_THRESHOLD;
+            double shipping = subOrderSubtotal >= threshold ? 0.0 : shippingCost;
+
             subOrder.setSubtotal(round(subOrderSubtotal));
-            subOrders.add(subOrder);
-        }
+            subOrder.setShipping(round(shipping));
+            subOrder.setTotal(round(subOrderSubtotal + shipping));
 
-        distributeAmounts(order, subOrders);
-    }
-
-    /**
-     * Reparte el envío entre las partes del pedido.
-     *
-     * @param order    pedido con los importes globales ya calculados.
-     * @param subOrders partes del pedido.
-     */
-    private void distributeAmounts(Order order, List<OrderSubOrder> subOrders) {
-        if (subOrders.isEmpty()) {
-            return;
-        }
-
-        double distributedShipping = 0.0;
-        int shippingParts = subOrders.size();
-
-        for (int index = 0; index < subOrders.size(); index++) {
-            OrderSubOrder subOrder = subOrders.get(index);
-            boolean last = index == subOrders.size() - 1;
-
-            double shipping = last
-                    ? round(order.getShipping() - distributedShipping)
-                    : round(order.getShipping() / shippingParts);
-
-            subOrder.setShipping(shipping);
-            subOrder.setTotal(round(subOrder.getSubtotal() + shipping));
-
-            double commission = round(subOrder.getSubtotal() * commissionRate);
+            double commission = round(subOrderSubtotal * commissionRate);
             subOrder.setCommissionRate(commissionRate);
             subOrder.setCommissionAmount(commission);
             subOrder.setSellerNetAmount(round(subOrder.getTotal() - commission));
             subOrder.setFundsStatus(FundsStatus.HELD);
-
-            distributedShipping += shipping;
         }
     }
 

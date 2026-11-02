@@ -97,6 +97,14 @@ public class Store {
     @Column(length = 30)
     private String whatsapp;
 
+    /** Coste de envío por pedido de esta tienda (COP). */
+    @Column(name = "shipping_cost")
+    private Double shippingCost = 25_900.0;
+
+    /** Subtotal desde el que el envío de esta tienda es gratuito (COP). */
+    @Column(name = "free_shipping_threshold")
+    private Double freeShippingThreshold = 400_000.0;
+
     /** Estado de la tienda (activa o suspendida). */
     @Enumerated(EnumType.STRING)
     @Column(length = 20)

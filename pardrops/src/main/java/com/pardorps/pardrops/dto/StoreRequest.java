@@ -2,6 +2,7 @@ package com.pardorps.pardrops.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -52,6 +53,30 @@ public record StoreRequest(
         @Pattern(
                 regexp = "^[a-z0-9]+(?:-[a-z0-9]+)*$",
                 message = "El slug solo admite minúsculas, números y guiones")
-        String slug
+        String slug,
+
+        @PositiveOrZero(message = "El costo de envío no puede ser negativo")
+        Double shippingCost,
+
+        @PositiveOrZero(message = "El umbral de envío gratis no puede ser negativo")
+        Double freeShippingThreshold
 ) {
+
+    /**
+     * Constructor compatible con las llamadas que aún no envían la
+     * configuración de envío (se conservan los valores actuales de la tienda).
+     */
+    public StoreRequest(
+            String description,
+            String logoUrl,
+            String bannerUrl,
+            String publicEmail,
+            String publicPhone,
+            String whatsapp,
+            String city,
+            String name,
+            String slug
+    ) {
+        this(description, logoUrl, bannerUrl, publicEmail, publicPhone, whatsapp, city, name, slug, null, null);
+    }
 }

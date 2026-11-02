@@ -87,6 +87,22 @@
         </div>
       </div>
 
+      <div class="seller-profile__row">
+        <div class="admin-field">
+          <label for="store-shipping">Costo de envío (COP)</label>
+          <input id="store-shipping" type="number" min="0" step="100" class="admin-input"
+                 formControlName="shippingCost" />
+          <span class="seller-profile__hint">Lo paga el comprador una vez por pedido de tu tienda.</span>
+        </div>
+
+        <div class="admin-field">
+          <label for="store-free-shipping">Envío gratis desde (COP)</label>
+          <input id="store-free-shipping" type="number" min="0" step="1000" class="admin-input"
+                 formControlName="freeShippingThreshold" />
+          <span class="seller-profile__hint">Si el subtotal de tu tienda llega a este valor, el envío es gratis.</span>
+        </div>
+      </div>
+
       <div class="seller-profile__media">
         <div class="admin-field">
           <span class="seller-profile__label">Logotipo</span>

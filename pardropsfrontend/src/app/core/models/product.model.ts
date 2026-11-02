@@ -129,6 +129,10 @@ export interface Product {
   sellerName?: string | null;
   /** Slug de la tienda a la que pertenece (opcional). */
   storeSlug?: string | null;
+  /** Costo de envío de la tienda (COP, opcional). */
+  shippingCost?: number | null;
+  /** Subtotal desde el que el envío es gratuito (COP, opcional). */
+  freeShippingThreshold?: number | null;
   /** Fecha de creación (opcional) */
   createdAt?: Date;
   /** Fecha de actualización (opcional) */
@@ -140,8 +144,8 @@ export interface Product {
  * @interface ProductHighlights
  */
 export interface ProductHighlights {
-  /** Productos con m�s unidades vendidas. */
+  /** Productos con m�s unidades vendidas. */
   bestSellers: Product[];
-  /** Productos con mejor valoraci�n. */
+  /** Productos con mejor valoraci�n. */
   topRated: Product[];
 }

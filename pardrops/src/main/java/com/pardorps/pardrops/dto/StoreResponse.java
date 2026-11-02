@@ -35,6 +35,8 @@ public record StoreResponse(
         String publicPhone,
         String city,
         String whatsapp,
+        double shippingCost,
+        double freeShippingThreshold,
         StoreStatus status,
         double rating,
         long reviewCount,

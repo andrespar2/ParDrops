@@ -73,8 +73,25 @@ export class CartService {
    * @returns {number} Coste de envÃ­o.
    */
   public readonly shipping = computed(() => {
-    const subtotal = this.subtotal();
-    return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+    const groups = new Map<string, { subtotal: number; cost: number; threshold: number }>();
+
+    for (const item of this._items()) {
+      const key = item.product.storeSlug ?? item.product.sellerName ?? 'pardrops';
+      const price = item.selectedVariant?.price ?? item.product.price;
+      const group = groups.get(key) ?? {
+        subtotal: 0,
+        cost: item.product.shippingCost ?? SHIPPING_COST,
+        threshold: item.product.freeShippingThreshold ?? FREE_SHIPPING_THRESHOLD
+      };
+      group.subtotal += price * item.quantity;
+      groups.set(key, group);
+    }
+
+    let total = 0;
+    for (const group of groups.values()) {
+      total += group.subtotal >= group.threshold ? 0 : group.cost;
+    }
+    return Math.round(total);
   });
 
   /**

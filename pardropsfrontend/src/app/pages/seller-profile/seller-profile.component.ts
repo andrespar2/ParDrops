@@ -1,10 +1,10 @@
-/**
+﻿/**
  * @file src/app/pages/seller-profile/seller-profile.component.ts
- * @description Edición de la ficha pública de la tienda del vendedor.
+ * @description EdiciÃ³n de la ficha pÃºblica de la tienda del vendedor.
  *
- * Permite cambiar el nombre comercial, el slug, la descripción, los datos de
- * contacto y las imágenes de la tienda. El backend valida que el slug sea
- * único y que el vendedor solo edite su propia ficha.
+ * Permite cambiar el nombre comercial, el slug, la descripciÃ³n, los datos de
+ * contacto y las imÃ¡genes de la tienda. El backend valida que el slug sea
+ * Ãºnico y que el vendedor solo edite su propia ficha.
  *
  * @author ParDrops E-commerce
  * @version 1.0.0
@@ -35,19 +35,19 @@ export class SellerProfileComponent {
   /** Ficha actual de la tienda. */
   public readonly store = signal<Store | null>(null);
 
-  /** Indica si la ficha está cargándose. */
+  /** Indica si la ficha estÃ¡ cargÃ¡ndose. */
   public readonly loading = signal<boolean>(true);
 
-  /** Indica si se está guardando. */
+  /** Indica si se estÃ¡ guardando. */
   public readonly saving = signal<boolean>(false);
 
-  /** Indica si se intentó guardar. */
+  /** Indica si se intentÃ³ guardar. */
   public readonly submitted = signal<boolean>(false);
 
   /** Mensaje de error. */
   public readonly errorMessage = signal<string | null>(null);
 
-  /** Mensaje de éxito. */
+  /** Mensaje de Ã©xito. */
   public readonly successMessage = signal<string | null>(null);
 
   /** Formulario de la ficha comercial. */
@@ -64,7 +64,9 @@ export class SellerProfileComponent {
     publicEmail: ['', [Validators.email, Validators.maxLength(180)]],
     publicPhone: ['', [Validators.maxLength(30)]],
     city: ['', [Validators.maxLength(120)]],
-    whatsapp: ['', [Validators.maxLength(30)]]
+    whatsapp: ['', [Validators.maxLength(30)]],
+    shippingCost: [25900, [Validators.min(0)]],
+    freeShippingThreshold: [400000, [Validators.min(0)]]
   });
 
   constructor() {
@@ -92,7 +94,9 @@ export class SellerProfileComponent {
           publicEmail: store.publicEmail ?? '',
           publicPhone: store.publicPhone ?? '',
           city: store.city ?? '',
-          whatsapp: store.whatsapp ?? ''
+          whatsapp: store.whatsapp ?? '',
+          shippingCost: store.shippingCost ?? 25900,
+          freeShippingThreshold: store.freeShippingThreshold ?? 400000
         });
         this.loading.set(false);
       },
@@ -123,7 +127,7 @@ export class SellerProfileComponent {
   /**
    * Asigna la URL del logotipo subido.
    *
-   * @param url URL pública.
+   * @param url URL pÃºblica.
    * @returns {void}
    */
   public setLogo(url: string): void {
@@ -133,7 +137,7 @@ export class SellerProfileComponent {
   /**
    * Asigna la URL de la portada subida.
    *
-   * @param url URL pública.
+   * @param url URL pÃºblica.
    * @returns {void}
    */
   public setBanner(url: string): void {
@@ -165,7 +169,9 @@ export class SellerProfileComponent {
       publicEmail: value.publicEmail.trim() || null,
       publicPhone: value.publicPhone.trim() || null,
       city: value.city.trim() || null,
-      whatsapp: value.whatsapp.trim() || null
+      whatsapp: value.whatsapp.trim() || null,
+      shippingCost: value.shippingCost,
+      freeShippingThreshold: value.freeShippingThreshold
     };
 
     this.saving.set(true);
@@ -184,7 +190,7 @@ export class SellerProfileComponent {
   }
 
   /**
-   * Abre la tienda pública en una pestaña nueva.
+   * Abre la tienda pÃºblica en una pestaÃ±a nueva.
    *
    * @returns {void}
    */
@@ -195,3 +201,4 @@ export class SellerProfileComponent {
     }
   }
 }
+

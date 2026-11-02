@@ -144,17 +144,41 @@ class OrderServiceTest {
         assertEquals(100_000.0, response.subOrders().get(0).subtotal(), 0.001);
         assertEquals(50_000.0, response.subOrders().get(1).subtotal(), 0.001);
 
-        // El IVA va incluido en el precio publicado: la parte suma subtotal y
-        // su envío, sin añadir impuestos encima.
-        assertEquals(112_950.0, response.subOrders().get(0).total(), 0.001);
-        assertEquals(62_950.0, response.subOrders().get(1).total(), 0.001);
-        assertEquals(12_950.0, response.subOrders().get(0).shipping(), 0.001);
-        assertEquals(12_950.0, response.subOrders().get(1).shipping(), 0.001);
+        // Cada tienda cobra su propio envío (por defecto 25.900 al no llegar
+        // al umbral de envío gratis de 400.000).
+        assertEquals(125_900.0, response.subOrders().get(0).total(), 0.001);
+        assertEquals(75_900.0, response.subOrders().get(1).total(), 0.001);
+        assertEquals(25_900.0, response.subOrders().get(0).shipping(), 0.001);
+        assertEquals(25_900.0, response.subOrders().get(1).shipping(), 0.001);
 
         double suma = response.subOrders().stream()
                 .mapToDouble(subOrder -> subOrder.total())
                 .sum();
         assertEquals(response.total(), suma, 0.001);
+    }
+
+    @Test
+    @DisplayName("Aplica el envío configurado por la tienda y su umbral de envío gratis")
+    void usesStoreShippingSettings() {
+        User seller = seller(5L, "Tienda Envío");
+        Product product = product("prod-s", "Mochila", 100_000.0, 30, seller);
+        Store store = store(seller, "Tienda Envío", "tienda-envio");
+        store.setShippingCost(8_000.0);
+        store.setFreeShippingThreshold(150_000.0);
+
+        when(productRepository.findById("prod-s")).thenReturn(Optional.of(product));
+        when(storeRepository.findBySellerId(5L)).thenReturn(Optional.of(store));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        OrderResponse conEnvio = orderService.createOrder(request(List.of(item("prod-s", 1))), null);
+        assertEquals(100_000.0, conEnvio.subtotal(), 0.001);
+        assertEquals(8_000.0, conEnvio.shipping(), 0.001);
+        assertEquals(108_000.0, conEnvio.total(), 0.001);
+
+        OrderResponse envioGratis = orderService.createOrder(request(List.of(item("prod-s", 2))), null);
+        assertEquals(200_000.0, envioGratis.subtotal(), 0.001);
+        assertEquals(0.0, envioGratis.shipping(), 0.001);
+        assertEquals(200_000.0, envioGratis.total(), 0.001);
     }
 
     @Test

@@ -194,32 +194,34 @@ npx wrangler pages deploy dist/pardropsfrontend/browser --project-name=pardrops 
 
 ## 7. DNS de pardrops.qd.je (DigitalPlat)
 
-Estado actual del dominio:
+Estado configurado:
 
-- `qd.je` está delegado en `ns1.digitalplat.org` … `ns4.digitalplat.org`.
-- `pardrops.qd.je` es una **zona delegada propia** (`dns1/dns2.digitalplat.org`),
-  es decir, el nombre que controlamos es el **apex** de su zona.
-- DigitalPlat no ofrece editor de registros: solo guarda los nameservers. Los
-  registros A/CNAME deben crearse en el proveedor DNS externo al que se delegue.
+| Tipo | Nombre | Valor | Función |
+|---|---|---|---|
+| CNAME | `www` | `pardrops.pages.dev.` | SPA en Cloudflare Pages (URL canónica) |
+| A | `@` | `216.24.57.1` | Apex en Render, que responde 301 hacia `www` |
 
-Cloudflare Pages permite dominios personalizados fuera de Cloudflare creando un
-`CNAME` hacia `<proyecto>.pages.dev`. Como `pardrops.qd.je` es el apex de su
-zona, ese CNAME debe resolverse con *flattening* (alias en el apex), algo que no
-todos los proveedores soportan.
+- `pardrops.qd.je` es una **zona delegada propia** (NS `dns1/dns2.digitalplat.org`),
+  así que el nombre que controlamos es el **apex** de su zona.
+- Un apex no admite CNAME (RFC 1034: convive con SOA/NS). Cloudflare Pages exige
+  un CNAME real hacia `<proyecto>.pages.dev` (con una IP responde
+  `error 1001`), por lo que la SPA vive en `www`.
+- Para que la URL corta funcione, el apex apunta con un registro `A` a Render
+  (`216.24.57.1`, admitido por Render para dominios raíz). El backend tiene
+  `APP_REDIRECT_APEX_HOST=pardrops.qd.je` y `ApexRedirectFilter` responde 301
+  hacia `https://www.pardrops.qd.je` conservando ruta y query. Las rutas
+  `/api`, `/media`, `/oauth2`, `/login/oauth2` y `/actuator` no se redirigen.
+- El valor del CNAME debe escribirse **con punto final** (`pardrops.pages.dev.`)
+  en el panel de DigitalPlat; si se escribe sin punto lo interpreta como
+  relativo y genera `pardrops.pages.dev.pardrops.qd.je` (registro inválido).
 
-Pasos recomendados:
+Pasos si hay que rehacerlo:
 
-1. En el panel de DigitalPlat, apunta los nameservers de `pardrops.qd.je` al
-   proveedor DNS que admita alias en el apex.
-2. Crea los registros:
-   ```text
-   @     CNAME/ALIAS   pardrops.pages.dev
-   www   CNAME         pardrops.pages.dev
-   ```
-3. En Cloudflare → Workers & Pages → `pardrops` → Custom domains, añade
-   `pardrops.qd.je` y `www.pardrops.qd.je` (ya están dados de alta en estado
-   `initializing`, esperando DNS).
-4. Espera a que Cloudflare emita el certificado (unos minutos tras propagar).
+1. En DigitalPlat, `CNAME www → pardrops.pages.dev.` y `A @ → 216.24.57.1`.
+2. En Cloudflare Pages, dominio personalizado `www.pardrops.qd.je`.
+3. En Render, dominio personalizado `pardrops.qd.je`.
+4. Esperar la emisión de certificados (unos minutos) y comprobar con
+   `curl -I https://pardrops.qd.je` (301) y `curl -I https://www.pardrops.qd.je` (200).
 
 No cambies los nameservers de `qd.je` ni borres registros existentes: solo se
 tocan los de la zona `pardrops.qd.je`.

@@ -286,3 +286,69 @@ body {
     padding-bottom: 76px;
   }
 }
+
+/* ============================================================================
+   Normalización del modo oscuro
+   ----------------------------------------------------------------------------
+   Algunos componentes usaban colores fijos (grises de la paleta clara) que
+   quedaban ilegibles sobre las superficies oscuras. Estas reglas los alinean
+   con las variables del tema sin cambiar la estructura visual.
+   ========================================================================== */
+[data-theme='dark'] {
+  .header__icon,
+  .header__login,
+  .header__search,
+  .header__toggle,
+  .header__user-button {
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+  }
+
+  .footer {
+    background-color: var(--color-surface);
+    border-top-color: var(--color-border);
+  }
+
+  .footer__logo,
+  .footer__heading,
+  .footer__link,
+  .footer__item,
+  .footer__description,
+  .footer__copyright,
+  .footer__text {
+    color: var(--color-text-secondary);
+  }
+
+  .footer__link:hover {
+    color: var(--color-text-primary);
+  }
+
+  input,
+  select,
+  textarea {
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    border-color: var(--color-border);
+    color-scheme: dark;
+  }
+
+  option {
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-text-tertiary);
+  }
+
+  .summary-line--muted,
+  .summary__line--muted,
+  .finance__hint,
+  .admin-muted,
+  .support__muted,
+  .favorites__subtitle {
+    color: var(--color-text-tertiary);
+  }
+}

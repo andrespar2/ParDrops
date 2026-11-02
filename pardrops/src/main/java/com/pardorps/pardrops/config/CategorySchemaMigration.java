@@ -19,7 +19,7 @@ import java.util.Locale;
  * datos existentes.</p>
  */
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE + 15)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class CategorySchemaMigration implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(CategorySchemaMigration.class);
@@ -55,6 +55,8 @@ public class CategorySchemaMigration implements CommandLineRunner {
             jdbcTemplate.execute("ALTER TABLE categories ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0");
             jdbcTemplate.execute("ALTER TABLE categories ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)");
             jdbcTemplate.execute("ALTER TABLE categories ADD COLUMN IF NOT EXISTS collection BOOLEAN NOT NULL DEFAULT FALSE");
+            jdbcTemplate.execute("UPDATE categories SET collection = FALSE WHERE collection IS NULL");
+            jdbcTemplate.execute("UPDATE categories SET sort_order = 0 WHERE sort_order IS NULL");
             log.info("Columnas de categorías verificadas");
         } catch (Exception exception) {
             log.warn("No se pudieron preparar las columnas de categorías: {}", exception.getMessage());

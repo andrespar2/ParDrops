@@ -27,7 +27,9 @@ jobs:
 
       - name: Verificar el backend antes de publicar
         working-directory: pardrops
-        run: ./mvnw -B verify
+        run: |
+          chmod +x mvnw
+          ./mvnw -B verify
 
       - name: Disparar el despliegue en Render
         env:

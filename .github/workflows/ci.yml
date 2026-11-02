@@ -28,7 +28,9 @@ jobs:
           cache: maven
 
       - name: Compilar y ejecutar pruebas
-        run: ./mvnw -B verify
+        run: |
+          chmod +x mvnw
+          ./mvnw -B verify
 
   frontend:
     name: Frontend (Angular)

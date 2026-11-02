@@ -29,7 +29,7 @@ Una plataforma e-commerce moderna, intuitiva y construida con tecnologías de ú
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-Authentication-111827?style=flat-square&logo=jsonwebtokens)
-![H2](https://img.shields.io/badge/H2-Database-2563EB?style=flat-square)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 ![REST](https://img.shields.io/badge/REST-API-06B6D4?style=flat-square)
 ![COP](https://img.shields.io/badge/Currency-COP-16A34A?style=flat-square)
 ![Responsive](https://img.shields.io/badge/Design-Responsive-8B5CF6?style=flat-square)
@@ -62,6 +62,23 @@ Una plataforma e-commerce moderna, intuitiva y construida con tecnologías de ú
 > Más que una tienda online: una experiencia digital completa.
 
 </div>
+
+---
+
+## 🚀 Producción
+
+ParDrops está desplegado en producción con tres servicios gratuitos:
+
+| Componente | Servicio | URL |
+|---|---|---|
+| Frontend | Cloudflare Pages | https://pardrops.pages.dev |
+| Backend | Render (Docker) | https://pardrops-api.onrender.com |
+| Base de datos | Neon PostgreSQL 18 | `neondb` (rama `production`) |
+| Dominio principal | DigitalPlat + Cloudflare Pages | https://pardrops.qd.je |
+
+- Guía completa de despliegue, variables y operación: [`DEPLOYMENT.md`](DEPLOYMENT.md).
+- Decisiones técnicas y registro de la migración H2 → PostgreSQL: [`docs/despliegue-produccion.md`](docs/despliegue-produccion.md).
+- Plantilla de variables de entorno: [`.env.example`](.env.example).
 
 ---
 

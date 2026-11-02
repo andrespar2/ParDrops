@@ -1,4 +1,4 @@
-package com.pardorps.pardrops.model;
+﻿package com.pardorps.pardrops.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,16 +15,16 @@ import lombok.Setter;
 import java.time.Instant;
 
 /**
- * Categoría del catálogo del marketplace.
+ * CategorÃ­a del catÃ¡logo del marketplace.
  *
- * <p>Hasta la evolución a marketplace las categorías eran cadenas de texto
+ * <p>Hasta la evoluciÃ³n a marketplace las categorÃ­as eran cadenas de texto
  * libres dentro de {@link Product} ({@code @ElementCollection}). Esta entidad
- * las convierte en un catálogo gestionable desde el panel de administración
- * (nombre, slug, descripción y estado), sin romper los valores ya guardados:
- * la migración inicial las importa automáticamente.</p>
+ * las convierte en un catÃ¡logo gestionable desde el panel de administraciÃ³n
+ * (nombre, slug, descripciÃ³n y estado), sin romper los valores ya guardados:
+ * la migraciÃ³n inicial las importa automÃ¡ticamente.</p>
  *
- * <p>Los productos siguen guardando el <em>nombre</em> de la categoría, de modo
- * que el catálogo histórico permanece intacto aunque una categoría se
+ * <p>Los productos siguen guardando el <em>nombre</em> de la categorÃ­a, de modo
+ * que el catÃ¡logo histÃ³rico permanece intacto aunque una categorÃ­a se
  * desactive.</p>
  */
 @Entity
@@ -39,56 +39,56 @@ import java.time.Instant;
 @Setter
 public class Category {
 
-    /** Identificador autogenerado de la categoría. */
+    /** Identificador autogenerado de la categorÃ­a. */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Nombre visible de la categoría (coincide con el valor de producto). */
+    /** Nombre visible de la categorÃ­a (coincide con el valor de producto). */
     @Column(nullable = false, length = 120)
     private String name;
 
-    /** Slug único con el que se publica la categoría. */
+    /** Slug Ãºnico con el que se publica la categorÃ­a. */
     @Column(nullable = false, length = 140)
     private String slug;
 
-    /** Descripción de la categoría (opcional). */
+    /** DescripciÃ³n de la categorÃ­a (opcional). */
     @Column(length = 500)
     private String description;
 
-    /** Indica si la categoría está disponible para asignarla a productos. */
+    /** Indica si la categorÃ­a estÃ¡ disponible para asignarla a productos. */
     @Column(nullable = false)
     private boolean active = true;
 
-    /** Indica si la categoría se muestra en el menú de navegación del catálogo. */
+    /** Indica si la categorÃ­a se muestra en el menÃº de navegaciÃ³n del catÃ¡logo. */
     @Column(nullable = false)
     private boolean featured;
 
-    /** Categoría padre, para organizar subcategorías. */
+    /** CategorÃ­a padre, para organizar subcategorÃ­as. */
     @jakarta.persistence.ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
     @jakarta.persistence.JoinColumn(name = "parent_id")
     private Category parent;
 
-    /** Orden de aparición en el catálogo. */
-    @Column(name = "sort_order", nullable = false)
+    /** Orden de apariciÃ³n en el catÃ¡logo. */
+    @Column(name = "sort_order")
     private int sortOrder = 0;
 
-    /** Imagen representativa de la categoría. */
+    /** Imagen representativa de la categorÃ­a. */
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
-    /** Indica si es una colección (ofertas, novedades, temporadas). */
-    @Column(nullable = false)
+    /** Indica si es una colecciÃ³n (ofertas, novedades, temporadas). */
+    @Column
     private boolean collection = false;
 
-    /** Fecha de alta de la categoría. */
+    /** Fecha de alta de la categorÃ­a. */
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    /** Fecha de la última modificación. */
+    /** Fecha de la Ãºltima modificaciÃ³n. */
     private Instant updatedAt;
 
-    /** Constructor vacío requerido por JPA. */
+    /** Constructor vacÃ­o requerido por JPA. */
     public Category() {
     }
 
@@ -100,9 +100,10 @@ public class Category {
         updatedAt = now;
     }
 
-    /** Actualiza la fecha de modificación antes de cada guardado posterior. */
+    /** Actualiza la fecha de modificaciÃ³n antes de cada guardado posterior. */
     @PreUpdate
     void onUpdate() {
         updatedAt = Instant.now();
     }
 }
+

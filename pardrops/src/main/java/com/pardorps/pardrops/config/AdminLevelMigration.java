@@ -1,4 +1,4 @@
-package com.pardorps.pardrops.config;
+﻿package com.pardorps.pardrops.config;
 
 import com.pardorps.pardrops.model.AdminLevel;
 import com.pardorps.pardrops.model.Role;
@@ -12,16 +12,15 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 
 /**
  * Garantiza que siempre exista un administrador principal.
  *
- * <p>Las cuentas administrativas anteriores a la incorporación de niveles
- * quedan como {@link AdminLevel#MANAGER}; la más antigua activa pasa a
- * {@link AdminLevel#OWNER} si todavía no hay propietario. Es idempotente.</p>
+ * <p>Las cuentas administrativas anteriores a la incorporaciÃ³n de niveles
+ * quedan como {@link AdminLevel#MANAGER}; la mÃ¡s antigua activa pasa a
+ * {@link AdminLevel#OWNER} si todavÃ­a no hay propietario. Es idempotente.</p>
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
@@ -74,3 +73,4 @@ public class AdminLevelMigration implements CommandLineRunner {
         }
     }
 }
+

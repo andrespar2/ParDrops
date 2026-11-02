@@ -1,0 +1,44 @@
+# ============================================================================
+# Blueprint de Render para ParDrops
+# ----------------------------------------------------------------------------
+# Declara el servicio web del backend. Se puede aplicar desde el panel de
+# Render (New > Blueprint) o crear el servicio con la API; en ambos casos los
+# valores secretos se rellenan en el panel, nunca en el repositorio.
+# ============================================================================
+services:
+  - type: web
+    name: pardrops-api
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: pardrops
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+    envVars:
+      # Perfil de Spring y puerto: Render inyecta PORT automáticamente.
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      # Conexión a Neon. Se rellenan en el panel de Render.
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      # Clave de firma de los JWT (mínimo 32 caracteres).
+      - key: APP_JWT_SECRET
+        generateValue: true
+      # Orígenes autorizados para el frontend publicado.
+      - key: APP_CORS_ALLOWED_ORIGINS
+        sync: false
+      # URL pública del frontend para los enlaces de correo y OAuth2.
+      - key: APP_FRONTEND_URL
+        value: https://pardrops.qd.je
+      # Datos iniciales: solo la cuenta de administrador en producción.
+      - key: APP_SEED_DEMO_DATA
+        value: "true"
+      - key: APP_SEED_ADMIN_EMAIL
+        sync: false
+      - key: APP_SEED_ADMIN_PASSWORD
+        sync: false

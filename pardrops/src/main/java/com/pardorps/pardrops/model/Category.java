@@ -1,4 +1,4 @@
-﻿package com.pardorps.pardrops.model;
+package com.pardorps.pardrops.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

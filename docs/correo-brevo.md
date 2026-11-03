@@ -16,8 +16,10 @@ Evento de negocio (pedido, retiro, registro)
 ```
 
 - `EmailService` centraliza el envío: HTML, reintentos, deduplicación y registro.
-- `SmtpMailGateway` se activa con `app.mail.enabled=true`; sin él se usa el outbox
-  local (`./data/mail-outbox`).
+- **Transporte activo en producción: API HTTPS de Brevo** (`BrevoApiMailGateway`),
+  porque Render bloquea el puerto 587 en instancias gratuitas.
+- `SmtpMailGateway` queda disponible con `MAIL_TRANSPORT=smtp` (desarrollo o
+  proveedores sin bloqueo de puertos).
 - `OutboxMailGateway` permite desarrollar sin credenciales ni red.
 - Un fallo de correo **nunca** revierte la operación: se registra y la
   notificación interna se conserva.
@@ -38,6 +40,8 @@ Evento de negocio (pedido, retiro, registro)
 | `MAIL_CONNECTION_TIMEOUT` | `10000` |
 | `MAIL_READ_TIMEOUT` | `10000` |
 | `MAIL_WRITE_TIMEOUT` | `10000` |
+| `MAIL_TRANSPORT` | `api` (HTTPS de Brevo; `smtp` como alternativa) |
+| `BREVO_API_KEY` | *secreto (API key de Brevo)* |
 
 Equivalentes de Spring Boot aceptados: `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`,
 `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD`.
@@ -94,29 +98,26 @@ curl -s -X POST https://pardrops-api.onrender.com/api/admin/mail/test \
 
 ## 6. Estado de la verificación (2026-11-03)
 
-**Bloqueado por Brevo, no por el código.** Brevo rechaza las conexiones desde
-IPs no autorizadas:
+**Correo operativo.** Se envió un mensaje real desde producción a
+`jorgepardounu@gmail.com` con resultado:
 
 ```text
-SMTP  → EAUTH 525  5.7.1 Unauthorized IP address
-API   → 401 {"message":"We have detected you are using an unrecognised IP address …"}
+POST /api/admin/mail/test → {"sent": true}
+Log: BrevoApiMailGateway "Brevo API aceptó el correo para jorgepardounu@gmail.com"
+Log: EmailService "Correo enviado (intento 1)"
+Brevo respondió 201 con messageId.
 ```
 
-- Render (plan gratuito) usa IPs de salida variables, por lo que no pueden
-  añadirse de forma estable a la lista de IPs autorizadas.
-- El endpoint de prueba responde correctamente `{"sent": false}` y el log
-  registra los 3 intentos; la aplicación no falla ni revierte operaciones.
+### Historial del bloqueo (resuelto)
 
-### Cómo desbloquearlo (acción en Brevo)
-
-1. Entrar en **Brevo → Security → Authorised IPs**
-   (<https://app.brevo.com/security/authorised_ips>) y **desactivar la
-   restricción de IPs** (recomendado para Render) o autorizar la IP indicada
-   en el error.
-2. Si se desactiva la restricción, sirve tanto la **SMTP key** como la **API key**.
-3. Repetir el `POST /api/admin/mail/test` y comprobar la recepción.
-
-No se requieren cambios de código adicionales.
+- `smtp-relay.brevo.com:587` fallaba con `EAUTH 525 Unauthorized IP address`
+  mientras la cuenta tenía restricción por IP.
+- Tras habilitar los permisos, SMTP funcionó desde una IP autorizada, pero
+  **Render bloquea el puerto 587** en instancias gratuitas (timeout).
+- Solución definitiva: enviar por la **API HTTPS de Brevo** (puerto 443), que no
+  sufre bloqueo de puertos. `MAIL_TRANSPORT=api` + `BREVO_API_KEY`.
+- La API key también estaba sujeta a la restricción de IPs; quedó resuelta al
+  habilitar los permisos en Brevo.
 
 ## 7. Seguridad
 

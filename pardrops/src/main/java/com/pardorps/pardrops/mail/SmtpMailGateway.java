@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
  */
 @Component
 @ConditionalOnProperty(name = "app.mail.enabled", havingValue = "true")
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "app.mail.transport", havingValue = "smtp", matchIfMissing = true)
 public class SmtpMailGateway implements MailGateway {
 
     private final JavaMailSender mailSender;

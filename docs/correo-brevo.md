@@ -135,3 +135,31 @@ Brevo respondió 201 con messageId.
 | `sent: false` y timeout | Puerto bloqueado o SMTP caído |
 | No llega pero `sent: true` | Revisar spam / remitente no verificado |
 | Correos duplicados | No debería ocurrir (deduplicación de 10 min) |
+
+## 9. Remitente privado con el dominio propio
+
+El remitente actual es `pardrops1508@gmail.com` (cuenta personal). Para no
+exponerla, se debe autenticar el dominio `pardrops.qd.je` en Brevo y usar
+`no-reply@pardrops.qd.je`.
+
+Pasos (una sola vez):
+
+1. Brevo → **Senders & IPs → Domains → Add a domain** → `pardrops.qd.je`.
+2. Brevo muestra los registros DNS. Añadirlos en DigitalPlat (zona
+   `pardrops.qd.je`):
+   - Dos `TXT` DKIM: `mail._domainkey` y `brevo._domainkey` (o los selectores
+     que indique Brevo).
+   - Un `TXT` SPF en `@`: `v=spf1 include:spf.brevo.com ~all`.
+   - Opcional DMARC en `_dmarc`: `v=DMARC1; p=none; rua=mailto:...`.
+3. Pulsar **Authenticate** en Brevo y esperar la verificación.
+4. Cambiar en Render:
+   - `MAIL_FROM=no-reply@pardrops.qd.je`
+   - `MAIL_FROM_NAME=ParDrops`
+5. Probar con `POST /api/admin/mail/test`.
+
+Mientras el dominio no esté autenticado, el envío seguiría funcionando con el
+remitente verificado actual; cambiarlo antes de tiempo haría que Brevo rechace
+los mensajes.
+
+No se debe usar un buzón real para `no-reply`: con el dominio autenticado no
+hace falta recibir correo en esa dirección.

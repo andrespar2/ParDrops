@@ -138,28 +138,20 @@ Brevo respondió 201 con messageId.
 
 ## 9. Remitente privado con el dominio propio
 
-El remitente actual es `pardrops1508@gmail.com` (cuenta personal). Para no
-exponerla, se debe autenticar el dominio `pardrops.qd.je` en Brevo y usar
-`no-reply@pardrops.qd.je`.
+**Configurado y verificado.** El remitente de producción es
+`no-reply@pardrops.qd.je` (nombre `ParDrops`); la cuenta personal ya no aparece.
 
-Pasos (una sola vez):
+- Dominio `pardrops.qd.je` autenticado en Brevo (DKIM ×2, código de verificación
+  TXT y DMARC).
+- Registros en la zona `pardrops.qd.je` de DigitalPlat:
+  - `TXT @` → `brevo-code:…`
+  - `CNAME brevo1._domainkey` → `b1.pardrops-qd-je.dkim.brevo.com.`
+  - `CNAME brevo2._domainkey` → `b2.pardrops-qd-je.dkim.brevo.com.`
+  - `TXT _dmarc` → `v=DMARC1; p=none; rua=mailto:rua@dmarc.brevo.com`
+- Brevo respondió `Domain has been authenticated successfully`.
+- Envío de prueba desde `no-reply@pardrops.qd.je` aceptado por Brevo (HTTP 201).
 
-1. Brevo → **Senders & IPs → Domains → Add a domain** → `pardrops.qd.je`.
-2. Brevo muestra los registros DNS. Añadirlos en DigitalPlat (zona
-   `pardrops.qd.je`):
-   - Dos `TXT` DKIM: `mail._domainkey` y `brevo._domainkey` (o los selectores
-     que indique Brevo).
-   - Un `TXT` SPF en `@`: `v=spf1 include:spf.brevo.com ~all`.
-   - Opcional DMARC en `_dmarc`: `v=DMARC1; p=none; rua=mailto:...`.
-3. Pulsar **Authenticate** en Brevo y esperar la verificación.
-4. Cambiar en Render:
-   - `MAIL_FROM=no-reply@pardrops.qd.je`
-   - `MAIL_FROM_NAME=ParDrops`
-5. Probar con `POST /api/admin/mail/test`.
+Variables en Render: `MAIL_FROM=no-reply@pardrops.qd.je`, `MAIL_FROM_NAME=ParDrops`.
 
-Mientras el dominio no esté autenticado, el envío seguiría funcionando con el
-remitente verificado actual; cambiarlo antes de tiempo haría que Brevo rechace
-los mensajes.
-
-No se debe usar un buzón real para `no-reply`: con el dominio autenticado no
-hace falta recibir correo en esa dirección.
+`no-reply@` no necesita buzón: el dominio autenticado firma los envíos con DKIM
+y las respuestas no se reciben (comportamiento esperado).

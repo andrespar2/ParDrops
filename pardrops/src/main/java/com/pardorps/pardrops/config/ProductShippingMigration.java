@@ -54,23 +54,41 @@ public class ProductShippingMigration implements CommandLineRunner {
             jdbcTemplate.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS shipping_cost DOUBLE PRECISION");
             jdbcTemplate.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS free_shipping_threshold DOUBLE PRECISION");
             jdbcTemplate.execute("UPDATE products SET requires_shipping = false WHERE requires_shipping IS NULL");
-            int copied = jdbcTemplate.update("""
-                    UPDATE products p
-                    SET requires_shipping = true,
-                        shipping_cost = s.shipping_cost,
-                        free_shipping_threshold = s.free_shipping_threshold
-                    FROM stores s
-                    WHERE s.seller_id = p.seller_id
-                      AND p.requires_shipping = false
-                      AND p.shipping_cost IS NULL
-                      AND s.shipping_cost IS NOT NULL
-                    """);
-            if (copied > 0) {
-                log.info("Configuración de envío copiada a {} productos", copied);
+
+            if (columnExists("stores", "shipping_cost")) {
+                int copied = jdbcTemplate.update("""
+                        UPDATE products p
+                        SET requires_shipping = true,
+                            shipping_cost = s.shipping_cost,
+                            free_shipping_threshold = s.free_shipping_threshold
+                        FROM stores s
+                        WHERE s.seller_id = p.seller_id
+                          AND p.requires_shipping = false
+                          AND p.shipping_cost IS NULL
+                          AND s.shipping_cost IS NOT NULL
+                        """);
+                if (copied > 0) {
+                    log.info("Configuración de envío copiada a {} productos", copied);
+                }
             }
             log.info("Columnas de envío por producto verificadas");
         } catch (Exception exception) {
             log.warn("No se pudieron preparar las columnas de envío: {}", exception.getMessage());
         }
+    }
+
+    /**
+     * Comprueba si una columna existe en PostgreSQL.
+     *
+     * @param table  tabla.
+     * @param column columna.
+     * @return {@code true} si existe.
+     */
+    private boolean columnExists(String table, String column) {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_NAME = ? AND COLUMN_NAME = ?
+                """, Integer.class, table, column);
+        return count != null && count > 0;
     }
 }

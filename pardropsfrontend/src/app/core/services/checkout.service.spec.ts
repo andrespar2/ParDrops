@@ -93,7 +93,6 @@ describe('CheckoutService', () => {
         notes: null,
         items: [],
         subtotal: 50_000,
-        tax: 7_983,
         shipping: 8_000,
         total: 58_700,
         status: 'PAID',

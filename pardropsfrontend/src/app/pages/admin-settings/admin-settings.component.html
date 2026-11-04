@@ -22,8 +22,9 @@
 
   <h2 class="admin-page__title">Parámetros de la tienda</h2>
   <p class="admin-page__subtitle admin-page__subtitle--spaced">
-    Estos valores se aplican de forma uniforme en el catálogo, el carrito y el
-    pago. Para cambiarlos hay que editar la configuración de la plataforma.
+    La moneda es global. Los precios publicados por los vendedores ya incluyen
+    impuestos y cada producto define su propio costo de envío y su mínimo para
+    envío gratis.
   </p>
 
   <section class="admin-cards">
@@ -31,18 +32,6 @@
       <p class="admin-card__label">Moneda</p>
       <p class="admin-card__value">{{ currencyCode }}</p>
       <p class="admin-card__hint">{{ country }}</p>
-    </article>
-    <article class="admin-card">
-      <p class="admin-card__label">IVA</p>
-      <p class="admin-card__value">{{ formatRate(taxRate) }}</p>
-      <p class="admin-card__hint">Aplicado al total del pedido</p>
-    </article>
-    <article class="admin-card">
-      <p class="admin-card__label">Envío</p>
-      <p class="admin-card__value">{{ formatPrice(shippingCost) }}</p>
-      <p class="admin-card__hint">
-        Gratis desde {{ formatPrice(freeShippingThreshold) }}
-      </p>
     </article>
   </section>
 

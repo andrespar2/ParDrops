@@ -272,7 +272,10 @@ class ProductServiceTest {
                 0,
                 false,
                 false,
-                false);
+                false,
+                false,
+                null,
+                null);
 
         productService.update("prod-1", request, seller);
 
@@ -380,6 +383,9 @@ class ProductServiceTest {
                 0,
                 Boolean.FALSE,
                 Boolean.FALSE,
-                Boolean.FALSE);
+                Boolean.FALSE,
+                Boolean.FALSE,
+                null,
+                null);
     }
 }

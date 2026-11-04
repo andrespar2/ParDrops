@@ -92,10 +92,6 @@ public final class EmailTemplateDefaults {
                     <td style="padding:6px 0;text-align:right;">{{subtotal}}</td>
                   </tr>
                   <tr>
-                    <td style="padding:6px 0;color:#6b7280;">IVA</td>
-                    <td style="padding:6px 0;text-align:right;">{{tax}}</td>
-                  </tr>
-                  <tr>
                     <td style="padding:6px 0;color:#6b7280;">Envío</td>
                     <td style="padding:6px 0;text-align:right;">{{shipping}}</td>
                   </tr>
@@ -161,10 +157,6 @@ public final class EmailTemplateDefaults {
                   <tr>
                     <td style="padding:6px 0;color:#6b7280;">Subtotal</td>
                     <td style="padding:6px 0;text-align:right;">{{subtotal}}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:6px 0;color:#6b7280;">IVA</td>
-                    <td style="padding:6px 0;text-align:right;">{{tax}}</td>
                   </tr>
                   <tr>
                     <td style="padding:6px 0;color:#6b7280;">Envío</td>

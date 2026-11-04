@@ -14,10 +14,7 @@ import { Injectable, signal, computed, effect } from '@angular/core';
 import { Cart, CartItem } from '../models/cart.model';
 import { Product, ProductVariant } from '../models/product.model';
 import {
-  CURRENCY_CODE,
-  FREE_SHIPPING_THRESHOLD,
-  SHIPPING_COST,
-  includedTax
+  CURRENCY_CODE
 } from '../config/commerce.config';
 
 @Injectable({
@@ -69,36 +66,34 @@ export class CartService {
   );
 
   /**
-   * Signal computado con los costes de envÃ­o (gratis desde el umbral de COP).
-   * @returns {number} Coste de envÃ­o.
+   * Signal computado con los costes de envío.
+   *
+   * Cada producto define si requiere envío, su coste y el subtotal de línea a
+   * partir del cual es gratis. El total es la suma de esos envíos.
+   *
+   * @returns {number} Coste de envío total.
    */
   public readonly shipping = computed(() => {
-    const groups = new Map<string, { subtotal: number; cost: number; threshold: number }>();
+    let total = 0;
 
     for (const item of this._items()) {
-      const key = item.product.storeSlug ?? item.product.sellerName ?? 'pardrops';
-      const price = item.selectedVariant?.price ?? item.product.price;
-      const group = groups.get(key) ?? {
-        subtotal: 0,
-        cost: item.product.shippingCost ?? SHIPPING_COST,
-        threshold: item.product.freeShippingThreshold ?? FREE_SHIPPING_THRESHOLD
-      };
-      group.subtotal += price * item.quantity;
-      groups.set(key, group);
+      const product = item.product;
+      if (!product.requiresShipping) {
+        continue;
+      }
+
+      const price = item.selectedVariant?.price ?? product.price;
+      const lineSubtotal = price * item.quantity;
+      const threshold = product.freeShippingThreshold;
+      if (threshold !== null && threshold !== undefined && lineSubtotal >= threshold) {
+        continue;
+      }
+
+      total += product.shippingCost ?? 0;
     }
 
-    let total = 0;
-    for (const group of groups.values()) {
-      total += group.subtotal >= group.threshold ? 0 : group.cost;
-    }
     return Math.round(total);
   });
-
-  /**
-   * IVA incluido en los precios (informativo). No se suma al total.
-   * @returns {number} Porción de impuesto incluida en el subtotal.
-   */
-  public readonly tax = computed(() => includedTax(this.subtotal()));
 
   /**
    * Signal computado con el total final.
@@ -108,9 +103,6 @@ export class CartService {
     Math.round(this.subtotal() + this.shipping())
   );
 
-  /** Subtotal a partir del cual el envÃ­o es gratuito. */
-  public readonly freeShippingThreshold = FREE_SHIPPING_THRESHOLD;
-
   /**
    * Signal computado que devuelve el estado completo del carrito.
    * @returns {Cart} Estado completo del carrito.
@@ -118,7 +110,6 @@ export class CartService {
   public readonly cart = computed<Cart>(() => ({
     items: this._items(),
     subtotal: this.subtotal(),
-    tax: this.tax(),
     shipping: this.shipping(),
     total: this.total(),
     currency: CURRENCY_CODE,

@@ -169,9 +169,7 @@ export interface Order {
   subOrders?: OrderSubOrder[];
   /** Suma de las líneas (COP). */
   subtotal: number;
-  /** Impuestos aplicados (IVA 19 %, en COP). */
-  tax: number;
-  /** Gastos de envío (COP; gratis a partir de 400.000). */
+  /** Gastos de envío (COP; según cada producto). */
   shipping: number;
   /** Importe total (COP). */
   total: number;

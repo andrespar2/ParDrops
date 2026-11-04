@@ -173,13 +173,33 @@ public class Product {
     @Transient
     private String storeSlug;
 
-    /** Coste de envío de la tienda del vendedor (COP, no persistido). */
-    @Transient
+    /**
+     * Indica si el producto requiere envío.
+     *
+     * <p>Lo define el vendedor en cada producto. Si es falso, el producto se
+     * entrega sin costo de envío (por ejemplo, un servicio o un producto
+     * digital).</p>
+     */
+    @Column(name = "requires_shipping")
+    private Boolean requiresShipping = false;
+
+    /**
+     * Coste de envío de este producto (COP).
+     *
+     * <p>Solo aplica cuando {@link #requiresShipping} es verdadero. No hay un
+     * valor predeterminado: si el vendedor no lo indica, el producto no puede
+     * publicarse con envío.</p>
+     */
+    @Column(name = "shipping_cost")
     private Double shippingCost;
 
-    /** Subtotal desde el que el envío es gratuito en su tienda (no persistido). */
-    @Transient
+    /**
+     * Subtotal de la línea a partir del cual el envío de este producto es
+     * gratuito (COP). Si es nulo, no hay envío gratis por umbral.
+     */
+    @Column(name = "free_shipping_threshold")
     private Double freeShippingThreshold;
+
 
     /** Constructor vacío requerido por JPA. */
     public Product() {

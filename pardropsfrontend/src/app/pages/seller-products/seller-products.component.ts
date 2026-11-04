@@ -78,7 +78,10 @@ export class SellerProductsComponent {
     tags: [''],
     isNew: [false],
     isFeatured: [false],
-    onSale: [false]
+    onSale: [false],
+    requiresShipping: [false],
+    shippingCost: [0, [Validators.min(0)]],
+    freeShippingThreshold: [null as number | null, [Validators.min(0)]]
   });
 
   constructor() {
@@ -131,7 +134,10 @@ export class SellerProductsComponent {
       tags: '',
       isNew: false,
       isFeatured: false,
-      onSale: false
+      onSale: false,
+      requiresShipping: false,
+      shippingCost: 0,
+      freeShippingThreshold: null
     });
     this.formOpen.set(true);
   }
@@ -161,7 +167,10 @@ export class SellerProductsComponent {
       tags: (product.tags ?? []).join(', '),
       isNew: product.isNew,
       isFeatured: product.isFeatured,
-      onSale: product.onSale
+      onSale: product.onSale,
+      requiresShipping: product.requiresShipping === true,
+      shippingCost: product.shippingCost ?? 0,
+      freeShippingThreshold: product.freeShippingThreshold ?? null
     });
     this.formOpen.set(true);
   }
@@ -236,6 +245,10 @@ export class SellerProductsComponent {
     }
 
     const value = this.form.getRawValue();
+    if (value.requiresShipping && Number(value.shippingCost) <= 0) {
+      this.errorMessage.set('Indica el costo de envío o desmarca que el producto requiere envío.');
+      return;
+    }
     const images: ProductImage[] = this.imageUrls().map((url, index) => ({
       url,
       alt: value.name,
@@ -257,7 +270,12 @@ export class SellerProductsComponent {
       variants: this.variants(),
       isNew: value.isNew,
       isFeatured: value.isFeatured,
-      onSale: value.onSale
+      onSale: value.onSale,
+      requiresShipping: value.requiresShipping,
+      shippingCost: value.requiresShipping ? Number(value.shippingCost) : null,
+      freeShippingThreshold: value.requiresShipping
+        ? (value.freeShippingThreshold === null ? null : Number(value.freeShippingThreshold))
+        : null
     };
 
     const editingId = this.editingId();

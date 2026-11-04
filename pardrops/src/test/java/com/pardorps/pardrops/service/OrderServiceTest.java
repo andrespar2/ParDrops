@@ -129,6 +129,10 @@ class OrderServiceTest {
         User sellerB = seller(2L, "Calzado Deportivo");
         Product productA = product("prod-a", "Gorra urbana", 100_000.0, 10, sellerA);
         Product productB = product("prod-b", "Zapatillas", 50_000.0, 8, sellerB);
+        productA.setRequiresShipping(true);
+        productA.setShippingCost(25_900.0);
+        productB.setRequiresShipping(true);
+        productB.setShippingCost(25_900.0);
 
         when(productRepository.findById("prod-a")).thenReturn(Optional.of(productA));
         when(productRepository.findById("prod-b")).thenReturn(Optional.of(productB));
@@ -160,13 +164,14 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("Aplica el envío configurado por la tienda y su umbral de envío gratis")
-    void usesStoreShippingSettings() {
+    @DisplayName("Aplica el envío configurado en el producto y su umbral de envío gratis")
+    void usesProductShippingSettings() {
         User seller = seller(5L, "Tienda Envío");
         Product product = product("prod-s", "Mochila", 100_000.0, 30, seller);
+        product.setRequiresShipping(true);
+        product.setShippingCost(8_000.0);
+        product.setFreeShippingThreshold(150_000.0);
         Store store = store(seller, "Tienda Envío", "tienda-envio");
-        store.setShippingCost(8_000.0);
-        store.setFreeShippingThreshold(150_000.0);
 
         when(productRepository.findById("prod-s")).thenReturn(Optional.of(product));
         when(storeRepository.findBySellerId(5L)).thenReturn(Optional.of(store));
@@ -402,6 +407,8 @@ class OrderServiceTest {
     void calculatesCommissionAndHoldsFunds() {
         User seller = seller(3L, "Tienda Comisión");
         Product product = product("prod-c", "Gorra", 100_000.0, 10, seller);
+        product.setRequiresShipping(true);
+        product.setShippingCost(25_900.0);
         when(productRepository.findById("prod-c")).thenReturn(Optional.of(product));
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 

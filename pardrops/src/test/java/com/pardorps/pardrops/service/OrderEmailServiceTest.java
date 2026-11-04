@@ -163,14 +163,13 @@ class OrderEmailServiceTest {
     }
 
     @Test
-    @DisplayName("Calcula el IVA repartido y formatea los importes")
-    void calculatesTaxAndFormatsMoney() {
+    @DisplayName("Formatea los importes de los correos")
+    void formatsMoney() {
         OrderSubOrder subOrder = subOrder(null, "ParDrops");
         subOrder.setSubtotal(100_000.0);
         subOrder.setShipping(25_900.0);
-        subOrder.setTotal(144_900.0);
+        subOrder.setTotal(125_900.0);
 
-        assertEquals(19_000.0, service.tax(subOrder), 0.01);
         assertEquals("$ 100.000", service.money(100_000.0));
         assertEquals("Pagado", service.statusLabel(OrderStatus.PAID));
     }

@@ -304,7 +304,6 @@ public class OrderEmailService {
     protected Map<String, Object> buildModel(Order order, OrderSubOrder subOrder) {
         List<OrderItem> items = subOrder == null ? order.getItems() : subOrder.getItems();
         double subtotal = subOrder == null ? nz(order.getSubtotal()) : nz(subOrder.getSubtotal());
-        double tax = subOrder == null ? nz(order.getTax()) : tax(subOrder);
         double shipping = subOrder == null ? nz(order.getShipping()) : nz(subOrder.getShipping());
         double total = subOrder == null ? nz(order.getTotal()) : nz(subOrder.getTotal());
         OrderStatus status = subOrder == null ? order.getStatus() : subOrder.getStatus();
@@ -322,7 +321,6 @@ public class OrderEmailService {
         model.put("sellerName", seller != null ? seller.getFullName() : "equipo de ParDrops");
         model.put("itemsTable", new EmailTemplateRenderer.SafeHtml(itemsTable(items)));
         model.put("subtotal", money(subtotal));
-        model.put("tax", money(tax));
         model.put("shipping", money(shipping));
         model.put("total", money(total));
         model.put("status", status == null ? "" : status.name());
@@ -389,12 +387,6 @@ public class OrderEmailService {
                 order.getAddressCity(),
                 order.getAddressPostalCode(),
                 order.getAddressCountry());
-    }
-
-    /** Calcula el IVA repartido en la parte del pedido. */
-    protected double tax(OrderSubOrder subOrder) {
-        return Math.round((nz(subOrder.getTotal()) - nz(subOrder.getSubtotal())
-                - nz(subOrder.getShipping())) * 100.0) / 100.0;
     }
 
     /** Formatea un importe en pesos colombianos sin decimales. */

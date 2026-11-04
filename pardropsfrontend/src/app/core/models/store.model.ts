@@ -35,10 +35,6 @@ export interface Store {
   city?: string | null;
   /** WhatsApp de contacto. */
   whatsapp?: string | null;
-  /** Costo de envío por pedido de la tienda (COP). */
-  shippingCost?: number | null;
-  /** Subtotal desde el que el envío es gratuito (COP). */
-  freeShippingThreshold?: number | null;
   /** Estado de la tienda. */
   status: StoreStatus;  /** Media de estrellas de sus productos. */
   rating: number;
@@ -70,10 +66,6 @@ export interface StoreRequest {
   whatsapp?: string | null;
   /** Ciudad de la tienda. */
   city?: string | null;
-  /** Costo de envío por pedido de la tienda (COP). */
-  shippingCost?: number | null;
-  /** Subtotal desde el que el envío es gratuito (COP). */
-  freeShippingThreshold?: number | null;
   /** Nombre comercial. */
   name?: string | null;
   /** Slug público (minúsculas, números y guiones). */

@@ -1,12 +1,10 @@
-﻿/**
+/**
  * @file src/app/pages/admin-settings/admin-settings.component.ts
- * @description SecciÃ³n "ConfiguraciÃ³n" del panel de administraciÃ³n.
+ * @description Sección "Configuración" del panel de administración.
  *
- * Muestra la configuraciÃ³n general de la plataforma tal y como la aplica el
- * frontend (moneda, impuesto, envÃ­o y umbral de envÃ­o gratuito) y el estado del
- * catÃ¡logo y de las categorÃ­as, leÃ­do de la API real. La configuraciÃ³n de
- * negocio es de solo lectura: vive en el cÃ³digo y en la base de datos, no se
- * edita desde aquÃ­ para no falsear cobros ni envÃ­os.
+ * Muestra la configuraci�n general de la plataforma (moneda) y el estado del
+ * cat�logo y de las categor�as, le�do de la API real. La configuraci�n de
+ * negocio es de solo lectura: vive en el c�digo y en la base de datos.
  *
  * @author ParDrops E-commerce
  * @version 1.0.0
@@ -19,11 +17,7 @@ import { AdminService } from '../../core/services/admin.service';
 import { AdminDashboard } from '../../core/models/admin.model';
 import {
   CURRENCY_CODE,
-  DEFAULT_COUNTRY,
-  FREE_SHIPPING_THRESHOLD,
-  SHIPPING_COST,
-  INCLUDED_TAX_RATE,
-  formatCurrency
+  DEFAULT_COUNTRY
 } from '../../core/config/commerce.config';
 
 @Component({
@@ -36,25 +30,17 @@ import {
 export class AdminSettingsComponent {
   private readonly adminService = inject(AdminService);
 
-  /** CÃ³digo de moneda de la plataforma. */
+  /** Código de moneda de la plataforma. */
   public readonly currencyCode = CURRENCY_CODE;
 
-  /** PaÃ­s de la tienda. */
+  /** País de la tienda. */
   public readonly country = DEFAULT_COUNTRY;
 
-  /** Porcentaje de IVA aplicado. */
-  public readonly taxRate = INCLUDED_TAX_RATE;
 
-  /** Coste de envÃ­o. */
-  public readonly shippingCost = SHIPPING_COST;
-
-  /** Umbral de envÃ­o gratuito. */
-  public readonly freeShippingThreshold = FREE_SHIPPING_THRESHOLD;
-
-  /** Resumen de la plataforma, usado para mostrar el estado del catÃ¡logo. */
+  /** Resumen de la plataforma, usado para mostrar el estado del catálogo. */
   public readonly dashboard = signal<AdminDashboard | null>(null);
 
-  /** Indica si el resumen estÃ¡ cargÃ¡ndose. */
+  /** Indica si el resumen está cargándose. */
   public readonly loading = signal<boolean>(true);
 
   /** Mensaje de error visible. */
@@ -65,7 +51,7 @@ export class AdminSettingsComponent {
   }
 
   /**
-   * Carga el estado actual del catÃ¡logo y las categorÃ­as.
+   * Carga el estado actual del catálogo y las categorías.
    *
    * @returns {void}
    */
@@ -87,24 +73,5 @@ export class AdminSettingsComponent {
     });
   }
 
-  /**
-   * Formatea un porcentaje como texto legible.
-   *
-   * @param rate tasa expresada en tanto por uno.
-   * @returns el porcentaje formateado.
-   */
-  public formatRate(rate: number): string {
-    return `${Math.round(rate * 100)}%`;
-  }
-
-  /**
-   * Formatea un importe como moneda.
-   *
-   * @param amount importe a formatear.
-   * @returns el importe formateado.
-   */
-  public formatPrice(amount: number): string {
-    return formatCurrency(amount);
-  }
 }
 

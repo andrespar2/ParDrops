@@ -3,7 +3,7 @@
  * @description Página del carrito de compras.
  *
  * Muestra todos los ítems en el carrito, permite gestionar cantidades,
- * eliminar productos y muestra un resumen con subtotal, impuestos, envío y
+ * eliminar productos y muestra un resumen con subtotal, envío y
  * total. El botón «Finalizar compra» lleva a la página de checkout, donde se
  * recogen los datos del cliente.
  *
@@ -33,9 +33,6 @@ export class CartComponent {
 
   /** Referencia al carrito computado. */
   public readonly cart = this.cartService.cart;
-
-  /** Subtotal a partir del cual el envío es gratuito. */
-  public readonly freeShippingThreshold = this.cartService.freeShippingThreshold;
 
   /**
    * Incrementa la cantidad de un ítem.

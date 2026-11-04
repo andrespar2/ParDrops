@@ -48,15 +48,6 @@ public class OrderService {
 
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
-    /** Porcentaje de IVA aplicado en Colombia (19%). */
-    private static final double INCLUDED_TAX_RATE = 0.19;
-
-    /** Importe a partir del cual el envío es gratuito (400.000 COP). */
-    private static final double FREE_SHIPPING_THRESHOLD = 400_000.0;
-
-    /** Coste de envío cuando no se alcanza el mínimo (25.900 COP). */
-    private static final double SHIPPING_COST = 25_900.0;
-
     /** Nombre de la tienda propia de la plataforma (productos sin vendedor). */
     private static final String PLATFORM_STORE_NAME = "ParDrops";
 
@@ -164,6 +155,7 @@ public class OrderService {
 
         double subtotal = 0.0;
         Map<Long, List<OrderItem>> itemsBySeller = new LinkedHashMap<>();
+        Map<Long, Double> shippingBySeller = new LinkedHashMap<>();
         java.util.Map<String, Integer> requestedByProductVariant = new java.util.HashMap<>();
 
         for (OrderItemRequest itemRequest : request.items()) {
@@ -197,6 +189,10 @@ public class OrderService {
 
             Long sellerId = product.getSeller() != null ? product.getSeller().getId() : null;
             itemsBySeller.computeIfAbsent(sellerId, key -> new ArrayList<>()).add(item);
+            shippingBySeller.merge(
+                    sellerId,
+                    lineShipping(product, unitPrice, itemRequest.quantity()),
+                    Double::sum);
 
             if (reserveStock) {
                 decreaseStock(product, variant, itemRequest.quantity());
@@ -212,15 +208,13 @@ public class OrderService {
             }
         }
 
-        // El precio publicado por el vendedor es el precio final: el IVA va
-        // incluido y solo se calcula la porción informativa para la factura.
-        double tax = round(subtotal - (subtotal / (1 + INCLUDED_TAX_RATE)));
-
+        // Los precios publicados por los vendedores ya incluyen los impuestos.
+        // No se añade IVA ni se calcula una porción adicional.
         order.setSubtotal(round(subtotal));
-        order.setTax(tax);
+        order.setTax(0.0);
 
-        // El envío se calcula por tienda al crear cada parte del pedido.
-        createSubOrders(order, itemsBySeller);
+        // El envío se calcula por producto y se agrupa por vendedor.
+        createSubOrders(order, itemsBySeller, shippingBySeller);
 
         double orderShipping = round(order.getSubOrders().stream()
                 .mapToDouble(OrderSubOrder::getShipping)
@@ -241,15 +235,20 @@ public class OrderService {
     /**
      * Crea una parte del pedido por cada grupo de líneas.
      *
-     * <p>El envío se divide a partes iguales y el IVA ya está incluido en los
-     * precios, de modo que la suma de las partes coincida con el total del
-     * pedido sin añadir impuestos encima.</p>
+     * <p>El envío se calcula por producto según la configuración del vendedor y
+     * se suma por tienda. Los precios publicados ya incluyen impuestos, de modo
+     * que la suma de las partes coincide con el total del pedido.</p>
      *
-     * @param order        pedido al que pertenecen las partes.
-     * @param itemsBySeller líneas agrupadas por vendedor (la clave nula es la
-     *                     tienda propia de la plataforma).
+     * @param order           pedido al que pertenecen las partes.
+     * @param itemsBySeller   líneas agrupadas por vendedor (la clave nula es la
+     *                        tienda propia de la plataforma).
+     * @param shippingBySeller envío acumulado por vendedor.
      */
-    private void createSubOrders(Order order, Map<Long, List<OrderItem>> itemsBySeller) {
+    private void createSubOrders(
+            Order order,
+            Map<Long, List<OrderItem>> itemsBySeller,
+            Map<Long, Double> shippingBySeller
+    ) {
         for (Map.Entry<Long, List<OrderItem>> entry : itemsBySeller.entrySet()) {
             User seller = null;
             Store store = null;
@@ -281,14 +280,8 @@ public class OrderService {
                 subOrder.addItem(item);
             }
 
-            // Cada tienda define su envío y su umbral de envío gratuito.
-            double shippingCost = store != null && store.getShippingCost() != null
-                    ? store.getShippingCost()
-                    : SHIPPING_COST;
-            double threshold = store != null && store.getFreeShippingThreshold() != null
-                    ? store.getFreeShippingThreshold()
-                    : FREE_SHIPPING_THRESHOLD;
-            double shipping = subOrderSubtotal >= threshold ? 0.0 : shippingCost;
+            // El envío lo define cada producto; se suma por tienda.
+            double shipping = shippingBySeller.getOrDefault(entry.getKey(), 0.0);
 
             subOrder.setSubtotal(round(subOrderSubtotal));
             subOrder.setShipping(round(shipping));
@@ -574,6 +567,27 @@ public class OrderService {
     }
 
     /**
+     * Calcula el envío de una línea según la configuración del producto.
+     *
+     * @param product   producto comprado.
+     * @param unitPrice precio unitario aplicado.
+     * @param quantity  unidades compradas.
+     * @return el envío de la línea (0 si no requiere envío o alcanza el mínimo).
+     */
+    private double lineShipping(Product product, double unitPrice, int quantity) {
+        if (!Boolean.TRUE.equals(product.getRequiresShipping())) {
+            return 0.0;
+        }
+        double lineSubtotal = unitPrice * quantity;
+        Double threshold = product.getFreeShippingThreshold();
+        if (threshold != null && lineSubtotal >= threshold) {
+            return 0.0;
+        }
+        Double cost = product.getShippingCost();
+        return cost == null ? 0.0 : cost;
+    }
+
+    /**
      * Redondea un importe a dos decimales.
      *
      * @param value importe a redondear.
@@ -619,7 +633,6 @@ public class OrderService {
                 items,
                 subOrders,
                 order.getSubtotal(),
-                order.getTax(),
                 order.getShipping(),
                 order.getTotal(),
                 order.getStatus(),
@@ -660,7 +673,6 @@ public class OrderService {
                 full.items(),
                 full.subOrders(),
                 full.subtotal(),
-                full.tax(),
                 full.shipping(),
                 full.total(),
                 full.status(),

@@ -149,7 +149,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
             + "  and (:active is null or p.active = :active) "
             + "  and (:category is null or exists ("
             + "        select 1 from Product p2 join p2.categories c "
-            + "        where p2.id = p.id and lower(c) = lower(:category)))")
+            + "        where p2.id = p.id and lower(c) = lower(cast(:category as string))))")
     Page<Product> searchForAdmin(
             @Param("search") String search,
             @Param("sellerId") Long sellerId,

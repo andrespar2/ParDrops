@@ -459,11 +459,6 @@ public class ProductService {
                         store -> store.getSeller().getId(),
                         Store::getName,
                         (first, second) -> first));
-        Map<Long, Store> storesBySeller = stores.stream()
-                .collect(Collectors.toMap(
-                        store -> store.getSeller().getId(),
-                        store -> store,
-                        (first, second) -> first));
 
         for (Product product : products) {
             User seller = product.getSeller();
@@ -471,20 +466,11 @@ public class ProductService {
                 product.setSellerId(null);
                 product.setSellerName(null);
                 product.setStoreSlug(null);
-                product.setShippingCost(null);
-                product.setFreeShippingThreshold(null);
                 continue;
             }
             product.setSellerId(seller.getId());
             product.setSellerName(storeNames.getOrDefault(seller.getId(), "ParDrops"));
             product.setStoreSlug(storeSlugs.get(seller.getId()));
-
-            Store store = storesBySeller.get(seller.getId());
-            if (store != null) {
-                product.setShippingCost(store.getShippingCost() == null ? 25_900.0 : store.getShippingCost());
-                product.setFreeShippingThreshold(
-                        store.getFreeShippingThreshold() == null ? 400_000.0 : store.getFreeShippingThreshold());
-            }
         }
     }
 
@@ -514,6 +500,16 @@ public class ProductService {
         product.setNew(Boolean.TRUE.equals(request.isNew()));
         product.setFeatured(Boolean.TRUE.equals(request.isFeatured()));
         product.setOnSale(Boolean.TRUE.equals(request.onSale()));
+
+        boolean requiresShipping = Boolean.TRUE.equals(request.requiresShipping());
+        if (requiresShipping && (request.shippingCost() == null || request.shippingCost() <= 0)) {
+            throw ApiException.badRequest(
+                    "Indica el costo de envío del producto o desmarca que requiere envío.");
+        }
+        product.setRequiresShipping(requiresShipping);
+        product.setShippingCost(requiresShipping ? request.shippingCost() : null);
+        product.setFreeShippingThreshold(
+                requiresShipping ? request.freeShippingThreshold() : null);
 
         // Las colecciones se reemplazan por copias para que Hibernate detecte
         // correctamente los cambios (no se reutilizan las listas de la petición).

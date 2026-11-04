@@ -126,8 +126,6 @@ class WompiCheckoutIntegrationTest {
         store.setName("Tienda " + suffix);
         store.setSlug("tienda-" + suffix);
         store.setStatus(StoreStatus.ACTIVE);
-        store.setShippingCost(8_000.0);
-        store.setFreeShippingThreshold(400_000.0);
         store.setContactEmail("tienda-" + suffix + "@wompi.test");
         storeRepository.save(store);
 
@@ -140,6 +138,9 @@ class WompiCheckoutIntegrationTest {
         product.setStock(10);
         product.setSeller(seller);
         product.setActive(true);
+        product.setRequiresShipping(true);
+        product.setShippingCost(8_000.0);
+        product.setFreeShippingThreshold(400_000.0);
         productRepository.save(product);
     }
 
@@ -329,8 +330,6 @@ class WompiCheckoutIntegrationTest {
         secondStore.setName("Segunda Tienda " + suffix);
         secondStore.setSlug("segunda-tienda-" + suffix);
         secondStore.setStatus(StoreStatus.ACTIVE);
-        secondStore.setShippingCost(5_000.0);
-        secondStore.setFreeShippingThreshold(400_000.0);
         secondStore.setContactEmail("segunda-" + suffix + "@wompi.test");
         storeRepository.save(secondStore);
 
@@ -343,6 +342,9 @@ class WompiCheckoutIntegrationTest {
         second.setStock(10);
         second.setSeller(secondSeller);
         second.setActive(true);
+        second.setRequiresShipping(true);
+        second.setShippingCost(5_000.0);
+        second.setFreeShippingThreshold(400_000.0);
         productRepository.save(second);
 
         JsonNode checkout = checkout(product.getId(), second.getId());

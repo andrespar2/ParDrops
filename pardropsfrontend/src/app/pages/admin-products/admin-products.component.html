@@ -85,6 +85,23 @@
             </div>
 
             <div class="field">
+              <label class="flag"><input type="checkbox" formControlName="requiresShipping"> Requiere envío</label>
+              <span class="field__hint">Si no se marca, el producto se vende sin costo de envío.</span>
+            </div>
+
+            @if (form.controls.requiresShipping.value) {
+              <div class="field">
+                <label class="field__label" for="p-shipping">Costo de envío (COP)</label>
+                <input id="p-shipping" type="number" step="100" min="1" class="field__input" formControlName="shippingCost">
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="p-free-shipping">Envío gratis desde (COP, opcional)</label>
+                <input id="p-free-shipping" type="number" step="1000" min="0" class="field__input" formControlName="freeShippingThreshold">
+              </div>
+            }
+
+            <div class="field">
               <label class="field__label" for="p-rating">Valoración (0-5)</label>
               <input id="p-rating" type="number" step="0.1" min="0" max="5" class="field__input" formControlName="rating">
             </div>

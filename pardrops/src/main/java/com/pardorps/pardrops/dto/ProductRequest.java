@@ -89,6 +89,14 @@ public record ProductRequest(
         Boolean isFeatured,
 
         @JsonProperty("onSale")
-        Boolean onSale
+        Boolean onSale,
+
+        Boolean requiresShipping,
+
+        @PositiveOrZero(message = "El costo de envío no puede ser negativo")
+        Double shippingCost,
+
+        @PositiveOrZero(message = "El umbral de envío gratis no puede ser negativo")
+        Double freeShippingThreshold
 ) {
 }

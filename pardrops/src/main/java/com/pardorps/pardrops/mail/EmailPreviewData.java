@@ -32,9 +32,8 @@ public final class EmailPreviewData {
         model.put("sellerName", "Jorge Pardo");
         model.put("itemsTable", new EmailTemplateRenderer.SafeHtml(itemsTable()));
         model.put("subtotal", "$ 100.000");
-        model.put("tax", "$ 19.000");
         model.put("shipping", "$ 25.900");
-        model.put("total", "$ 144.900");
+        model.put("total", "$ 125.900");
         model.put("status", "PREPARED");
         model.put("statusLabel", "Preparado");
         model.put("accountUrl", "http://localhost:4200/cuenta");

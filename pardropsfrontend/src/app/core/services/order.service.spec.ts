@@ -32,7 +32,6 @@ function buildOrder(id: number, status: OrderStatus = 'PENDING'): Order {
     notes: null,
     items: [],
     subtotal: 239900,
-    tax: 45581,
     shipping: 25900,
     total: 311381,
     status,

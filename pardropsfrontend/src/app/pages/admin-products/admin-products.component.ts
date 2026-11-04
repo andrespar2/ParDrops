@@ -102,7 +102,10 @@ export class AdminProductsComponent {
     tagsText: [''],
     isNew: [false],
     isFeatured: [false],
-    onSale: [false]
+    onSale: [false],
+    requiresShipping: [false],
+    shippingCost: [0, [Validators.min(0)]],
+    freeShippingThreshold: [null as number | null, [Validators.min(0)]]
   });
 
   /**
@@ -299,7 +302,8 @@ export class AdminProductsComponent {
       name: '', slug: '', description: '', longDescription: '',
       price: 0, originalPrice: null, currency: CURRENCY_CODE, stock: 0,
       rating: null, reviewCount: null, categoriesText: '', tagsText: '',
-      isNew: false, isFeatured: false, onSale: false
+      isNew: false, isFeatured: false, onSale: false,
+      requiresShipping: false, shippingCost: 0, freeShippingThreshold: null
     });
     this.errorMessage.set(null);
     this.formOpen.set(true);
@@ -334,7 +338,10 @@ export class AdminProductsComponent {
       tagsText: (product.tags ?? []).join(', '),
       isNew: product.isNew,
       isFeatured: product.isFeatured,
-      onSale: product.onSale
+      onSale: product.onSale,
+      requiresShipping: product.requiresShipping === true,
+      shippingCost: product.shippingCost ?? 0,
+      freeShippingThreshold: product.freeShippingThreshold ?? null
     });
     this.errorMessage.set(null);
     this.formOpen.set(true);
@@ -453,6 +460,11 @@ export class AdminProductsComponent {
 
     const raw = this.form.getRawValue();
 
+    if (raw.requiresShipping && Number(raw.shippingCost) <= 0) {
+      this.errorMessage.set('Indica el costo de envío o desmarca que el producto requiere envío.');
+      return;
+    }
+
     const request: ProductRequest = {
       name: (raw.name ?? '').trim(),
       slug: (raw.slug ?? '').trim(),
@@ -474,7 +486,12 @@ export class AdminProductsComponent {
       })),
       isNew: raw.isNew ?? false,
       isFeatured: raw.isFeatured ?? false,
-      onSale: raw.onSale ?? false
+      onSale: raw.onSale ?? false,
+      requiresShipping: raw.requiresShipping ?? false,
+      shippingCost: raw.requiresShipping ? Number(raw.shippingCost) : null,
+      freeShippingThreshold: raw.requiresShipping
+        ? (raw.freeShippingThreshold === null ? null : Number(raw.freeShippingThreshold))
+        : null
     };
 
     this.saving.set(true);

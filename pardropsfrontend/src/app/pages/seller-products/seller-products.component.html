@@ -91,6 +91,39 @@
       </div>
 
       <div class="admin-field">
+        <label class="admin-form__check">
+          <input type="checkbox" formControlName="requiresShipping" />
+          Este producto requiere envío
+        </label>
+        <span class="seller-form__hint">
+          Si no lo marcas, el producto se muestra sin costo de envío.
+        </span>
+      </div>
+
+      @if (form.controls.requiresShipping.value) {
+        <div class="seller-form__row">
+          <div class="admin-field">
+            <label for="product-shipping">Costo de envío (COP)</label>
+            <input id="product-shipping" type="number" min="1" step="100"
+                   class="admin-input" formControlName="shippingCost" />
+            @if (submitted() && form.controls.shippingCost.invalid) {
+              <span class="seller-form__error">Indica un costo de envío mayor que cero.</span>
+            }
+          </div>
+
+          <div class="admin-field">
+            <label for="product-free-shipping">Envío gratis desde (COP)</label>
+            <input id="product-free-shipping" type="number" min="0" step="1000"
+                   class="admin-input" formControlName="freeShippingThreshold" />
+            <span class="seller-form__hint">
+              Si el subtotal de este producto llega a ese valor, su envío es gratis.
+              Déjalo vacío para no aplicar envío gratis.
+            </span>
+          </div>
+        </div>
+      }
+
+      <div class="admin-field">
         <label for="product-categories">Categorías (separadas por comas)</label>
         <input id="product-categories" class="admin-input" formControlName="categories" />
       </div>

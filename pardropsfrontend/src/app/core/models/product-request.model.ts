@@ -52,4 +52,10 @@ export interface ProductRequest {
   isFeatured?: boolean;
   /** Marca de oferta. */
   onSale?: boolean;
+  /** Indica si el producto requiere envío. */
+  requiresShipping?: boolean;
+  /** Costo de envío del producto (COP). */
+  shippingCost?: number | null;
+  /** Subtotal de línea desde el que el envío es gratuito (COP). */
+  freeShippingThreshold?: number | null;
 }

@@ -2,8 +2,9 @@
  * @file src/app/core/config/commerce.config.ts
  * @description Configuración comercial y de formato para la tienda en Colombia.
  *
- * Centraliza la moneda, el locale, los impuestos, el envío y el formato de
- * importes para que todas las pantallas usen los mismos valores.
+ * Centraliza la moneda, el locale y el formato de importes. Los precios
+ * publicados por los vendedores ya incluyen impuestos y cada producto define
+ * su propia configuración de envío.
  */
 
 /** Locale usado en fechas e importes. */
@@ -11,28 +12,6 @@ export const APP_LOCALE = 'es-CO';
 
 /** Código ISO 4217 de la moneda de la tienda. */
 export const CURRENCY_CODE = 'COP';
-
-/** Porcentaje de IVA incluido en los precios publicados (Colombia). */
-export const INCLUDED_TAX_RATE = 0.19;
-
-/**
- * Calcula la porción de IVA incluida en un importe.
- *
- * Los vendedores publican el precio final; este valor solo sirve para
- * discriminar el impuesto en la factura y nunca se suma al total.
- *
- * @param amount importe con IVA incluido.
- * @returns la parte correspondiente al impuesto.
- */
-export function includedTax(amount: number): number {
-  return Math.round(amount - amount / (1 + INCLUDED_TAX_RATE));
-}
-
-/** Coste de envío cuando no se alcanza el mínimo. */
-export const SHIPPING_COST = 25_900;
-
-/** Subtotal a partir del cual el envío es gratuito. */
-export const FREE_SHIPPING_THRESHOLD = 400_000;
 
 /** País propuesto por defecto en el checkout. */
 export const DEFAULT_COUNTRY = 'Colombia';

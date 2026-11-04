@@ -129,9 +129,11 @@ export interface Product {
   sellerName?: string | null;
   /** Slug de la tienda a la que pertenece (opcional). */
   storeSlug?: string | null;
-  /** Costo de envío de la tienda (COP, opcional). */
+  /** Indica si el producto requiere envío. */
+  requiresShipping?: boolean | null;
+  /** Costo de envío del producto (COP, opcional). */
   shippingCost?: number | null;
-  /** Subtotal desde el que el envío es gratuito (COP, opcional). */
+  /** Subtotal de línea desde el que el envío es gratuito (COP, opcional). */
   freeShippingThreshold?: number | null;
   /** Fecha de creación (opcional) */
   createdAt?: Date;

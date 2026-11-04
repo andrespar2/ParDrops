@@ -39,7 +39,14 @@ public final class EmailTemplateDefaults {
      * @return listado de plantillas.
      */
     public static List<DefaultTemplate> all() {
-        return List.of(sellerNewOrder(), buyerPaymentReceipt(), buyerOrderStatus());
+        return List.of(
+                sellerNewOrder(),
+                buyerPaymentReceipt(),
+                buyerOrderStatus(),
+                buyerPurchaseConfirmed(),
+                sellerSaleConfirmed(),
+                adminSaleConfirmed()
+        );
     }
 
     /**
@@ -241,6 +248,249 @@ public final class EmailTemplateDefaults {
                 "Cambio de estado del pedido",
                 "Se envía al comprador en cada cambio de estado distinto de pagado.",
                 "Tu pedido #{{orderId}} está {{statusLabel}}",
+                layout(content));
+    }
+
+    private static DefaultTemplate buyerPurchaseConfirmed() {
+        String content = """
+                <p style="margin:0 0 16px;font-size:16px;color:#111827;">Hola, {{customerName}}:</p>
+                <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#374151;">
+                  ¡Tu compra en <strong>ParDrops</strong> fue confirmada! Wompi aprobó el pago del
+                  pedido <strong>#{{orderId}}</strong> el {{paymentDate}}.
+                </p>
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                       style="margin:0 0 20px;font-size:14px;color:#374151;">
+                  <tr>
+                    <td style="padding:8px 0;color:#6b7280;">Número de pedido</td>
+                    <td style="padding:8px 0;text-align:right;font-weight:600;">#{{orderId}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px 0;color:#6b7280;">Referencia de pago</td>
+                    <td style="padding:8px 0;text-align:right;">{{paymentReference}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px 0;color:#6b7280;">Fecha de compra</td>
+                    <td style="padding:8px 0;text-align:right;">{{paymentDate}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px 0;color:#6b7280;">Método de pago</td>
+                    <td style="padding:8px 0;text-align:right;">{{paymentMethod}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px 0;color:#6b7280;">Estado</td>
+                    <td style="padding:8px 0;text-align:right;font-weight:600;">{{statusLabel}}</td>
+                  </tr>
+                </table>
+
+                <h2 style="margin:0 0 12px;font-size:16px;color:#111827;">Productos adquiridos</h2>
+                {{itemsTable}}
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                       style="margin:8px 0 24px;font-size:14px;color:#374151;">
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Subtotal</td>
+                    <td style="padding:6px 0;text-align:right;">{{subtotal}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Envío</td>
+                    <td style="padding:6px 0;text-align:right;">{{shipping}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Cargo de servicio ParDrops</td>
+                    <td style="padding:6px 0;text-align:right;">{{serviceFee}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:12px 0 0;border-top:1px solid #e5e7eb;font-weight:700;">Total pagado</td>
+                    <td style="padding:12px 0 0;border-top:1px solid #e5e7eb;text-align:right;font-weight:700;">{{totalPaid}}</td>
+                  </tr>
+                </table>
+
+                <h2 style="margin:0 0 12px;font-size:16px;color:#111827;">Siguientes pasos</h2>
+                <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#374151;">
+                  Cada tienda preparará sus productos y te avisaremos cuando el pedido salga.
+                  Puedes consultar el estado en cualquier momento desde tu cuenta.
+                </p>
+
+                <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#6b7280;">
+                  ¿Necesitas ayuda? Escríbenos a {{supportEmail}}.
+                </p>
+
+                <a href="{{orderUrl}}"
+                   style="display:inline-block;margin-top:16px;padding:12px 20px;border-radius:8px;background:#252525;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;">
+                  Consultar mi pedido
+                </a>
+                """;
+        return new DefaultTemplate(
+                EmailTemplateCode.BUYER_PURCHASE_CONFIRMED,
+                "Compra confirmada al comprador",
+                "Se envía al comprador cuando Wompi aprueba el pago y el backend lo verifica.",
+                "¡Tu compra en ParDrops fue confirmada!",
+                layout(content));
+    }
+
+    private static DefaultTemplate sellerSaleConfirmed() {
+        String content = """
+                <p style="margin:0 0 16px;font-size:16px;color:#111827;">Hola, {{sellerName}}:</p>
+                <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#374151;">
+                  ¡Tienes una nueva venta en ParDrops! El pago del pedido
+                  <strong>#{{orderId}}</strong> fue confirmado el {{paymentDate}} y ya puedes
+                  preparar los productos de <strong>{{storeName}}</strong>.
+                </p>
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                       style="margin:0 0 20px;font-size:14px;color:#374151;">
+                  <tr>
+                    <td style="padding:8px 0;color:#6b7280;">Pedido</td>
+                    <td style="padding:8px 0;text-align:right;font-weight:600;">#{{orderId}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px 0;color:#6b7280;">Fecha de la venta</td>
+                    <td style="padding:8px 0;text-align:right;">{{paymentDate}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px 0;color:#6b7280;">Estado del pago</td>
+                    <td style="padding:8px 0;text-align:right;font-weight:600;">{{paymentStatusLabel}}</td>
+                  </tr>
+                </table>
+
+                <h2 style="margin:0 0 12px;font-size:16px;color:#111827;">Tus productos vendidos</h2>
+                {{itemsTable}}
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                       style="margin:8px 0 24px;font-size:14px;color:#374151;">
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Valor de tus productos</td>
+                    <td style="padding:6px 0;text-align:right;">{{subtotal}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Envío</td>
+                    <td style="padding:6px 0;text-align:right;">{{shipping}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Comisión de ParDrops</td>
+                    <td style="padding:6px 0;text-align:right;">{{commission}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:12px 0 0;border-top:1px solid #e5e7eb;font-weight:700;">Importe acreditado</td>
+                    <td style="padding:12px 0 0;border-top:1px solid #e5e7eb;text-align:right;font-weight:700;">{{sellerNet}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Estado del saldo</td>
+                    <td style="padding:6px 0;text-align:right;">{{fundsStatusLabel}}</td>
+                  </tr>
+                </table>
+
+                <h2 style="margin:0 0 12px;font-size:16px;color:#111827;">Cómo preparar el pedido</h2>
+                <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#374151;">
+                  Revisa los productos y cantidades, embala el pedido y actualiza el estado en tu
+                  panel. El comprador recibirá un aviso cuando lo marques como enviado.
+                </p>
+
+                <a href="{{sellerOrdersUrl}}"
+                   style="display:inline-block;padding:12px 20px;border-radius:8px;background:#252525;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;">
+                  Ver la venta en mi panel
+                </a>
+                """;
+        return new DefaultTemplate(
+                EmailTemplateCode.SELLER_SALE_CONFIRMED,
+                "Venta confirmada al vendedor",
+                "Se envía a cada vendedor con sus productos e importes cuando el pago se aprueba.",
+                "¡Tienes una nueva venta en ParDrops!",
+                layout(content));
+    }
+
+    private static DefaultTemplate adminSaleConfirmed() {
+        String content = """
+                <p style="margin:0 0 16px;font-size:16px;color:#111827;">Nueva venta confirmada en ParDrops</p>
+                <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#374151;">
+                  El pedido <strong>#{{orderId}}</strong> fue pagado y verificado con Wompi.
+                  A continuación tienes el detalle operativo de la venta.
+                </p>
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                       style="margin:0 0 20px;font-size:14px;color:#374151;">
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Pedido</td>
+                    <td style="padding:6px 0;text-align:right;font-weight:600;">#{{orderId}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Referencia de pago</td>
+                    <td style="padding:6px 0;text-align:right;">{{paymentReference}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Transacción Wompi</td>
+                    <td style="padding:6px 0;text-align:right;">{{wompiTransactionId}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Fecha y hora</td>
+                    <td style="padding:6px 0;text-align:right;">{{paymentDate}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Método de pago</td>
+                    <td style="padding:6px 0;text-align:right;">{{paymentMethod}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Estado del pago</td>
+                    <td style="padding:6px 0;text-align:right;font-weight:600;">{{paymentStatusLabel}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Comprador</td>
+                    <td style="padding:6px 0;text-align:right;">{{customerName}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Correo del comprador</td>
+                    <td style="padding:6px 0;text-align:right;">{{customerEmail}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Teléfono</td>
+                    <td style="padding:6px 0;text-align:right;">{{customerPhone}}</td>
+                  </tr>
+                </table>
+
+                <h2 style="margin:0 0 12px;font-size:16px;color:#111827;">Productos vendidos</h2>
+                {{itemsTable}}
+
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                       style="margin:8px 0 24px;font-size:14px;color:#374151;">
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Subtotal</td>
+                    <td style="padding:6px 0;text-align:right;">{{subtotal}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Envío</td>
+                    <td style="padding:6px 0;text-align:right;">{{shipping}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Cargo de servicio</td>
+                    <td style="padding:6px 0;text-align:right;">{{serviceFee}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:12px 0 0;border-top:1px solid #e5e7eb;font-weight:700;">Total pagado</td>
+                    <td style="padding:12px 0 0;border-top:1px solid #e5e7eb;text-align:right;font-weight:700;">{{totalPaid}}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;">Comisiones de ParDrops</td>
+                    <td style="padding:6px 0;text-align:right;">{{commission}}</td>
+                  </tr>
+                </table>
+
+                <h2 style="margin:0 0 12px;font-size:16px;color:#111827;">Distribución por vendedor</h2>
+                {{distributionTable}}
+                <p style="margin:12px 0 24px;font-size:14px;color:#374151;">
+                  Vendedores: {{sellersSummary}}
+                </p>
+
+                <a href="{{adminOrderUrl}}"
+                   style="display:inline-block;padding:12px 20px;border-radius:8px;background:#252525;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;">
+                  Abrir el pedido en administración
+                </a>
+                """;
+        return new DefaultTemplate(
+                EmailTemplateCode.ADMIN_SALE_CONFIRMED,
+                "Venta confirmada a administración",
+                "Se envía a los administradores con el detalle completo de cada venta confirmada.",
+                "Nueva venta confirmada en ParDrops",
                 layout(content));
     }
 

@@ -15,5 +15,14 @@ public enum EmailTemplateCode {
     BUYER_PAYMENT_RECEIPT,
 
     /** Aviso que recibe el comprador en cada cambio de estado. */
-    BUYER_ORDER_STATUS
+    BUYER_ORDER_STATUS,
+
+    /** Confirmación de compra pagada y aprobada por Wompi. */
+    BUYER_PURCHASE_CONFIRMED,
+
+    /** Aviso de venta confirmada para cada vendedor. */
+    SELLER_SALE_CONFIRMED,
+
+    /** Resumen de la venta confirmada para administración. */
+    ADMIN_SALE_CONFIRMED
 }

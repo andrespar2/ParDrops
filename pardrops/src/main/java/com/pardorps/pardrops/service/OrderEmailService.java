@@ -3,6 +3,7 @@ package com.pardorps.pardrops.service;
 import com.pardorps.pardrops.dto.RenderedEmail;
 import com.pardorps.pardrops.mail.EmailTemplateRenderer;
 import com.pardorps.pardrops.model.EmailTemplateCode;
+import com.pardorps.pardrops.model.FundsStatus;
 import com.pardorps.pardrops.model.Order;
 import com.pardorps.pardrops.model.OrderItem;
 import com.pardorps.pardrops.model.OrderStatus;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Construye y envía los correos del ciclo del pedido.
@@ -44,23 +46,27 @@ public class OrderEmailService {
     private final EmailService emailService;
     private final StoreRepository storeRepository;
     private final String frontendUrl;
+    private final String supportEmail;
 
     /**
      * @param templateService servicio de plantillas.
      * @param emailService    entrega de correos.
      * @param storeRepository acceso a la tienda del vendedor.
      * @param frontendUrl     URL base del frontend.
+     * @param supportEmail    correo de contacto mostrado en los mensajes.
      */
     public OrderEmailService(
             EmailTemplateService templateService,
             EmailService emailService,
             StoreRepository storeRepository,
-            @Value("${app.mail.frontend-url:http://localhost:4200}") String frontendUrl
+            @Value("${app.mail.frontend-url:http://localhost:4200}") String frontendUrl,
+            @Value("${app.mail.support-email:soporte@pardrops.com}") String supportEmail
     ) {
         this.templateService = templateService;
         this.emailService = emailService;
         this.storeRepository = storeRepository;
         this.frontendUrl = frontendUrl.replaceAll("/+$", "");
+        this.supportEmail = supportEmail;
     }
 
     /**
@@ -152,6 +158,143 @@ public class OrderEmailService {
     }
 
     /**
+     * Prepara el correo de compra confirmada para el comprador.
+     *
+     * @param order pedido aprobado.
+     * @return el correo renderizado, o vacío si la plantilla está inactiva.
+     */
+    public Optional<RenderedEmail> renderBuyerPurchaseConfirmed(Order order) {
+        Map<String, Object> model = buildModel(order, null);
+        enrichPaymentModel(order, null, model);
+        return templateService.renderIfActive(EmailTemplateCode.BUYER_PURCHASE_CONFIRMED, model);
+    }
+
+    /**
+     * Prepara el correo de venta confirmada para un vendedor.
+     *
+     * @param order    pedido aprobado.
+     * @param subOrder parte del vendedor.
+     * @return el correo renderizado, o vacío si la plantilla está inactiva.
+     */
+    public Optional<RenderedEmail> renderSellerSaleConfirmed(Order order, OrderSubOrder subOrder) {
+        Map<String, Object> model = buildModel(order, subOrder);
+        enrichPaymentModel(order, subOrder, model);
+        return templateService.renderIfActive(EmailTemplateCode.SELLER_SALE_CONFIRMED, model);
+    }
+
+    /**
+     * Prepara el correo de venta confirmada para administración.
+     *
+     * @param order pedido aprobado.
+     * @return el correo renderizado, o vacío si la plantilla está inactiva.
+     */
+    public Optional<RenderedEmail> renderAdminSaleConfirmed(Order order) {
+        Map<String, Object> model = buildModel(order, null);
+        enrichPaymentModel(order, null, model);
+        return templateService.renderIfActive(EmailTemplateCode.ADMIN_SALE_CONFIRMED, model);
+    }
+
+    /**
+     * Añade al modelo los datos propios de una compra confirmada.
+     *
+     * @param order    pedido aprobado.
+     * @param subOrder parte del vendedor, o {@code null} para el pedido completo.
+     * @param model    variables de la plantilla.
+     */
+    protected void enrichPaymentModel(Order order, OrderSubOrder subOrder, Map<String, Object> model) {
+        Instant paidAt = order.getPaidAt() != null ? order.getPaidAt() : order.getCreatedAt();
+        double totalCommission = order.getSubOrders().stream()
+                .mapToDouble(part -> part.getCommissionAmount() == null ? 0.0 : part.getCommissionAmount())
+                .sum();
+
+        model.put("paymentReference", order.getPaymentReference() == null ? "" : order.getPaymentReference());
+        model.put("wompiTransactionId", order.getWompiTransactionId() == null ? "" : order.getWompiTransactionId());
+        model.put("paymentDate", formatDate(paidAt));
+        model.put("paymentMethod", paymentMethodLabel(order.getPaymentMethod()));
+        model.put("paymentStatusLabel", "Aprobado");
+        model.put("serviceFee", money(order.getServiceFee()));
+        model.put("totalPaid", money(order.getTotal()));
+        model.put("commission", money(subOrder == null
+                ? totalCommission
+                : nz(subOrder.getCommissionAmount())));
+        model.put("sellerNet", money(subOrder == null ? 0.0 : nz(subOrder.getSellerNetAmount())));
+        model.put("fundsStatusLabel", subOrder == null
+                ? ""
+                : fundsStatusLabel(subOrder.getFundsStatus()));
+        model.put("sellersSummary", sellersSummary(order));
+        model.put("distributionTable", new EmailTemplateRenderer.SafeHtml(distributionTable(order)));
+        model.put("adminOrderUrl", frontendUrl + "/admin/pedidos");
+        model.put("orderUrl", frontendUrl + "/cuenta");
+        model.put("supportEmail", supportEmail);
+    }
+
+    /**
+     * Construye la tabla de distribución de ingresos por vendedor.
+     *
+     * @param order pedido aprobado.
+     * @return tabla HTML.
+     */
+    private String distributionTable(Order order) {
+        StringBuilder html = new StringBuilder();
+        html.append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" ")
+                .append("style=\"width:100%;border-collapse:collapse;font-size:13px;color:#374151;\">")
+                .append("<thead><tr style=\"background:#f9fafb;\">")
+                .append("<th align=\"left\" style=\"padding:8px;font-size:12px;color:#6b7280;\">Tienda</th>")
+                .append("<th align=\"right\" style=\"padding:8px;font-size:12px;color:#6b7280;\">Productos</th>")
+                .append("<th align=\"right\" style=\"padding:8px;font-size:12px;color:#6b7280;\">Comisión</th>")
+                .append("<th align=\"right\" style=\"padding:8px;font-size:12px;color:#6b7280;\">Neto</th>")
+                .append("</tr></thead><tbody>");
+        for (OrderSubOrder part : order.getSubOrders()) {
+            String store = part.getStoreName() == null ? "ParDrops" : part.getStoreName();
+            html.append("<tr style=\"border-top:1px solid #e5e7eb;\">")
+                    .append("<td style=\"padding:8px;\">").append(HtmlUtils.htmlEscape(store)).append("</td>")
+                    .append("<td align=\"right\" style=\"padding:8px;\">").append(money(part.getSubtotal())).append("</td>")
+                    .append("<td align=\"right\" style=\"padding:8px;\">").append(money(part.getCommissionAmount())).append("</td>")
+                    .append("<td align=\"right\" style=\"padding:8px;\">").append(money(part.getSellerNetAmount())).append("</td>")
+                    .append("</tr>");
+        }
+        html.append("</tbody></table>");
+        return html.toString();
+    }
+
+    /** Lista las tiendas participantes. */
+    private String sellersSummary(Order order) {
+        return order.getSubOrders().stream()
+                .map(part -> part.getStoreName() == null ? "ParDrops" : part.getStoreName())
+                .distinct()
+                .reduce((left, right) -> left + ", " + right)
+                .orElse("ParDrops");
+    }
+
+    /** Traduce el estado de fondos a lenguaje natural. */
+    protected String fundsStatusLabel(FundsStatus status) {
+        if (status == null) {
+            return "Pendiente";
+        }
+        return switch (status) {
+            case HELD -> "Pendiente de liberación";
+            case RELEASED -> "Disponible para retiro";
+            case CANCELLED -> "Cancelado";
+        };
+    }
+
+    /** Etiqueta legible del método de pago. */
+    protected String paymentMethodLabel(String method) {
+        if (method == null || method.isBlank()) {
+            return "Wompi";
+        }
+        return switch (method.toUpperCase(Locale.ROOT)) {
+            case "CARD" -> "Tarjeta";
+            case "NEQUI" -> "Nequi";
+            case "PSE" -> "PSE";
+            case "BANCOLOMBIA_TRANSFER" -> "Transferencia Bancolombia";
+            case "BANCOLOMBIA_QR" -> "QR Bancolombia";
+            case "BANCOLOMBIA_COLLECT" -> "Bancolombia Collect";
+            default -> method;
+        };
+    }
+
+    /**
      * Construye las variables comunes de la plantilla.
      *
      * @param order    pedido.
@@ -196,7 +339,7 @@ public class OrderEmailService {
      * @param subOrder parte del pedido.
      * @return correo o nulo.
      */
-    protected String sellerEmail(OrderSubOrder subOrder) {
+    public String sellerEmail(OrderSubOrder subOrder) {
         User seller = subOrder.getSeller();
         if (seller == null) {
             return null;

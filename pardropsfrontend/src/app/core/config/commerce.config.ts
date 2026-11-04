@@ -37,6 +37,14 @@ export const FREE_SHIPPING_THRESHOLD = 400_000;
 /** País propuesto por defecto en el checkout. */
 export const DEFAULT_COUNTRY = 'Colombia';
 
+/**
+ * Cargo fijo de servicio de ParDrops por compra con Wompi.
+ *
+ * Es un concepto propio de la plataforma (no una tarifa de Wompi). El backend
+ * recalcula y confirma el importe final.
+ */
+export const SERVICE_FEE_COP = 700;
+
 /** Formateador de importes en pesos colombianos. */
 const currencyFormatter = new Intl.NumberFormat(APP_LOCALE, {
   style: 'currency',

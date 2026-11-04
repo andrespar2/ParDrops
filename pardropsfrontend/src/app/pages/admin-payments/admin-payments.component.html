@@ -1,0 +1,186 @@
+<!--
+  @file src/app/pages/admin-payments/admin-payments.component.html
+  @description Plantilla del panel de transacciones de Wompi.
+-->
+
+<main class="page">
+  <div class="container">
+    <header class="page__header">
+      <div>
+        <h1 class="page__title">Pagos y transacciones</h1>
+        <p class="page__subtitle">
+          Consulta las transacciones de Wompi, el cargo de servicio y la distribución
+          de cada venta entre los vendedores.
+        </p>
+      </div>
+      <button type="button" class="btn-ghost" (click)="refresh()" [disabled]="loading()">
+        {{ loading() ? 'Actualizando…' : 'Actualizar' }}
+      </button>
+    </header>
+
+    @if (errorMessage()) {
+      <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
+    }
+
+    @if (summary(); as data) {
+      <section class="metrics" aria-label="Totales de pagos">
+        <article class="metric metric--highlight">
+          <span class="metric__label">Recaudado por cargo de servicio</span>
+          <span class="metric__value">{{ formatPrice(data.serviceFeeRevenue) }}</span>
+          <span class="metric__hint">Concepto propio de ParDrops (700 COP por compra)</span>
+        </article>
+        <article class="metric">
+          <span class="metric__label">Comisiones de ParDrops</span>
+          <span class="metric__value">{{ formatPrice(data.commissionRevenue) }}</span>
+          <span class="metric__hint">Sobre ventas aprobadas</span>
+        </article>
+        <article class="metric">
+          <span class="metric__label">Transacciones</span>
+          <span class="metric__value">{{ data.totalTransactions }}</span>
+          <span class="metric__hint">
+            {{ data.approvedCount }} aprobadas · {{ data.pendingCount }} pendientes ·
+            {{ data.rejectedCount }} rechazadas
+          </span>
+        </article>
+      </section>
+
+      <div class="filters" role="group" aria-label="Filtrar transacciones">
+        <button type="button" class="filter" [class.filter--active]="filter() === 'ALL'"
+                (click)="setFilter('ALL')">Todas</button>
+        <button type="button" class="filter" [class.filter--active]="filter() === 'APPROVED'"
+                (click)="setFilter('APPROVED')">Aprobadas</button>
+        <button type="button" class="filter" [class.filter--active]="filter() === 'PENDING'"
+                (click)="setFilter('PENDING')">Pendientes</button>
+        <button type="button" class="filter" [class.filter--active]="filter() === 'REJECTED'"
+                (click)="setFilter('REJECTED')">Rechazadas</button>
+      </div>
+
+      @if (loading() && data.transactions.length === 0) {
+        <p class="list__message">Cargando transacciones…</p>
+      } @else if (transactions().length === 0) {
+        <p class="list__message">No hay transacciones con este filtro.</p>
+      } @else {
+        <div class="payments">
+          @for (transaction of transactions(); track transaction.orderId) {
+            <article class="payment">
+              <header class="payment__header">
+                <div class="payment__heading">
+                  <span class="payment__id">Pedido #{{ transaction.orderId }}</span>
+                  <span class="payment__date">{{ formatDate(transaction.createdAt) }}</span>
+                </div>
+                <span class="status" [ngClass]="statusClass(transaction.paymentStatus)">
+                  {{ paymentStatusLabel(transaction.paymentStatus) }}
+                </span>
+              </header>
+
+              <div class="payment__grid">
+                <section class="block">
+                  <h2 class="block__title">Pago</h2>
+                  <p class="block__row">
+                    <span class="block__label">Referencia</span>
+                    <span class="block__mono">{{ transaction.reference }}</span>
+                  </p>
+                  <p class="block__row">
+                    <span class="block__label">Transacción</span>
+                    <span class="block__mono">{{ transaction.wompiTransactionId || '—' }}</span>
+                  </p>
+                  <p class="block__row">
+                    <span class="block__label">Método</span>
+                    <span>{{ transaction.paymentMethod || 'Wompi' }}</span>
+                  </p>
+                  <p class="block__row">
+                    <span class="block__label">Ambiente</span>
+                    <span>{{ transaction.environment === 'prod' ? 'Producción' : 'Sandbox' }}</span>
+                  </p>
+                  <p class="block__row">
+                    <span class="block__label">Fecha de pago</span>
+                    <span>{{ formatDate(transaction.paidAt) }}</span>
+                  </p>
+                </section>
+
+                <section class="block">
+                  <h2 class="block__title">Comprador</h2>
+                  <p class="block__row">
+                    <span class="block__label">Nombre</span>
+                    <span>{{ transaction.customerName }}</span>
+                  </p>
+                  <p class="block__row">
+                    <span class="block__label">Correo</span>
+                    <a class="block__link" [href]="'mailto:' + transaction.customerEmail">
+                      {{ transaction.customerEmail }}
+                    </a>
+                  </p>
+                  <p class="block__row">
+                    <span class="block__label">Estado del pedido</span>
+                    <span>{{ transaction.orderStatus }}</span>
+                  </p>
+                </section>
+
+                <section class="block">
+                  <h2 class="block__title">Importes</h2>
+                  <p class="block__row">
+                    <span class="block__label">Subtotal</span>
+                    <span>{{ formatPrice(transaction.subtotal) }}</span>
+                  </p>
+                  <p class="block__row">
+                    <span class="block__label">Envío</span>
+                    <span>{{ formatPrice(transaction.shipping) }}</span>
+                  </p>
+                  <p class="block__row">
+                    <span class="block__label">Cargo de servicio</span>
+                    <span>{{ formatPrice(transaction.serviceFee) }}</span>
+                  </p>
+                  <p class="block__row block__row--total">
+                    <span class="block__label">Total cobrado</span>
+                    <span>{{ formatPrice(transaction.total) }}</span>
+                  </p>
+                  <p class="block__row">
+                    <span class="block__label">Comisión ParDrops</span>
+                    <span>{{ formatPrice(transaction.commissionAmount) }}</span>
+                  </p>
+                </section>
+              </div>
+
+              <section class="distribution">
+                <h2 class="block__title">Distribución por vendedor</h2>
+                <table class="distribution__table">
+                  <thead>
+                    <tr>
+                      <th>Tienda</th>
+                      <th>Vendedor</th>
+                      <th class="num">Productos</th>
+                      <th class="num">Comisión</th>
+                      <th class="num">Neto</th>
+                      <th>Fondos</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (seller of transaction.sellers; track seller.storeName) {
+                      <tr>
+                        <td>{{ seller.storeName || 'ParDrops' }}</td>
+                        <td>{{ seller.sellerName || 'Plataforma' }}</td>
+                        <td class="num">{{ formatPrice(seller.subtotal) }}</td>
+                        <td class="num">{{ formatPrice(seller.commission) }}</td>
+                        <td class="num">{{ formatPrice(seller.net) }}</td>
+                        <td>{{ seller.fundsStatus === 'RELEASED' ? 'Disponible' : 'Retenido' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </section>
+
+              @if (!isApproved(transaction)) {
+                <p class="payment__note">
+                  Esta transacción no acredita saldos ni ingresos de servicio porque
+                  Wompi no la aprobó. El estado no se puede cambiar manualmente.
+                </p>
+              }
+            </article>
+          }
+        </div>
+      }
+    } @else if (loading()) {
+      <p class="list__message">Cargando transacciones…</p>
+    }
+  </div>
+</main>

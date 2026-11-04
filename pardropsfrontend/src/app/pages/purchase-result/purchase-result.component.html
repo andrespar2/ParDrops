@@ -1,0 +1,159 @@
+<!--
+  @file src/app/pages/purchase-result/purchase-result.component.html
+  @description Pantalla de resultado del pago con Wompi.
+-->
+
+<main class="result">
+  <div class="container result__container">
+    @if (loading() && !status()) {
+      <section class="panel panel--loading" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <h1 class="panel__title">Consultando el estado de tu pago…</h1>
+        <p class="panel__text">Estamos comprobando la transacción con Wompi.</p>
+      </section>
+    } @else if (errorMessage() && !status()) {
+      <section class="panel panel--error" role="alert">
+        <span class="panel__icon panel__icon--error" aria-hidden="true">!</span>
+        <h1 class="panel__title">No pudimos consultar tu pago</h1>
+        <p class="panel__text">{{ errorMessage() }}</p>
+        <div class="panel__actions">
+          <button type="button" class="button" (click)="refresh()">Consultar de nuevo</button>
+          <a routerLink="/productos" class="button button--ghost">Volver a la tienda</a>
+        </div>
+      </section>
+    } @else if (approved() && order(); as confirmed) {
+      <!-- COMPRA REALIZADA: solo tras verificación del backend -->
+      <section class="success" aria-live="polite">
+        <div class="success__icon" aria-hidden="true">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+        </div>
+        <h1 class="success__title">¡Compra realizada con éxito!</h1>
+        <p class="success__subtitle">Tu pago fue confirmado y tu pedido está registrado.</p>
+
+        <div class="meta">
+          <div class="meta__item">
+            <span class="meta__label">Número de pedido</span>
+            <span class="meta__value">#{{ confirmed.id }}</span>
+          </div>
+          <div class="meta__item">
+            <span class="meta__label">Referencia de pago</span>
+            <span class="meta__value meta__value--mono">{{ confirmed.paymentReference }}</span>
+          </div>
+          <div class="meta__item">
+            <span class="meta__label">Fecha de compra</span>
+            <span class="meta__value">{{ formatDate(confirmed.paidAt || confirmed.createdAt) }}</span>
+          </div>
+          <div class="meta__item">
+            <span class="meta__label">Estado inicial</span>
+            <span class="meta__value">{{ orderStatusLabel(confirmed.status) }}</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="card__title">Productos adquiridos</h2>
+          <ul class="items">
+            @for (item of confirmed.items; track item.productId + (item.variantName || '')) {
+              <li class="item">
+                <div class="item__info">
+                  <span class="item__name">{{ item.productName }}</span>
+                  @if (item.variantName) {
+                    <span class="item__variant">{{ item.variantName }}</span>
+                  }
+                  <span class="item__qty">Cantidad: {{ item.quantity }}</span>
+                </div>
+                <span class="item__price">{{ formatPrice(item.subtotal) }}</span>
+              </li>
+            }
+          </ul>
+
+          <div class="totals">
+            <div class="totals__line">
+              <span>Subtotal</span>
+              <span>{{ formatPrice(confirmed.subtotal) }}</span>
+            </div>
+            <div class="totals__line">
+              <span>Envío</span>
+              <span>{{ confirmed.shipping === 0 ? 'Gratis' : formatPrice(confirmed.shipping) }}</span>
+            </div>
+            <div class="totals__line">
+              <span>Cargo de servicio ParDrops</span>
+              <span>{{ formatPrice(confirmed.serviceFee) }}</span>
+            </div>
+            <div class="totals__line totals__line--total">
+              <span>Total pagado</span>
+              <span>{{ formatPrice(confirmed.total) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card--steps">
+          <h2 class="card__title">¿Qué sigue?</h2>
+          <ol class="steps">
+            <li>Cada tienda preparará los productos de tu pedido.</li>
+            <li>Te avisaremos por correo cuando el pedido sea enviado.</li>
+            <li>Puedes seguir el estado desde tu cuenta en cualquier momento.</li>
+          </ol>
+        </div>
+
+        <div class="success__actions">
+          <a routerLink="/cuenta" class="button">Consultar mi pedido</a>
+          <a routerLink="/productos" class="button button--ghost">Volver a la tienda</a>
+        </div>
+      </section>
+    } @else if (rejected()) {
+      <section class="panel panel--rejected" aria-live="polite">
+        <span class="panel__icon panel__icon--error" aria-hidden="true">×</span>
+        <h1 class="panel__title">El pago no fue aprobado</h1>
+        <p class="panel__text">
+          {{ status()?.message }} Tu pedido no se ha cobrado ni confirmado.
+        </p>
+        @if (order(); as current) {
+          <p class="panel__reference">
+            Pedido <strong>#{{ current.id }}</strong> · Referencia
+            <span class="meta__value--mono">{{ current.paymentReference }}</span>
+          </p>
+        }
+        @if (errorMessage()) {
+          <p class="panel__error">{{ errorMessage() }}</p>
+        }
+        <div class="panel__actions">
+          <button type="button" class="button" (click)="retryPayment()" [disabled]="retrying()">
+            {{ retrying() ? 'Abriendo pago…' : 'Intentar pagar de nuevo' }}
+          </button>
+          <button type="button" class="button button--ghost" (click)="refresh()" [disabled]="loading()">
+            {{ loading() ? 'Consultando…' : 'Consultar de nuevo' }}
+          </button>
+          <a routerLink="/productos" class="button button--ghost">Volver a la tienda</a>
+        </div>
+      </section>
+    } @else {
+      <section class="panel panel--pending" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <h1 class="panel__title">Estamos verificando tu pago</h1>
+        <p class="panel__text">
+          {{ status()?.message || 'Wompi todavía no ha confirmado la transacción.' }}
+        </p>
+        @if (order(); as current) {
+          <p class="panel__reference">
+            Pedido <strong>#{{ current.id }}</strong> · Referencia
+            <span class="meta__value--mono">{{ current.paymentReference }}</span>
+          </p>
+          <p class="panel__total">Total: {{ formatPrice(current.total) }}</p>
+        }
+        <p class="panel__hint">
+          Puedes actualizar o volver a consultar en unos segundos. No se creará
+          un segundo pedido ni se repetirá el cobro.
+        </p>
+        <div class="panel__actions">
+          <button type="button" class="button" (click)="refresh()" [disabled]="loading()">
+            {{ loading() ? 'Consultando…' : 'Consultar el estado' }}
+          </button>
+          <a routerLink="/productos" class="button button--ghost">Volver a la tienda</a>
+        </div>
+      </section>
+    }
+  </div>
+</main>

@@ -60,6 +60,11 @@ export const routes: Routes = [
     title: 'ParDrops - Finalizar compra'
   },
   {
+    path: 'compra/:reference',
+    loadComponent: () => import('./pages/purchase-result/purchase-result.component').then(m => m.PurchaseResultComponent),
+    title: 'ParDrops - Resultado de la compra'
+  },
+  {
     path: 'login',
     loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent),
     title: 'ParDrops - Iniciar sesión'
@@ -173,6 +178,11 @@ export const routes: Routes = [
         path: 'pedidos',
         loadComponent: () => import('./pages/admin-orders/admin-orders.component').then(m => m.AdminOrdersComponent),
         title: 'ParDrops - Administración de pedidos'
+      },
+      {
+        path: 'pagos',
+        loadComponent: () => import('./pages/admin-payments/admin-payments.component').then(m => m.AdminPaymentsComponent),
+        title: 'ParDrops - Pagos y transacciones'
       },
       {
         path: 'plantillas-correo',

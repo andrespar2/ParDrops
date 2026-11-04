@@ -96,6 +96,12 @@ export class AdminComponent {
       icon: 'M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0'
     },
     {
+      path: 'pagos',
+      label: 'Pagos',
+      description: 'Transacciones de Wompi y servicio',
+      icon: 'M2 7h20v10H2zM2 11h20M6 15h4'
+    },
+    {
       path: 'plantillas-correo',
       label: 'Plantillas de correo',
       description: 'Edita los mensajes de pedidos y pagos',

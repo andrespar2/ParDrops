@@ -14,6 +14,28 @@
  */
 export type OrderStatus = 'PENDING' | 'PAID' | 'PREPARED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
+/** Estados del pago notificados por Wompi. */
+export type PaymentStatus = 'PENDING' | 'APPROVED' | 'DECLINED' | 'VOIDED' | 'ERROR';
+
+/** Etiquetas legibles de los estados de pago. */
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  PENDING: 'Pendiente de confirmación',
+  APPROVED: 'Pago aprobado',
+  DECLINED: 'Pago rechazado',
+  VOIDED: 'Pago anulado',
+  ERROR: 'Error en el pago'
+};
+
+/**
+ * Devuelve la etiqueta legible de un estado de pago.
+ *
+ * @param status estado del pago.
+ * @returns la etiqueta en español.
+ */
+export function paymentStatusLabel(status: PaymentStatus): string {
+  return PAYMENT_STATUS_LABELS[status] ?? status;
+}
+
 /** Etiquetas legibles (en español) para cada estado de pedido. */
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   PENDING: 'Pendiente',
@@ -103,6 +125,14 @@ export interface OrderSubOrder {
   shipping: number;
   /** Importe total de la parte. */
   total: number;
+  /** Tasa de comisión aplicada (opcional). */
+  commissionRate?: number | null;
+  /** Comisión de ParDrops (opcional). */
+  commissionAmount?: number | null;
+  /** Neto que corresponde al vendedor (opcional). */
+  sellerNetAmount?: number | null;
+  /** Situación de los fondos (HELD, RELEASED, CANCELLED). */
+  fundsStatus?: 'HELD' | 'RELEASED' | 'CANCELLED' | null;
   /** Líneas que componen la parte. */
   items: OrderItem[];
   /** Fecha de creación (ISO 8601). */
@@ -149,6 +179,20 @@ export interface Order {
   status: OrderStatus;
   /** Fecha de creación (ISO 8601). */
   createdAt: string;
+  /** Referencia única de pago (nula si no se usó Wompi). */
+  paymentReference?: string | null;
+  /** Estado del pago en Wompi. */
+  paymentStatus?: PaymentStatus | null;
+  /** Método de pago (CARD, NEQUI, PSE…). */
+  paymentMethod?: string | null;
+  /** Identificador de la transacción en Wompi. */
+  wompiTransactionId?: string | null;
+  /** Cargo fijo de servicio de ParDrops. */
+  serviceFee?: number | null;
+  /** Fecha en la que se aprobó el pago. */
+  paidAt?: string | null;
+  /** Ambiente de Wompi (test o prod). */
+  paymentEnvironment?: string | null;
   /** Correo de la cuenta asociada (nulo si fue una compra de invitado). */
   userEmail?: string | null;
 }

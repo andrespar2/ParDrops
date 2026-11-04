@@ -1,37 +1,11 @@
 <!--
   @file src/app/pages/checkout/checkout.component.html
-  @description Plantilla de la página de checkout.
+  @description Plantilla de la página de checkout con Wompi.
 -->
 
 <main class="page">
   <div class="container">
-    <!-- Confirmación de compra -->
-    @if (isCompleted()) {
-      <div class="success">
-        <div class="success__icon">✓</div>
-        <h1 class="success__title">¡Pedido realizado con éxito!</h1>
-        <p class="success__text">
-          Tu pedido <strong>#{{ createdOrder()!.id }}</strong> se ha registrado por un total de
-          <strong>{{ formatPrice(createdOrder()!.total) }}</strong>.
-        </p>
-        @if (isAuthenticated()) {
-          <p class="success__text">Puedes consultarlo en tu historial de pedidos.</p>
-          <div class="success__actions">
-            <a routerLink="/cuenta" class="success__button">Ver mis pedidos</a>
-            <a routerLink="/productos" class="success__button success__button--ghost">Seguir comprando</a>
-          </div>
-        } @else {
-          <p class="success__text">
-            Has comprado como <strong>invitado</strong>, por lo que este pedido no se guardará en
-            ningún historial. Crea una cuenta para guardar tus próximas compras.
-          </p>
-          <div class="success__actions">
-            <a routerLink="/login" class="success__button">Crear cuenta</a>
-            <a routerLink="/productos" class="success__button success__button--ghost">Seguir comprando</a>
-          </div>
-        }
-      </div>
-    } @else if (cart().isEmpty) {
+    @if (cart().isEmpty && !session()) {
       <!-- Carrito vacío -->
       <div class="empty">
         <h1 class="empty__title">No hay nada que comprar</h1>
@@ -42,7 +16,9 @@
       <!-- Formulario de checkout -->
       <header class="page__header">
         <h1 class="page__title">Finalizar compra</h1>
-        <p class="page__subtitle">Completa tus datos para registrar el pedido.</p>
+        <p class="page__subtitle">
+          Revisa tus datos y paga de forma segura con Wompi.
+        </p>
       </header>
 
       @if (!isAuthenticated()) {
@@ -133,8 +109,12 @@
           </fieldset>
 
           <button type="submit" class="checkout__submit" [disabled]="submitting()">
-            {{ submitting() ? 'Procesando…' : 'Confirmar pedido' }}
+            {{ submitting() ? 'Abriendo pago seguro…' : 'Pagar con Wompi' }}
           </button>
+
+          <p class="checkout__secure">
+            El pago se procesa en Wompi. ParDrops no almacena los datos de tu tarjeta.
+          </p>
         </form>
 
         <!-- Resumen del pedido -->
@@ -153,13 +133,44 @@
             }
           </ul>
 
-          <div class="summary__line"><span>Subtotal</span><span>{{ formatPrice(cart().subtotal) }}</span></div>
-          <div class="summary__line summary__line--muted"><span>IVA incluido (19%)</span><span>{{ formatPrice(cart().tax) }}</span></div>
+          <div class="summary__line">
+            <span>Subtotal</span>
+            <span>{{ formatPrice(session()?.subtotal ?? cart().subtotal) }}</span>
+          </div>
+          <div class="summary__line summary__line--muted">
+            <span>IVA incluido (19%)</span>
+            <span>{{ formatPrice(cart().tax) }}</span>
+          </div>
           <div class="summary__line">
             <span>Envío</span>
-            <span>{{ cart().shipping === 0 ? 'Gratis' : formatPrice(cart().shipping) }}</span>
+            <span>
+              @if ((session()?.shipping ?? cart().shipping) === 0) {
+                Gratis
+              } @else {
+                {{ formatPrice(session()?.shipping ?? cart().shipping) }}
+              }
+            </span>
           </div>
-          <div class="summary__total"><span>Total</span><span>{{ formatPrice(cart().total) }}</span></div>
+          <div class="summary__line">
+            <span>Cargo de servicio ParDrops</span>
+            <span>{{ formatPrice(session()?.serviceFee ?? serviceFee) }}</span>
+          </div>
+          <div class="summary__total">
+            <span>Total</span>
+            <span>{{ formatPrice(displayTotal()) }}</span>
+          </div>
+
+          @if (priceChanged()) {
+            <p class="summary__notice" role="status">
+              El vendedor actualizó algún precio. El cobro se hará por el importe
+              confirmado por ParDrops.
+            </p>
+          }
+
+          <p class="summary__fine">
+            El cargo de servicio de ParDrops es un concepto propio de la plataforma
+            y se cobra una sola vez por compra.
+          </p>
         </aside>
       </div>
     }

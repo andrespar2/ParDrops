@@ -217,6 +217,52 @@ export class CartService {
   }
 
   /**
+   * Sincroniza los precios del carrito con los confirmados por el backend.
+   *
+   * @param items líneas del pedido con el precio definitivo.
+   * @returns {void}
+   */
+  public syncPrices(items: Array<{ productId: string; variantName?: string | null; unitPrice: number }>): void {
+    if (items.length === 0) {
+      return;
+    }
+
+    const prices = new Map<string, number>();
+    for (const item of items) {
+      prices.set(`${item.productId}|${item.variantName ?? ''}`, item.unitPrice);
+    }
+
+    const updated = this._items().map(cartItem => {
+      const key = `${cartItem.product.id}|${cartItem.selectedVariant?.name ?? ''}`;
+      const price = prices.get(key);
+      if (price === undefined) {
+        return cartItem;
+      }
+
+      const currentPrice = cartItem.selectedVariant?.price ?? cartItem.product.price;
+      if (Math.abs(price - currentPrice) < 0.01) {
+        return cartItem;
+      }
+
+      const product = cartItem.selectedVariant
+        ? cartItem.product
+        : { ...cartItem.product, price };
+      const selectedVariant = cartItem.selectedVariant
+        ? { ...cartItem.selectedVariant, price }
+        : undefined;
+
+      return {
+        ...cartItem,
+        product,
+        selectedVariant,
+        subtotal: price * cartItem.quantity
+      };
+    });
+
+    this._items.set(updated);
+  }
+
+  /**
    * Incrementa la cantidad de un Ã­tem en 1 unidad.
    * 
    * @param {string} itemId - ID del Ã­tem.

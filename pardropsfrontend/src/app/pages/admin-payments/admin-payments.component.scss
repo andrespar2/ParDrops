@@ -1,0 +1,300 @@
+/**
+ * @file src/app/pages/admin-payments/admin-payments.component.scss
+ * @description Estilos del panel de transacciones de Wompi.
+ */
+
+.page {
+  padding: 0;
+}
+
+.page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  flex-wrap: wrap;
+}
+
+.page__title {
+  font-size: var(--font-size-3xl);
+  margin-bottom: var(--space-2);
+}
+
+.page__subtitle {
+  color: var(--color-text-tertiary);
+  max-width: 640px;
+}
+
+.alert {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-6);
+}
+
+.alert--error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.btn-ghost {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full, 999px);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.metric {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.metric--highlight {
+  border-color: #86efac;
+  background: linear-gradient(160deg, rgba(22, 163, 74, 0.12), var(--color-surface) 70%);
+}
+
+.metric__label {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-tertiary);
+}
+
+.metric__value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+}
+
+.metric__hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.filter {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full, 999px);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.filter--active {
+  background-color: var(--color-text-primary);
+  border-color: var(--color-text-primary);
+  color: var(--color-surface);
+}
+
+.payments {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.payment {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.payment__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.payment__heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.payment__id {
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+}
+
+.payment__date {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+.status {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full, 999px);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status--approved {
+  background-color: rgba(22, 163, 74, 0.14);
+  color: #15803d;
+}
+
+.status--pending {
+  background-color: rgba(234, 179, 8, 0.16);
+  color: #a16207;
+}
+
+.status--rejected {
+  background-color: rgba(220, 38, 38, 0.14);
+  color: #b91c1c;
+}
+
+.payment__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-6);
+  padding: var(--space-5) 0;
+
+  @media (max-width: 1000px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.block__title {
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-tertiary);
+  margin: 0 0 var(--space-3);
+}
+
+.block__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.block__row--total {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  font-weight: 700;
+}
+
+.block__label {
+  color: var(--color-text-tertiary);
+}
+
+.block__mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--font-size-xs);
+  word-break: break-all;
+  text-align: right;
+}
+
+.block__link {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.distribution {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-4);
+  overflow-x: auto;
+}
+
+.distribution__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.distribution__table th,
+.distribution__table td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-border-light);
+  text-align: left;
+}
+
+.distribution__table th {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-tertiary);
+}
+
+.num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.payment__note {
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}
+
+.list__message {
+  color: var(--color-text-tertiary);
+  padding: var(--space-8) 0;
+  text-align: center;
+}
+
+:host-context([data-theme='dark']) {
+  .alert--error {
+    background-color: rgba(185, 28, 28, 0.18);
+    border-color: rgba(248, 113, 113, 0.35);
+    color: #fca5a5;
+  }
+
+  .status--approved {
+    color: #86efac;
+  }
+
+  .status--pending {
+    color: #fde68a;
+  }
+
+  .status--rejected {
+    color: #fca5a5;
+  }
+
+  .metric--highlight {
+    border-color: rgba(134, 239, 172, 0.35);
+  }
+}

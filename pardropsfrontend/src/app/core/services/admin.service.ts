@@ -38,6 +38,7 @@ import {
   SellerApplicationStatus
 } from '../models/admin.model';
 import { ProductRequest } from '../models/product-request.model';
+import { AdminPayments } from '../models/checkout.model';
 
 /**
  * Filtros del listado de cuentas.
@@ -98,6 +99,15 @@ export class AdminService {
    */
   public loadDashboard(): Observable<AdminDashboard> {
     return this.http.get<AdminDashboard>(`${this.adminUrl}/dashboard`);
+  }
+
+  /**
+   * Carga las transacciones de Wompi y los ingresos por servicio.
+   *
+   * @returns observable con el resumen de pagos.
+   */
+  public loadPayments(): Observable<AdminPayments> {
+    return this.http.get<AdminPayments>(`${this.adminUrl}/payments`);
   }
 
   // ------------------------------------------------------------------

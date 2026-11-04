@@ -17,7 +17,7 @@ import java.util.Locale;
  * por defecto de una tabla ya poblada se crean aquí de forma idempotente.</p>
  */
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE - 10)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class PaymentSchemaMigration implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentSchemaMigration.class);

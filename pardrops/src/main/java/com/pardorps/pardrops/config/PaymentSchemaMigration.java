@@ -35,10 +35,8 @@ public class PaymentSchemaMigration implements CommandLineRunner {
     public void run(String... args) {
         String product;
         try {
-            product = jdbcTemplate.getDataSource() == null
-                    ? ""
-                    : jdbcTemplate.getDataSource().getConnection()
-                    .getMetaData().getDatabaseProductName().toLowerCase(Locale.ROOT);
+            product = jdbcTemplate.execute((org.springframework.jdbc.core.ConnectionCallback<String>) connection ->
+                    connection.getMetaData().getDatabaseProductName().toLowerCase(Locale.ROOT));
         } catch (Exception exception) {
             return;
         }

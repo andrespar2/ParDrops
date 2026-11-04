@@ -65,4 +65,13 @@ describe('CartService · envío por tienda', () => {
     expect(cart.total()).toBe(105_000);
     expect(cart.tax()).toBe(15_966);
   });
+
+  it('sincroniza los precios confirmados por el backend', () => {
+    cart.addItem(product('a', 100_000, 'tienda-a', 5_000, 500_000), 1);
+
+    cart.syncPrices([{ productId: 'a', variantName: null, unitPrice: 120_000 }]);
+
+    expect(cart.items()[0].product.price).toBe(120_000);
+    expect(cart.subtotal()).toBe(120_000);
+  });
 });

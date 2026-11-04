@@ -26,7 +26,8 @@ class OrderEmailServiceTest {
     private final EmailService emailService = org.mockito.Mockito.mock(EmailService.class);
     private final StoreRepository storeRepository = org.mockito.Mockito.mock(StoreRepository.class);
     private final OrderEmailService service = new OrderEmailService(
-            templateService, emailService, storeRepository, "http://localhost:4200");
+            templateService, emailService, storeRepository, "http://localhost:4200",
+            "soporte@pardrops.test");
 
     @Test
     @DisplayName("Envía al vendedor el correo de su subpedido")

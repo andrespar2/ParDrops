@@ -42,3 +42,27 @@ services:
         sync: false
       - key: APP_SEED_ADMIN_PASSWORD
         sync: false
+      # Pagos con Wompi. El ambiente y la moneda son configuración; las llaves
+      # se rellenan en el panel de Render y nunca se versionan.
+      - key: WOMPI_ENV
+        value: production
+      - key: WOMPI_CURRENCY
+        value: COP
+      - key: WOMPI_FIXED_FEE_COP
+        value: "700"
+      - key: WOMPI_TEST_PUBLIC_KEY
+        sync: false
+      - key: WOMPI_TEST_PRIVATE_KEY
+        sync: false
+      - key: WOMPI_TEST_EVENTS_SECRET
+        sync: false
+      - key: WOMPI_TEST_INTEGRITY_SECRET
+        sync: false
+      - key: WOMPI_PROD_PUBLIC_KEY
+        sync: false
+      - key: WOMPI_PROD_PRIVATE_KEY
+        sync: false
+      - key: WOMPI_PROD_EVENTS_SECRET
+        sync: false
+      - key: WOMPI_PROD_INTEGRITY_SECRET
+        sync: false

@@ -38,13 +38,15 @@ class EmailTemplateServiceTest {
     private final EmailTemplateService service = new EmailTemplateService(repository, auditLogService);
 
     @Test
-    @DisplayName("Crea las tres plantillas cuando no existen")
+    @DisplayName("Crea todas las plantillas cuando no existen")
     void seedsMissingTemplates() {
         when(repository.existsByCode(any())).thenReturn(false);
 
         service.seedDefaults();
 
-        verify(repository, org.mockito.Mockito.times(3)).save(any(EmailTemplate.class));
+        verify(repository, org.mockito.Mockito.times(
+                com.pardorps.pardrops.mail.EmailTemplateDefaults.all().size()))
+                .save(any(EmailTemplate.class));
     }
 
     @Test

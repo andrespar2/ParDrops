@@ -20,7 +20,7 @@ endpoints, reglas de negocio, correos, seguridad y activación de producción.
 | Notificaciones internas | Implementado |
 | Panel administrativo de transacciones | Implementado |
 | Pruebas sandbox | Ver sección 9 |
-| Producción | Ver sección 10 |
+| Producción | Activa; seguimiento externo en Issue #116 |
 
 ## 2. Variables de entorno
 
@@ -210,18 +210,23 @@ tarjetas de prueba de Wompi. No se usó dinero real.
 
 ## 10. Activación de producción
 
-1. Cargar las cuatro llaves `WOMPI_PROD_*` en Render.
-2. Cambiar `WOMPI_ENV=production`.
-3. Confirmar que `GET /api/checkout` devuelve `environment: "prod"` y una llave
-   `pub_prod_`.
-4. Configurar en el dashboard de Wompi la URL de eventos de producción:
-   `https://pardrops-api.onrender.com/api/webhooks/wompi`.
-5. Verificar el SMTP/Brevo.
-6. Desplegar backend y frontend.
-7. Hacer una compra de bajo valor y comprobar la pantalla y los tres correos.
+1. Llaves `WOMPI_PROD_*` cargadas en Render y verificadas contra el merchant real.
+2. `WOMPI_ENV=production` configurado en Render.
+3. Backend desplegado (`83b2643`), health `UP` y `/api/checkout` público.
+4. Comprobado en producción: `POST /api/checkout` devuelve
+   `environment: "prod"`, llave `pub_prod_…` y el total con el cargo de 700.
+   El pedido de verificación `#74` se canceló después de la prueba.
+5. Frontend desplegado en Cloudflare Pages; `/compra/:reference` responde y
+   consulta el backend de producción.
+6. SMTP/Brevo permanece configurado con `MAIL_TRANSPORT=api`.
+7. **Pendiente externo**: registrar en el dashboard de Wompi la URL de eventos
+   de producción `https://pardrops-api.onrender.com/api/webhooks/wompi`.
+   Seguimiento en el Issue #116.
 
 ### Requisito externo
 
 Antes de recibir dinero real, Wompi debe autorizar el modelo **marketplace**
 (cobro centralizado en ParDrops y dispersión posterior a los vendedores). Si la
 cuenta no tiene esa habilitación, hay que solicitarla y documentar la respuesta.
+Seguimiento en el Issue #116.
+

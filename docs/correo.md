@@ -79,7 +79,7 @@ Nuevo pedido #{{orderId}} en {{storeName}}
 - Saludo: «Hola, {{sellerName}}: tienes un pedido nuevo en {{storeName}}».
 - Pedido `#{{orderId}}`, fecha `{{orderDate}}` y estado actual.
 - Tabla de productos: producto, variante, cantidad, precio unitario y subtotal.
-- Subtotal, IVA, envío y total de la parte del vendedor.
+- Subtotal, envío y total de la parte del vendedor.
 - Datos del comprador: nombre, correo y teléfono.
 - Dirección de envío completa.
 - Notas del cliente, si existen.
@@ -99,7 +99,7 @@ Comprobante de compra — Pedido #{{orderId}}
   pedido #{{orderId}}».
 - Fecha del pedido y tienda(s).
 - Tabla de productos con cantidades e importes.
-- Subtotal, IVA, envío y total.
+- Subtotal, envío y total.
 - Dirección de envío.
 - Texto: «Este comprobante confirma el registro del pago en ParDrops. No
   sustituye a la factura electrónica.»
@@ -134,7 +134,6 @@ Tu pedido #{{orderId}} está {{statusLabel}}
 | `{{sellerName}}` | Nombre del vendedor |
 | `{{itemsTable}}` | Tabla HTML de productos |
 | `{{subtotal}}` | Subtotal |
-| `{{tax}}` | IVA |
 | `{{shipping}}` | Envío |
 | `{{total}}` | Total |
 | `{{status}}` | Código del estado (`PAID`, `SHIPPED`…) |

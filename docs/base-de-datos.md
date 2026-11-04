@@ -15,10 +15,10 @@
 | `User` | `users` | Usuarios con `role` (`CUSTOMER`/`SELLER`/`ADMIN`), estado, credenciales. |
 | `Store` | `stores` | Tienda de un vendedor. Relación `@ManyToOne` a `User` (propietario). Campos `name`, `slug` único, contacto, imágenes, `status`. |
 | `SellerApplication` | `seller_applications` | Solicitud para vender. Estado (`PENDING`/`APPROVED`/`REJECTED`), notas de revisión, revisor. |
-| `Product` | `products` | Producto del catálogo. Pertenece a `User` (`seller`). Incluye `active`, `sellerId`, `sellerName`, `storeSlug` (transientes/derivados). Imágenes/variantes/categorías/tags como `@ElementCollection`. |
+| `Product` | `products` | Producto del catálogo. Pertenece a `User` (`seller`). Incluye `active`, `sellerId`, `sellerName`, `storeSlug` (transientes/derivados) y su configuración de envío (`requires_shipping`, `shipping_cost`, `free_shipping_threshold`). Imágenes/variantes/categorías/tags como `@ElementCollection`. |
 | `ProductImage`, `ProductVariant` | Embebidos/element collections | Estructuras de producto. |
 | `Category` | `categories` | Categorías administrables. |
-| `Order` | `orders` | Pedido global. Datos de cliente/envío, totales (`subtotal`, `tax`, `shipping`, `total`), `status`, moneda. Relación `@OneToMany` con `OrderItem` y `OrderSubOrder`. |
+| `Order` | `orders` | Pedido global. Datos de cliente/envío, totales (`subtotal`, `shipping`, `total`), `status`, moneda. El campo `tax` se conserva por compatibilidad histórica y vale 0: los precios ya incluyen impuestos. Relación `@OneToMany` con `OrderItem` y `OrderSubOrder`. |
 | `OrderSubOrder` | `order_sub_orders` | Parte del pedido por tienda/vendedor. `seller`, `storeName`, `storeSlug`, totales, `status`, `createdAt`. Relación con `OrderItem`. |
 | `OrderItem` | `order_items` | Línea de pedido. Referencia a `Order`, `OrderSubOrder`, `Product`/`User` vendedor, cantidad, precios. |
 | `ProductReview` | `product_reviews` | Reseñas con restricción de elegibilidad (solo quien compró y recibió). |

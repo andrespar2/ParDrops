@@ -8,7 +8,8 @@ tienda, variantes, reseÃ±as con imÃ¡genes y rankings de portada.
 ### Regla
 
 - ComisiÃ³n: **5% del importe de productos** (`OrderSubOrder.subtotal`).
-- No se cobra comisiÃ³n sobre IVA ni sobre envÃ­o.
+- No se cobra comisiÃ³n sobre el envÃ­o.
+- Los precios publicados por el vendedor ya incluyen impuestos.
 - El vendedor recibe `OrderSubOrder.total - comisiÃ³n`.
 - La tasa se guarda en cada subpedido para que un cambio futuro no altere
   ventas pasadas.
@@ -17,11 +18,10 @@ Ejemplo:
 
 ```text
 Subtotal productos: 100.000
-IVA:                 19.000
 EnvÃ­o:               25.900
-Total cobrado:      144.900
+Total cobrado:      125.900
 ComisiÃ³n 5%:          5.000
-Neto vendedor:      139.900
+Neto vendedor:      120.900
 ```
 
 ### Ciclo de los fondos
@@ -199,26 +199,26 @@ catÃ¡logo.
 | Portada | #66 |
 | Pruebas y documentaciÃ³n | #67, #68 |
 
-## 9. Estado de la implementación
+## 9. Estado de la implementaciï¿½n
 
 | Elemento | Estado |
 |---|---|
-| Comisión del 5% sobre el subtotal | Implementado |
+| Comisiï¿½n del 5% sobre el subtotal | Implementado |
 | Saldo retenido y disponible | Implementado |
-| Liberación al entregar y anulación al cancelar | Implementado |
+| Liberaciï¿½n al entregar y anulaciï¿½n al cancelar | Implementado |
 | Paneles de vendedor y administrador | Implementado |
-| Datos públicos y privados de la tienda | Implementado |
-| Perfil público con estrellas y reseñas | Implementado |
+| Datos pï¿½blicos y privados de la tienda | Implementado |
+| Perfil pï¿½blico con estrellas y reseï¿½as | Implementado |
 | Variantes con talla, color, precio y stock | Implementado |
 | Editor de variantes en ambos paneles | Implementado |
-| Imágenes en reseñas | Implementado |
-| Moderación de reseñas por el administrador | Implementado |
-| Más vendidos y mejor valorados en portada | Implementado |
+| Imï¿½genes en reseï¿½as | Implementado |
+| Moderaciï¿½n de reseï¿½as por el administrador | Implementado |
+| Mï¿½s vendidos y mejor valorados en portada | Implementado |
 | Pruebas de backend | 235 en verde |
 | Pruebas de frontend | 87 en verde |
 
 ### Notas
 
-- Los pedidos históricos se rellenan en la migración y los saldos se reconstruyen una sola vez.
-- La comisión es contable: no hay pasarela de pago real, por lo que el saldo refleja lo registrado en la plataforma.
-- Las imágenes de reseña no se borran del almacén al eliminar la reseña para no romper enlaces compartidos; se puede añadir una limpieza posterior.
+- Los pedidos histï¿½ricos se rellenan en la migraciï¿½n y los saldos se reconstruyen una sola vez.
+- La comisiï¿½n es contable: no hay pasarela de pago real, por lo que el saldo refleja lo registrado en la plataforma.
+- Las imï¿½genes de reseï¿½a no se borran del almacï¿½n al eliminar la reseï¿½a para no romper enlaces compartidos; se puede aï¿½adir una limpieza posterior.

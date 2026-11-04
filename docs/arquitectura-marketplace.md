@@ -42,8 +42,8 @@ flowchart TB
 - **User** (`Role`: `CUSTOMER`, `SELLER`, `ADMIN`): cuenta autenticada. Un cliente puede solicitar convertirse en vendedor.
 - **Store**: ficha comercial de un vendedor (`name`, `slug` único, descripción, contacto, logo/portada, `status`, propietario `seller`). Cada vendedor tiene, como máximo, una tienda.
 - **SellerApplication**: solicitud para vender. Flujo `PENDING` → `APPROVED`/`REJECTED` con notas de revisión. Al aprobar, se asigna rol `SELLER`, se crea la tienda y se notifica.
-- **Product**: pertenece a un vendedor (`seller`, `sellerId`, `sellerName`, `storeSlug`). Puede estar `active` (publicado/oculto). Los productos ocultos no aparecen en el catálogo público.
-- **Order**: pedido global creado por cliente/invitado con datos de envío, totales (`subtotal`, `tax`, `shipping`, `total`) y estado global.
+- **Product**: pertenece a un vendedor (`seller`, `sellerId`, `sellerName`, `storeSlug`). Define su propia configuración de envío (`requiresShipping`, `shippingCost`, `freeShippingThreshold`). Puede estar `active` (publicado/oculto). Los productos ocultos no aparecen en el catálogo público.
+- **Order**: pedido global creado por cliente/invitado con datos de envío, totales (`subtotal`, `shipping`, `total`) y estado global. Los precios ya incluyen impuestos.
 - **OrderSubOrder**: **parte del pedido por tienda/vendedor**. Agrupa las líneas (`OrderItem`) correspondientes a cada vendedor, con sus propios totales y estado (`PENDING`/`PAID`/`PREPARED`/`SHIPPED`/`DELIVERED`/`CANCELLED`). El cliente ve el estado por tienda en su cuenta.
 - **OrderItem**: línea de pedido con `productId`, `seller`, `subOrder`, precio unitario y cantidad.
 - **Notification**: avisos por usuario (`ORDER`, `PRODUCT`, `SELLER_APPLICATION`, `ACCOUNT`, `INFO`), con enlace opcional.
@@ -52,7 +52,7 @@ flowchart TB
 ### Flujo multivendedor de compra
 
 1. **Carrito**: el cliente añade productos (pueden ser de distintas tiendas).
-2. **Checkout**: se crea `Order` con totales globales (impuestos/envío calculados por el backend).
+2. **Checkout**: se crea `Order` con totales globales (envío calculado por el backend según cada producto).
 3. **Agrupación**: `OrderService` agrupa las líneas por vendedor (`sellerId`) y crea un `OrderSubOrder` por vendedor. Si un producto no tiene vendedor asignado, se agrupa bajo la tienda plataforma (`ParDrops`).
 4. **Notificación a vendedores**: cada vendedor con parte de pedido recibe una notificación.
 5. **Preparación**: el vendedor gestiona su `OrderSubOrder` desde `/vendedor/pedidos` y avanza estados siguiendo las transiciones permitidas.

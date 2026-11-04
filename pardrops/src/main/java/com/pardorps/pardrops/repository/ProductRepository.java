@@ -140,10 +140,9 @@ public interface ProductRepository extends JpaRepository<Product, String> {
      * @return página de productos que cumplen los filtros.
      */
     @Query("select distinct p from Product p left join fetch p.seller "
-            + "where (:search is null "
-            + "       or lower(p.name) like lower(concat('%', :search, '%')) "
-            + "       or lower(p.slug) like lower(concat('%', :search, '%')) "
-            + "       or lower(p.description) like lower(concat('%', :search, '%'))) "
+            + "where (lower(p.name) like lower(concat('%', :search, '%')) "
+            + "   or lower(p.slug) like lower(concat('%', :search, '%')) "
+            + "   or lower(p.description) like lower(concat('%', :search, '%'))) "
             + "  and (:sellerId is null or p.seller.id = :sellerId) "
             + "  and (:active is null or p.active = :active)")
     Page<Product> searchForAdmin(
@@ -166,10 +165,9 @@ public interface ProductRepository extends JpaRepository<Product, String> {
      * @return página de productos que cumplen los filtros.
      */
     @Query("select distinct p from Product p left join fetch p.seller "
-            + "where (:search is null "
-            + "       or lower(p.name) like lower(concat('%', :search, '%')) "
-            + "       or lower(p.slug) like lower(concat('%', :search, '%')) "
-            + "       or lower(p.description) like lower(concat('%', :search, '%'))) "
+            + "where (lower(p.name) like lower(concat('%', :search, '%')) "
+            + "   or lower(p.slug) like lower(concat('%', :search, '%')) "
+            + "   or lower(p.description) like lower(concat('%', :search, '%'))) "
             + "  and (:sellerId is null or p.seller.id = :sellerId) "
             + "  and (:active is null or p.active = :active) "
             + "  and exists ("

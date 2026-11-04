@@ -118,7 +118,7 @@ public class Order {
     @Column(nullable = false)
     private Double subtotal;
 
-    /** Impuestos aplicados (IVA 19%). */
+    /** Campo histórico de impuestos; los precios actuales ya los incluyen. */
     @Column(nullable = false)
     private Double tax;
 

@@ -67,7 +67,7 @@ public class SellerBalance {
     @Column(name = "withdrawn_total", nullable = false)
     private Double withdrawnTotal = 0.0;
 
-    /** Subtotal de productos vendidos, sin IVA ni envío. */
+    /** Subtotal de productos vendidos, sin envío. */
     @Column(nullable = false)
     private Double totalSales = 0.0;
 

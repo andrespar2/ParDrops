@@ -167,11 +167,13 @@ public class ProductService {
                 Sort.by(Sort.Direction.DESC, "createdAt"));
 
         String normalizedCategory = trimToNull(category);
+        String normalizedSearch = trimToNull(search);
+        String searchValue = normalizedSearch == null ? "" : normalizedSearch;
         Page<Product> result = normalizedCategory == null
                 ? productRepository.searchForAdmin(
-                        trimToNull(search), sellerId, active, pageable)
+                        searchValue, sellerId, active, pageable)
                 : productRepository.searchForAdminByCategory(
-                        trimToNull(search), sellerId, normalizedCategory, active, pageable);
+                        searchValue, sellerId, normalizedCategory, active, pageable);
 
         List<Product> products = result.getContent();
         enrich(products);

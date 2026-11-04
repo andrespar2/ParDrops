@@ -135,7 +135,32 @@ public interface ProductRepository extends JpaRepository<Product, String> {
      *
      * @param search    texto de búsqueda (puede ser nulo).
      * @param sellerId  filtra por vendedor propietario (puede ser nulo).
-     * @param category  filtra por categoría (puede ser nulo).
+     * @param active    filtra por visibilidad (puede ser nulo).
+     * @param pageable  paginación y orden.
+     * @return página de productos que cumplen los filtros.
+     */
+    @Query("select distinct p from Product p left join fetch p.seller "
+            + "where (:search is null "
+            + "       or lower(p.name) like lower(concat('%', :search, '%')) "
+            + "       or lower(p.slug) like lower(concat('%', :search, '%')) "
+            + "       or lower(p.description) like lower(concat('%', :search, '%'))) "
+            + "  and (:sellerId is null or p.seller.id = :sellerId) "
+            + "  and (:active is null or p.active = :active)")
+    Page<Product> searchForAdmin(
+            @Param("search") String search,
+            @Param("sellerId") Long sellerId,
+            @Param("active") Boolean active,
+            Pageable pageable);
+
+    /**
+     * Busca productos por categoría en el panel de administración.
+     *
+     * <p>Se mantiene separada de la búsqueda general para no enviar nunca un
+     * parámetro nulo a {@code lower()}, que PostgreSQL no puede tipar.</p>
+     *
+     * @param search    texto de búsqueda (puede ser nulo).
+     * @param sellerId  filtra por vendedor propietario (puede ser nulo).
+     * @param category  categoría obligatoria en esta consulta.
      * @param active    filtra por visibilidad (puede ser nulo).
      * @param pageable  paginación y orden.
      * @return página de productos que cumplen los filtros.
@@ -147,10 +172,10 @@ public interface ProductRepository extends JpaRepository<Product, String> {
             + "       or lower(p.description) like lower(concat('%', :search, '%'))) "
             + "  and (:sellerId is null or p.seller.id = :sellerId) "
             + "  and (:active is null or p.active = :active) "
-            + "  and (:category is null or exists ("
+            + "  and exists ("
             + "        select 1 from Product p2 join p2.categories c "
-            + "        where p2.id = p.id and lower(c) = lower(cast(:category as string))))")
-    Page<Product> searchForAdmin(
+            + "        where p2.id = p.id and lower(c) = lower(:category))")
+    Page<Product> searchForAdminByCategory(
             @Param("search") String search,
             @Param("sellerId") Long sellerId,
             @Param("category") String category,

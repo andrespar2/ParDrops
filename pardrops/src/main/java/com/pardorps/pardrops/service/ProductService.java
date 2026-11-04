@@ -166,12 +166,12 @@ public class ProductService {
                 Math.max(size, 1),
                 Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        Page<Product> result = productRepository.searchForAdmin(
-                trimToNull(search),
-                sellerId,
-                trimToNull(category),
-                active,
-                pageable);
+        String normalizedCategory = trimToNull(category);
+        Page<Product> result = normalizedCategory == null
+                ? productRepository.searchForAdmin(
+                        trimToNull(search), sellerId, active, pageable)
+                : productRepository.searchForAdminByCategory(
+                        trimToNull(search), sellerId, normalizedCategory, active, pageable);
 
         List<Product> products = result.getContent();
         enrich(products);

@@ -23,6 +23,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -42,6 +45,8 @@ import java.util.Map;
  */
 @Service
 public class OrderService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     /** Porcentaje de IVA aplicado en Colombia (19%). */
     private static final double INCLUDED_TAX_RATE = 0.19;
@@ -106,6 +111,44 @@ public class OrderService {
      */
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request, User user) {
+        Order saved = persistOrder(request, user, true);
+        notifySellers(saved);
+        notifyCustomer(saved, user);
+        orderEmailService.sendNewOrderToSellers(saved);
+        adminAlertService.newSale(saved);
+        for (OrderSubOrder subOrder : saved.getSubOrders()) {
+            sellerBalanceService.hold(subOrder);
+        }
+
+        return toResponse(saved);
+    }
+
+    /**
+     * Registra un pedido pendiente de pago sin efectos secundarios.
+     *
+     * <p>Es el primer paso del checkout con Wompi: calcula los importes con
+     * los precios reales de la base de datos y guarda el pedido, pero no
+     * retiene saldos, no descuenta stock y no envía correos. Todo eso ocurre
+     * únicamente cuando la pasarela confirma el pago.</p>
+     *
+     * @param request datos del cliente, dirección y productos.
+     * @param user    usuario autenticado, o {@code null} si es un invitado.
+     * @return el pedido guardado en estado pendiente.
+     */
+    @Transactional
+    public Order persistPendingOrder(CreateOrderRequest request, User user) {
+        return persistOrder(request, user, false);
+    }
+
+    /**
+     * Construye y guarda un pedido a partir de los datos del checkout.
+     *
+     * @param request        datos del cliente, dirección y productos.
+     * @param user           usuario autenticado o {@code null}.
+     * @param reserveStock   indica si se descuenta el inventario al crear.
+     * @return el pedido guardado.
+     */
+    private Order persistOrder(CreateOrderRequest request, User user, boolean reserveStock) {
         Order order = new Order();
         order.setUser(user);
         order.setCustomerName(request.customerName().trim());
@@ -121,6 +164,7 @@ public class OrderService {
 
         double subtotal = 0.0;
         Map<Long, List<OrderItem>> itemsBySeller = new LinkedHashMap<>();
+        java.util.Map<String, Integer> requestedByProductVariant = new java.util.HashMap<>();
 
         for (OrderItemRequest itemRequest : request.items()) {
             Product product = productRepository.findById(itemRequest.productId())
@@ -154,7 +198,18 @@ public class OrderService {
             Long sellerId = product.getSeller() != null ? product.getSeller().getId() : null;
             itemsBySeller.computeIfAbsent(sellerId, key -> new ArrayList<>()).add(item);
 
-            decreaseStock(product, variant, itemRequest.quantity());
+            if (reserveStock) {
+                decreaseStock(product, variant, itemRequest.quantity());
+            } else {
+                // En el checkout de Wompi el stock se descuenta solo cuando el
+                // pago queda aprobado; aquí se valida para no vender de más.
+                String key = product.getId() + "|"
+                        + (variant != null ? variant.getId() : "");
+                int accumulated = requestedByProductVariant.getOrDefault(key, 0)
+                        + itemRequest.quantity();
+                requestedByProductVariant.put(key, accumulated);
+                ensureStock(product, variant, accumulated);
+            }
         }
 
         // El precio publicado por el vendedor es el precio final: el IVA va
@@ -179,15 +234,8 @@ public class OrderService {
         }
 
         Order saved = orderRepository.save(order);
-        notifySellers(saved);
-        notifyCustomer(saved, user);
-        orderEmailService.sendNewOrderToSellers(saved);
-        adminAlertService.newSale(saved);
-        for (OrderSubOrder subOrder : saved.getSubOrders()) {
-            sellerBalanceService.hold(subOrder);
-        }
 
-        return toResponse(saved);
+        return saved;
     }
 
     /**
@@ -251,6 +299,65 @@ public class OrderService {
             subOrder.setCommissionAmount(commission);
             subOrder.setSellerNetAmount(round(subOrder.getTotal() - commission));
             subOrder.setFundsStatus(FundsStatus.HELD);
+        }
+    }
+
+    /**
+     * Comprueba que haya existencias suficientes para una cantidad acumulada.
+     *
+     * @param product  producto.
+     * @param variant  variante (puede ser nula).
+     * @param quantity unidades solicitadas.
+     * @throws ApiException si no hay stock suficiente (409).
+     */
+    private void ensureStock(Product product, ProductVariant variant, int quantity) {
+        int available = variant != null && variant.getStock() != null
+                ? variant.getStock()
+                : product.getStock();
+        if (available < quantity) {
+            String label = variant != null ? product.getName() + " (" + variant.getName() + ")" : product.getName();
+            throw ApiException.conflict("No hay stock suficiente de " + label);
+        }
+    }
+
+    /**
+     * Descuenta el inventario de un pedido que acaba de ser pagado.
+     *
+     * <p>El checkout no reserva stock para no bloquear unidades de compras
+     * abandonadas; el descuento ocurre una sola vez cuando Wompi confirma el
+     * pago. Se ejecuta dentro de la transacción financiera.</p>
+     *
+     * @param order pedido aprobado.
+     */
+    @Transactional
+    public void reserveStockForPaidOrder(Order order) {
+        for (OrderItem item : order.getItems()) {
+            Product product = productRepository.findById(item.getProductId()).orElse(null);
+            if (product == null) {
+                continue;
+            }
+            ProductVariant variant = null;
+            if (item.getVariantId() != null && product.getVariants() != null) {
+                for (ProductVariant candidate : product.getVariants()) {
+                    if (item.getVariantId().equals(candidate.getId())) {
+                        variant = candidate;
+                        break;
+                    }
+                }
+            }
+            int available = variant != null && variant.getStock() != null
+                    ? variant.getStock()
+                    : product.getStock();
+            if (available < item.getQuantity()) {
+                log.warn("Stock insuficiente al confirmar el pedido {}: producto {}",
+                        order.getId(), item.getProductId());
+            }
+            int remaining = Math.max(0, available - item.getQuantity());
+            if (variant != null) {
+                variant.setStock(remaining);
+            }
+            product.setStock(Math.max(0, product.getStock() - item.getQuantity()));
+            productRepository.save(product);
         }
     }
 
@@ -394,6 +501,15 @@ public class OrderService {
                             + " a " + newStatus + ".");
         }
 
+        // Un pedido cobrado por Wompi solo puede marcarse como pagado cuando la
+        // transacción fue verificada y aprobada por la pasarela.
+        if (newStatus == OrderStatus.PAID
+                && order.getPaymentReference() != null
+                && !com.pardorps.pardrops.model.PaymentStatus.APPROVED.equals(order.getPaymentStatus())) {
+            throw ApiException.conflict(
+                    "El pago de este pedido todavía no ha sido confirmado por Wompi.");
+        }
+
         order.setStatus(newStatus);
 
         // El administrador puede forzar el estado del pedido: en ese caso las
@@ -473,7 +589,7 @@ public class OrderService {
      * @param order pedido a convertir.
      * @return el pedido listo para enviar al cliente.
      */
-    private OrderResponse toResponse(Order order) {
+    public OrderResponse toResponse(Order order) {
         List<OrderItemResponse> items = order.getItems().stream()
                 .map(item -> new OrderItemResponse(
                         item.getProductId(),
@@ -508,7 +624,55 @@ public class OrderService {
                 order.getTotal(),
                 order.getStatus(),
                 order.getCreatedAt(),
+                order.getPaymentReference(),
+                order.getPaymentStatus(),
+                order.getPaymentMethod(),
+                order.getWompiTransactionId(),
+                order.getServiceFee(),
+                order.getPaidAt(),
+                order.getPaymentEnvironment(),
                 order.getUser() != null ? order.getUser().getEmail() : null
+        );
+    }
+
+    /**
+     * Convierte un pedido en una vista pública reducida.
+     *
+     * <p>Se usa en la pantalla de resultado del pago, a la que se accede con la
+     * referencia (que actúa como secreto). No expone dirección, teléfono ni
+     * correo del comprador.</p>
+     *
+     * @param order pedido a convertir.
+     * @return la vista pública.
+     */
+    public OrderResponse toPublicResponse(Order order) {
+        OrderResponse full = toResponse(order);
+        return new OrderResponse(
+                full.id(),
+                full.customerName(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                full.items(),
+                full.subOrders(),
+                full.subtotal(),
+                full.tax(),
+                full.shipping(),
+                full.total(),
+                full.status(),
+                full.createdAt(),
+                full.paymentReference(),
+                full.paymentStatus(),
+                full.paymentMethod(),
+                full.wompiTransactionId(),
+                full.serviceFee(),
+                full.paidAt(),
+                full.paymentEnvironment(),
+                null
         );
     }
 
@@ -542,6 +706,10 @@ public class OrderService {
                 subOrder.getSubtotal(),
                 subOrder.getShipping(),
                 subOrder.getTotal(),
+                subOrder.getCommissionRate(),
+                subOrder.getCommissionAmount(),
+                subOrder.getSellerNetAmount(),
+                subOrder.getFundsStatus(),
                 items,
                 subOrder.getCreatedAt()
         );

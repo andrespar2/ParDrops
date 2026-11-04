@@ -67,5 +67,11 @@ public enum AuditAction {
     ADMIN_DEACTIVATED,
 
     /** Cuenta administrativa reactivada. */
-    ADMIN_REACTIVATED
+    ADMIN_REACTIVATED,
+
+    /** Pago verificado y aprobado por Wompi. */
+    PAYMENT_APPROVED,
+
+    /** Estado de pago no aprobado informado por Wompi. */
+    PAYMENT_STATUS_CHANGED
 }

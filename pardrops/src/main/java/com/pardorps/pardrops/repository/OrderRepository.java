@@ -30,6 +30,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findAllByOrderByCreatedAtDesc();
 
     /**
+     * Busca un pedido por su referencia única de pago.
+     *
+     * @param paymentReference referencia de Wompi.
+     * @return el pedido, si existe.
+     */
+    java.util.Optional<Order> findByPaymentReference(String paymentReference);
+
+    /**
      * Indica si un usuario tiene al menos un pedido en el estado indicado que
      * contenga el producto dado.
      *

@@ -146,6 +146,14 @@ public class SecurityConfig {
                         // --- Pedidos: crear es público (invitado o cliente). ---
                         .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
 
+                        // --- Checkout con Wompi: público (invitado o cliente). ---
+                        // La seguridad financiera la da la firma y la verificación
+                        // del pago en el backend, no la sesión del navegador.
+                        .requestMatchers("/api/checkout/**").permitAll()
+
+                        // --- Webhook de Wompi: público y validado por checksum. ---
+                        .requestMatchers(HttpMethod.POST, "/api/webhooks/wompi").permitAll()
+
                         // --- Sesión del usuario: requiere estar autenticado. ---
                         .requestMatchers("/api/auth/me").authenticated()
                         .requestMatchers("/api/orders/me").authenticated()

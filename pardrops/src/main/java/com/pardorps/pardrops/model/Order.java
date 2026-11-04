@@ -135,6 +135,48 @@ public class Order {
     @Column(nullable = false, length = 20)
     private OrderStatus status;
 
+    /**
+     * Referencia única de pago usada con Wompi.
+     *
+     * <p>Es nula en los pedidos históricos y en los registrados sin pasarela.
+     * Se regenera al reintentar un pago rechazado, pero nunca una vez
+     * aprobado.</p>
+     */
+    @Column(name = "payment_reference", unique = true, length = 80)
+    private String paymentReference;
+
+    /** Estado del pago notificado por Wompi. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status", length = 20)
+    private PaymentStatus paymentStatus;
+
+    /** Método de pago informado por Wompi (CARD, NEQUI, PSE, etc.). */
+    @Column(name = "payment_method", length = 40)
+    private String paymentMethod;
+
+    /** Identificador de la transacción en Wompi. */
+    @Column(name = "wompi_transaction_id", length = 80)
+    private String wompiTransactionId;
+
+    /** Ambiente de Wompi usado ({@code test} o {@code prod}). */
+    @Column(name = "payment_environment", length = 10)
+    private String paymentEnvironment;
+
+    /** Cargo fijo de servicio de ParDrops aplicado al pedido. */
+    @Column(name = "service_fee")
+    private Double serviceFee = 0.0;
+
+    /** Fecha y hora en la que Wompi aprobó el pago. */
+    @Column(name = "paid_at")
+    private Instant paidAt;
+
+    /**
+     * Fecha en la que se generaron las notificaciones internas de la compra
+     * confirmada. Evita duplicarlas si el evento se repite.
+     */
+    @Column(name = "payment_notified_at")
+    private Instant paymentNotifiedAt;
+
     /** Fecha y hora de creación del pedido. */
     @Column(nullable = false, updatable = false)
     private Instant createdAt;

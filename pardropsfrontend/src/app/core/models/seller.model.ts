@@ -164,3 +164,27 @@ export interface SellerApplicationRequest {
   /** Teléfono personal del titular. */
   personalPhone?: string | null;
 }
+
+/**
+ * Reseña de un producto del vendedor, en modo solo lectura.
+ *
+ * @interface SellerReview
+ */
+export interface SellerReview {
+  /** Identificador de la reseña. */
+  id: number;
+  /** Producto reseñado. */
+  productId: string;
+  /** Nombre del producto. */
+  productName: string;
+  /** Estrellas (1 a 5). */
+  rating: number;
+  /** Comentario del comprador. */
+  comment: string;
+  /** Nombre del autor (nunca su correo). */
+  authorName: string;
+  /** Imágenes adjuntas. */
+  images: string[];
+  /** Fecha de publicación. */
+  createdAt: string;
+}

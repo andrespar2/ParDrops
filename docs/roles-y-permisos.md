@@ -24,6 +24,8 @@
 | Panel vendedor (`/vendedor/*`, `/api/seller/**`) | ❌ | ❌ | ✅ | ❌ |
 | Gestionar productos propios (`/api/seller/products`) | ❌ | ❌ | ✅ | ❌ |
 | Gestionar subpedidos propios (`/api/seller/orders`) | ❌ | ❌ | ✅ | ❌ |
+| Consultar reseñas propias (`GET /api/seller/reviews`) | ❌ | ❌ | ✅ (solo lectura) | ✅ |
+| Editar/borrar reseñas | ❌ | Solo la propia al publicarla | ❌ | ✅ (moderación) |
 | Ver/editar ficha propia (`GET/PUT /api/stores/mine`) | ❌ | ❌ | ✅ | ❌ |
 | Panel administración (`/api/admin/**`) | ❌ | ❌ | ❌ | ✅ |
 | Revisar solicitudes de vendedor (`GET/PATCH /api/seller-applications`) | ❌ | ❌ | ❌ | ✅ |
@@ -39,3 +41,4 @@
 - **Visibilidad**: un producto con `active=false` solo es visible para su propietario (vendedor) en su panel; no aparece en el catálogo público ni en la tienda pública.
 - **Solicitudes**: solo usuarios con rol `CUSTOMER` pueden enviar una nueva solicitud (con reglas de reintento tras rechazo configurables). Al aprobar, se promociona a `SELLER` y se crea una tienda activa.
 - **403/401**: el backend responde con JSON estructurado vía `RestAuthenticationEntryPoint` y `RestAccessDeniedHandler`.
+- **Reseñas del vendedor**: el rol SELLER solo tiene `GET /api/seller/reviews`. No hay endpoints de escritura; un `POST` directo responde 405 y el acceso a rutas de administración responde 403.

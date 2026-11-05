@@ -22,7 +22,8 @@ import {
   SellerApplication,
   SellerApplicationRequest,
   SellerDashboard,
-  SellerOrder
+  SellerOrder,
+  SellerReview
 } from '../models/seller.model';
 
 @Injectable({
@@ -113,6 +114,15 @@ export class SellerService {
    */
   public listOrders(): Observable<SellerOrder[]> {
     return this.http.get<SellerOrder[]>(this.ordersUrl);
+  }
+
+  /**
+   * Lista las reseñas de los productos del vendedor en modo solo lectura.
+   *
+   * @returns observable con las reseñas.
+   */
+  public listReviews(): Observable<SellerReview[]> {
+    return this.http.get<SellerReview[]>(`${API_BASE_URL}/seller/reviews`);
   }
 
   /**

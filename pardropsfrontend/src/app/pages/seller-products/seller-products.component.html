@@ -151,7 +151,7 @@
           <ul class="seller-form__images">
             @for (url of imageUrls(); track url; let i = $index) {
               <li class="seller-form__image">
-                <img [src]="url" alt="Imagen del producto" class="admin-thumb" />
+                <img [src]="url" alt="Imagen del producto" class="admin-thumb" loading="lazy" decoding="async" />
                 <button type="button" class="admin-btn admin-btn--danger"
                         (click)="removeImage(i)">
                   Quitar

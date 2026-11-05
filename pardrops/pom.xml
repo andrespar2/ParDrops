@@ -79,6 +79,16 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
+		<!--
+			Caché opcional con Redis (cache-aside). La dependencia solo aporta
+			el cliente: sin `app.cache.redis.enabled=true` no se abre ninguna
+			conexión y la aplicación sigue funcionando con la base de datos.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+
 		<!-- Base de datos H2 en modo archivo (desarrollo local y pruebas). -->
 		<dependency>
 			<groupId>com.h2database</groupId>

@@ -2,7 +2,10 @@ package com.pardorps.pardrops.config;
 
 import com.pardorps.pardrops.storage.FileSystemMediaStorage;
 import com.pardorps.pardrops.storage.MediaStorage;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.filter.ShallowEtagHeaderFilter;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -37,7 +40,29 @@ public class WebConfig implements WebMvcConfigurer {
         // MediaFileController; aquí solo se publica el almacén en disco.
         if (mediaStorage instanceof FileSystemMediaStorage fileSystemStorage) {
             registry.addResourceHandler(fileSystemStorage.basePublicPath() + "/**")
-                    .addResourceLocations(fileSystemStorage.storageLocation());
+                    .addResourceLocations(fileSystemStorage.storageLocation())
+                    // Los nombres son UUID versionados: el contenido de una
+                    // misma URL no cambia, así que puede cachearse un año.
+                    .setCacheControl(org.springframework.http.CacheControl
+                            .maxAge(java.time.Duration.ofDays(365))
+                            .cachePublic()
+                            .immutable());
         }
+    }
+
+    /**
+     * Añade ETag a las respuestas públicas de catálogo y tiendas para que el
+     * navegador pueda revalidar con {@code If-None-Match} y recibir 304.
+     *
+     * @return registro del filtro limitado a endpoints públicos.
+     */
+    @Bean
+    public FilterRegistrationBean<ShallowEtagHeaderFilter> publicEtagFilter() {
+        ShallowEtagHeaderFilter filter = new ShallowEtagHeaderFilter();
+        FilterRegistrationBean<ShallowEtagHeaderFilter> registration =
+                new FilterRegistrationBean<>(filter);
+        registration.addUrlPatterns("/api/products/*", "/api/stores/*", "/api/categories");
+        registration.setName("publicEtagFilter");
+        return registration;
     }
 }

@@ -319,6 +319,7 @@ permiten medir “después” en producción.
   - `41f40fd` feat(cdn): R2 opcional y caché de imágenes.
   - `18fdd52` docs(calidad): documentación, caché local y configuración.
   - `e66aa2e` perf(catalogo): evita la carga duplicada inicial.
+  - `097a901` perf(catalogo): consulta categorías del ranking por lotes.
 - Pull Request: **#125** `perf: optimizacion integral de infraestructura,
   cache, paneles y catalogo`, desde `perf/optimizacion-integral` hacia `main`.
 - El push se hizo a la rama del PR, **no a `main`**, para no disparar el

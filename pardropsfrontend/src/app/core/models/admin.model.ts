@@ -466,3 +466,29 @@ export interface RenderedEmail {
   /** Cuerpo HTML final. */
   bodyHtml: string;
 }
+
+/**
+ * Resumen de una tienda para organizar el catálogo por tiendas.
+ *
+ * @interface AdminStoreProductSummary
+ */
+export interface AdminStoreProductSummary {
+  /** Identificador de la tienda (nulo para el catálogo propio). */
+  storeId: number | null;
+  /** Identificador del vendedor (nulo para el catálogo propio). */
+  sellerId: number | null;
+  /** Nombre comercial. */
+  storeName: string;
+  /** Slug público. */
+  storeSlug: string | null;
+  /** Nombre del vendedor. */
+  sellerName: string;
+  /** Estado de la tienda. */
+  status: AdminStoreStatus | null;
+  /** Total de productos. */
+  productCount: number;
+  /** Productos publicados. */
+  publishedCount: number;
+  /** Productos ocultos. */
+  hiddenCount: number;
+}

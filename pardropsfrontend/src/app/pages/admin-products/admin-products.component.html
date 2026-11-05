@@ -17,6 +17,75 @@
       <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
     }
 
+    <!-- Selector de tiendas: no se cargan productos hasta elegir una. -->
+    @if (!selectedStore()) {
+      <section class="stores">
+        <form class="list__filters" (submit)="$event.preventDefault(); reloadStores()">
+          <input
+            type="search"
+            class="field__input"
+            name="storeSearch"
+            placeholder="Buscar tienda, slug o vendedor"
+            [(ngModel)]="storeSearch"
+          />
+          <select class="field__input" name="storeSort" [(ngModel)]="storeSort">
+            <option value="name">Ordenar por nombre</option>
+            <option value="products">Más productos primero</option>
+          </select>
+          <button type="submit" class="btn-primary">Buscar tienda</button>
+        </form>
+
+        @if (storeLoading()) {
+          <p class="list__message">Cargando tiendas…</p>
+        } @else if (storePage(); as page) {
+          @if (page.content.length === 0) {
+            <p class="list__message">No hay tiendas que coincidan con la búsqueda.</p>
+          } @else {
+            <div class="stores__grid">
+              @for (store of page.content; track store.storeId ?? 'platform') {
+                <button type="button" class="store-card" (click)="selectStore(store)">
+                  <span class="store-card__name">{{ store.storeName }}</span>
+                  <span class="store-card__seller">{{ store.sellerName }}</span>
+                  <span class="store-card__count">{{ store.productCount }} productos</span>
+                  <span class="store-card__detail">
+                    {{ store.publishedCount }} publicados · {{ store.hiddenCount }} ocultos
+                  </span>
+                  <span class="badge">{{ store.status || 'PLATAFORMA' }}</span>
+                </button>
+              }
+            </div>
+
+            <div class="list__pagination">
+              <span class="list__message">
+                {{ page.totalElements }} tienda(s) · página {{ page.page + 1 }} de
+                {{ page.totalPages === 0 ? 1 : page.totalPages }}
+              </span>
+              <div class="table__actions">
+                <button type="button" class="btn-ghost"
+                        [disabled]="page.page === 0" (click)="changeStorePage(-1)">
+                  Anterior
+                </button>
+                <button type="button" class="btn-ghost"
+                        [disabled]="page.page + 1 >= page.totalPages" (click)="changeStorePage(1)">
+                  Siguiente
+                </button>
+              </div>
+            </div>
+          }
+        }
+      </section>
+    } @else {
+      <div class="store-context">
+        <button type="button" class="btn-ghost" (click)="backToStores()">← Volver a tiendas</button>
+        <div>
+          <strong>{{ selectedStore()!.storeName }}</strong>
+          <span class="list__message">
+            · {{ selectedStore()!.productCount }} productos ·
+            {{ selectedStore()!.publishedCount }} publicados
+          </span>
+        </div>
+      </div>
+
     <!-- Formulario de creación/edición -->
     @if (formOpen()) {
       <section class="editor">
@@ -236,7 +305,8 @@
               @for (product of page.content; track product.id) {
                 <tr>
                   <td>
-                    <img [src]="product.imageUrl || ''" [alt]="product.name" class="table__image">
+                    <img [src]="product.imageUrl || ''" [alt]="product.name"
+                         class="table__image" loading="lazy" decoding="async">
                   </td>
                   <td>
                     <span class="table__name">{{ product.name }}</span>
@@ -317,5 +387,6 @@
         }
       }
     </section>
+    }
   </div>
 </main>

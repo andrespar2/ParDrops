@@ -266,3 +266,62 @@
 .list__message {
   color: var(--color-text-tertiary);
 }
+
+/* --- Selector de tiendas --- */
+.stores__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-3);
+}
+
+.store-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface);
+  text-align: left;
+  color: var(--color-text-primary);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-primary);
+    background-color: var(--color-surface-secondary);
+  }
+}
+
+.store-card__name {
+  font-weight: 700;
+  font-size: var(--font-size-base);
+}
+
+.store-card__seller {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.store-card__count {
+  margin-top: var(--space-2);
+  font-weight: 700;
+  font-size: var(--font-size-xl);
+}
+
+.store-card__detail {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.store-context {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-secondary);
+}

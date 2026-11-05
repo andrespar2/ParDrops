@@ -21,6 +21,7 @@ import {
   AdminProduct,
   AdminReview,
   AdminSeller,
+  AdminStoreProductSummary,
   AdminUser,
   AdminUserDetail,
   AdminRole,
@@ -189,6 +190,44 @@ export class AdminService {
     return this.http.get<PageResponse<AdminProduct>>(
       `${this.adminUrl}/products`,
       { params: this.productParams(filters) }
+    );
+  }
+
+  /**
+   * Lista las tiendas con contadores agregados de productos.
+   *
+   * @param search búsqueda por tienda, slug o vendedor.
+   * @param sort   name o products.
+   * @param page   página (0-based).
+   * @param size   tamaño de página.
+   * @returns observable con las tiendas.
+   */
+  public listProductStores(
+    search = '',
+    sort: 'name' | 'products' = 'name',
+    page = 0,
+    size = 12
+  ): Observable<PageResponse<AdminStoreProductSummary>> {
+    let params = new HttpParams()
+      .set('page', String(page))
+      .set('size', String(size))
+      .set('sort', sort);
+    if (search.trim()) params = params.set('search', search.trim());
+    return this.http.get<PageResponse<AdminStoreProductSummary>>(
+      `${this.adminUrl}/product-stores`,
+      { params }
+    );
+  }
+
+  /**
+   * Obtiene el producto completo (imágenes y variantes) para editarlo.
+   *
+   * @param id identificador del producto.
+   * @returns observable con la entidad completa.
+   */
+  public getFullProduct(id: string): Observable<import('../models/product.model').Product> {
+    return this.http.get<import('../models/product.model').Product>(
+      `${this.adminUrl}/products/${id}/full`
     );
   }
 

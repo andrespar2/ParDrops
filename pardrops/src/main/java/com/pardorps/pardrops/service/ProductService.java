@@ -69,7 +69,7 @@ public class ProductService {
     private final Duration adminTtl;
 
     /** Tiempo de vida de la copia local del catálogo publicado. */
-    private static final Duration LOCAL_CATALOG_TTL = Duration.ofSeconds(60);
+    private static final Duration LOCAL_CATALOG_TTL = Duration.ofMinutes(15);
 
     /** Máximo de productos que se mantienen en memoria para el feed. */
     private static final int LOCAL_CATALOG_MAX = 2_000;

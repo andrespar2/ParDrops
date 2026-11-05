@@ -210,13 +210,15 @@ public class ProductRankingService {
             return redisCached.get();
         }
 
-        List<Object[]> rows = productRepository.findRankingCandidates(
-                filter.search() == null ? "" : filter.search().trim(),
-                trimToNull(filter.category()),
-                filter.minPrice(),
-                filter.maxPrice(),
-                filter.onlyNew(),
-                filter.onlyOnSale());
+        String search = filter.search() == null ? "" : filter.search().trim();
+        String category = trimToNull(filter.category());
+        List<Object[]> rows = category == null
+                ? productRepository.findRankingCandidates(
+                        search, filter.minPrice(), filter.maxPrice(),
+                        filter.onlyNew(), filter.onlyOnSale())
+                : productRepository.findRankingCandidatesByCategory(
+                        search, category, filter.minPrice(), filter.maxPrice(),
+                        filter.onlyNew(), filter.onlyOnSale());
 
         Map<String, Long> sold = soldQuantities();
         List<String> ids = rows.stream().map(row -> (String) row[0]).toList();

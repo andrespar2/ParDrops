@@ -41,7 +41,7 @@ class ProductRankingServiceTest {
 
         Instant now = Instant.now();
         when(productRepository.findRankingCandidates(
-                anyString(), any(), any(), any(), anyBoolean(), anyBoolean()))
+                anyString(), any(), any(), anyBoolean(), anyBoolean()))
                 .thenReturn(List.of(
                         new Object[]{"p1", 5.0, 1, now, false, false, 10, 100.0, 1L},
                         new Object[]{"p2", 4.8, 50, now.minus(10, ChronoUnit.DAYS),
@@ -98,5 +98,23 @@ class ProductRankingServiceTest {
 
         assertEquals(List.of("p3", "p1", "p2"),
                 service.rank(filter, "seed-a", "price-asc", null));
+    }
+
+    @Test
+    void categoryFilterUsesDedicatedQueryWithoutNullLower() {
+        when(productRepository.findRankingCandidatesByCategory(
+                anyString(), anyString(), any(), any(), anyBoolean(), anyBoolean()))
+                .thenReturn(List.<Object[]>of(
+                        new Object[]{"p1", 5.0, 1, Instant.now(), false, false, 10, 100.0, 1L}
+                ));
+
+        var filter = new ProductRankingService.FeedFilter("", "ropa", null, null, false, false);
+        List<String> result = service.rank(filter, "seed-a", "relevance", null);
+
+        assertEquals(List.of("p1"), result);
+        org.mockito.Mockito.verify(productRepository)
+                .findRankingCandidatesByCategory(
+                        anyString(), org.mockito.ArgumentMatchers.eq("ropa"),
+                        any(), any(), anyBoolean(), anyBoolean());
     }
 }

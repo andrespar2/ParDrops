@@ -260,15 +260,52 @@ public interface ProductRepository extends JpaRepository<Product, String> {
               and (:search = '' or lower(p.name) like lower(concat('%', :search, '%'))
                    or lower(p.slug) like lower(concat('%', :search, '%'))
                    or lower(p.description) like lower(concat('%', :search, '%')))
-              and (:category is null or exists (
-                    select 1 from Product p2 join p2.categories c
-                    where p2.id = p.id and lower(c) = lower(:category)))
               and (:minPrice is null or p.price >= :minPrice)
               and (:maxPrice is null or p.price <= :maxPrice)
               and (:onlyNew = false or p.isNew = true)
               and (:onlyOnSale = false or p.onSale = true)
             """)
     List<Object[]> findRankingCandidates(
+            @Param("search") String search,
+            @Param("minPrice") Double minPrice,
+            @Param("maxPrice") Double maxPrice,
+            @Param("onlyNew") boolean onlyNew,
+            @Param("onlyOnSale") boolean onlyOnSale);
+
+    /**
+     * Variante con categoría obligatoria. Se mantiene separada para no enviar
+     * nunca un parámetro nulo a {@code lower()}, que PostgreSQL no puede tipar.
+     *
+     * @param search  texto de búsqueda (cadena vacía para no filtrar).
+     * @param category categoría exacta obligatoria.
+     * @param minPrice precio mínimo (nulo para no filtrar).
+     * @param maxPrice precio máximo (nulo para no filtrar).
+     * @param onlyNew solo novedades cuando es verdadero.
+     * @param onlyOnSale solo ofertas cuando es verdadero.
+     * @return filas con id, rating, reviewCount, createdAt, featured, isNew,
+     *         stock, price y sellerId.
+     */
+    @Query("""
+            select p.id, p.rating, p.reviewCount, p.createdAt, p.isFeatured,
+                   p.isNew, p.stock, p.price, p.seller.id
+            from Product p
+            where p.active = true
+              and (p.seller is null or exists (
+                    select s.id from Store s
+                    where s.seller.id = p.seller.id
+                      and s.status = com.pardorps.pardrops.model.StoreStatus.ACTIVE))
+              and (:search = '' or lower(p.name) like lower(concat('%', :search, '%'))
+                   or lower(p.slug) like lower(concat('%', :search, '%'))
+                   or lower(p.description) like lower(concat('%', :search, '%')))
+              and exists (
+                    select 1 from Product p2 join p2.categories c
+                    where p2.id = p.id and lower(c) = lower(:category))
+              and (:minPrice is null or p.price >= :minPrice)
+              and (:maxPrice is null or p.price <= :maxPrice)
+              and (:onlyNew = false or p.isNew = true)
+              and (:onlyOnSale = false or p.onSale = true)
+            """)
+    List<Object[]> findRankingCandidatesByCategory(
             @Param("search") String search,
             @Param("category") String category,
             @Param("minPrice") Double minPrice,

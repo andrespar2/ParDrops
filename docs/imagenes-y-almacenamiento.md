@@ -3,9 +3,11 @@
 ## Almacenamiento
 
 - **Metadatos**: `MediaAsset` en base de datos (propietario, nombre original/almacenado, ruta pública, MIME, tamaño, fecha).
-- **Ficheros**: guardados en disco en `app.media.storage-dir` (por defecto `./data/media`). La carpeta `data/` está excluida del control de versiones.
-- **Servicio**: `MediaService` + `FileSystemMediaStorage` gestionan guardado, validación y borrado.
-- **Publicación**: `WebConfig` mapea `app.media.public-path` (`/media`) a la ubicación física para servir imágenes estáticamente.
+- **Ficheros**: en desarrollo se guardan en disco (`app.media.storage-dir`, por defecto `./data/media`). En producción se mantiene PostgreSQL como respaldo si no hay almacenamiento externo.
+- **R2/CDN (opcional)**: con `APP_MEDIA_STORAGE=r2` y las variables `R2_*`, los ficheros se guardan en Cloudflare R2 y se sirven por el dominio CDN configurado. Las credenciales S3 de R2 son distintas del API Token de Cloudflare.
+- **Migración**: `APP_MEDIA_MIGRATE_TO_R2=true` copia los BLOB históricos a R2 y actualiza referencias sin borrar los originales.
+- **Servicio**: `MediaService` + `MediaStorage` gestionan guardado, validación y borrado.
+- **Publicación**: `WebConfig` mapea `app.media.public-path` (`/media`) a la ubicación física; en producción `MediaFileController` sirve el contenido con ETag y caché inmutable.
 
 ## Validación
 

@@ -106,7 +106,8 @@ export class ProductService {
   );
 
   constructor() {
-    this.loadProducts();
+    // El catálogo se carga cuando la vista lo pide con sus filtros; así se
+    // evita una petición duplicada al entrar en la portada o el listado.
   }
 
   /**

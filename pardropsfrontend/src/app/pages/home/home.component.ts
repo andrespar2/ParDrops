@@ -218,11 +218,11 @@ export class HomeComponent {
         break;
       case '100-300':
         filters.minPrice = 100_000;
-        filters.maxPrice = 300_000;
+        filters.maxPrice = 299_999;
         break;
       case '300-1000':
         filters.minPrice = 300_000;
-        filters.maxPrice = 1_000_000;
+        filters.maxPrice = 999_999;
         break;
       case 'gt1000':
         filters.minPrice = 1_000_001;

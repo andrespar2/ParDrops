@@ -101,7 +101,7 @@ public class AdminDashboardService {
                 storeRepository.countByStatus(StoreStatus.ACTIVE),
                 userRepository.countByStatus(UserStatus.SUSPENDED),
                 productRepository.count(),
-                productRepository.findPublished().size(),
+                productRepository.countPublished(),
                 productRepository.countOutOfStock(),
                 storeRepository.count(),
                 storeRepository.countByStatus(StoreStatus.ACTIVE),

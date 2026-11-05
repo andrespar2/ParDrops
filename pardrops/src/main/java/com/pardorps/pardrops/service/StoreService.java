@@ -1,5 +1,8 @@
 package com.pardorps.pardrops.service;
 
+import com.pardorps.pardrops.cache.CacheInvalidator;
+import com.pardorps.pardrops.cache.CacheKeys;
+import com.pardorps.pardrops.cache.CacheService;
 import com.pardorps.pardrops.dto.ProductReviewResponse;
 import com.pardorps.pardrops.dto.StoreRequest;
 import com.pardorps.pardrops.dto.StoreResponse;
@@ -17,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Servicio con la lógica de las tiendas de los vendedores.
@@ -30,20 +35,42 @@ public class StoreService {
     private final StoreRepository storeRepository;
     private final ProductRepository productRepository;
     private final ProductReviewRepository reviewRepository;
+    private final CacheService cacheService;
+    private final CacheInvalidator cacheInvalidator;
 
     /**
      * @param storeRepository   acceso a las tiendas.
      * @param productRepository acceso al catálogo para contar los productos.
      * @param reviewRepository  acceso a las reseñas para el rating de la tienda.
+     * @param cacheService      caché opcional de listados públicos.
+     * @param cacheInvalidator  invalidación tras escrituras.
      */
+    @org.springframework.beans.factory.annotation.Autowired
     public StoreService(
             StoreRepository storeRepository,
             ProductRepository productRepository,
-            ProductReviewRepository reviewRepository
+            ProductReviewRepository reviewRepository,
+            CacheService cacheService,
+            CacheInvalidator cacheInvalidator
     ) {
         this.storeRepository = storeRepository;
         this.productRepository = productRepository;
         this.reviewRepository = reviewRepository;
+        this.cacheService = cacheService;
+        this.cacheInvalidator = cacheInvalidator;
+    }
+
+    /**
+     * Constructor de compatibilidad para pruebas unitarias.
+     */
+    StoreService(
+            StoreRepository storeRepository,
+            ProductRepository productRepository,
+            ProductReviewRepository reviewRepository
+    ) {
+        this(storeRepository, productRepository, reviewRepository,
+                new com.pardorps.pardrops.cache.NoOpCacheService(),
+                new CacheInvalidator(new com.pardorps.pardrops.cache.NoOpCacheService()));
     }
 
     /**
@@ -85,11 +112,72 @@ public class StoreService {
      */
     @Transactional(readOnly = true)
     public List<StoreResponse> findAllActive() {
-        return storeRepository.findAllByOrderByNameAsc()
+        var cached = cacheService.getList(CacheKeys.STORES_PUBLIC, StoreResponse.class);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
+
+        Map<Long, Long> products = counts(productRepository.countPublishedGroupedBySeller());
+        Map<Long, double[]> ratings = ratingSummary();
+
+        List<StoreResponse> responses = storeRepository.findAllByOrderByNameAsc()
                 .stream()
                 .filter(store -> store.getStatus() == StoreStatus.ACTIVE)
-                .map(store -> toResponse(store, countPublishedProducts(store)))
+                .map(store -> {
+                    Long sellerId = store.getSeller() == null ? null : store.getSeller().getId();
+                    if (sellerId == null) {
+                        return toResponse(store, 0L, 0.0, 0L);
+                    }
+                    double[] rating = ratings.get(sellerId);
+                    if (rating == null) {
+                        Double average = reviewRepository.averageRatingBySellerId(sellerId);
+                        double value = average == null ? 0.0 : Math.round(average * 100.0) / 100.0;
+                        rating = new double[]{value,
+                                reviewRepository.countByProductSellerId(sellerId)};
+                    }
+                    Long productCount = products.get(sellerId);
+                    if (productCount == null) {
+                        productCount = productRepository.countPublishedBySellerId(sellerId);
+                    }
+                    return toResponse(store, productCount, rating[0], (long) rating[1]);
+                })
                 .toList();
+
+        List<StoreResponse> immutable = List.copyOf(responses);
+        cacheService.put(CacheKeys.STORES_PUBLIC, immutable,
+                java.time.Duration.ofSeconds(300));
+        return immutable;
+    }
+
+    private Map<Long, Long> counts(List<Object[]> rows) {
+        Map<Long, Long> values = new HashMap<>();
+        if (rows == null) {
+            return values;
+        }
+        for (Object[] row : rows) {
+            if (row[0] != null) {
+                values.put(((Number) row[0]).longValue(),
+                        row[1] == null ? 0L : ((Number) row[1]).longValue());
+            }
+        }
+        return values;
+    }
+
+    private Map<Long, double[]> ratingSummary() {
+        Map<Long, double[]> values = new HashMap<>();
+        List<Object[]> rows = reviewRepository.ratingSummaryBySeller();
+        if (rows == null) {
+            return values;
+        }
+        for (Object[] row : rows) {
+            if (row[0] != null) {
+                double average = row[1] == null ? 0.0 : ((Number) row[1]).doubleValue();
+                long count = row[2] == null ? 0L : ((Number) row[2]).longValue();
+                values.put(((Number) row[0]).longValue(),
+                        new double[]{Math.round(average * 100.0) / 100.0, count});
+            }
+        }
+        return values;
     }
 
     /**
@@ -129,6 +217,7 @@ public class StoreService {
         }
 
         Store saved = storeRepository.save(store);
+        cacheInvalidator.invalidateCatalog();
         return toResponse(saved, countPublishedProducts(saved));
     }
 
@@ -150,6 +239,7 @@ public class StoreService {
                         "El vendedor no tiene tienda registrada"));
         store.setStatus(status);
         Store saved = storeRepository.save(store);
+        cacheInvalidator.invalidateCatalog();
         return toResponse(saved, countPublishedProducts(saved));
     }
 
@@ -218,6 +308,14 @@ public class StoreService {
             rating = average == null ? 0.0 : Math.round(average * 100.0) / 100.0;
             reviewCount = reviewRepository.countByProductSellerId(store.getSeller().getId());
         }
+        return toResponse(store, productCount, rating, reviewCount);
+    }
+
+    /**
+     * Convierte una tienda en su representación pública con métricas ya
+     * calculadas en lote.
+     */
+    private StoreResponse toResponse(Store store, long productCount, double rating, long reviewCount) {
         return new StoreResponse(
                 store.getId(),
                 store.getName(),

@@ -77,6 +77,19 @@ public interface ProductReviewRepository extends JpaRepository<ProductReview, Lo
             org.springframework.data.domain.Pageable pageable);
 
     /**
+     * Agrupa la media y el número de reseñas por vendedor en una sola consulta.
+     *
+     * @return filas con sellerId, media y total de reseñas.
+     */
+    @Query("""
+            select r.product.seller.id, avg(r.rating), count(r)
+            from ProductReview r
+            where r.product.seller is not null
+            group by r.product.seller.id
+            """)
+    List<Object[]> ratingSummaryBySeller();
+
+    /**
      * Elimina todas las reseñas de un producto.
      *
      * <p>Se usa al borrar un producto del catálogo para no violar la clave

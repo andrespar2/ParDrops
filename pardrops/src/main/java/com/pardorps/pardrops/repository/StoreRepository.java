@@ -89,6 +89,15 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     List<Store> findByStatusWithOwner(@Param("status") StoreStatus status);
 
     /**
+     * Devuelve las tiendas de un conjunto de vendedores en una sola consulta.
+     *
+     * @param sellerIds identificadores de vendedor.
+     * @return tiendas con su propietario cargado.
+     */
+    @Query("select s from Store s join fetch s.seller where s.seller.id in :sellerIds")
+    List<Store> findBySellerIdIn(@Param("sellerIds") List<Long> sellerIds);
+
+    /**
      * Cuenta las tiendas que están en un estado concreto.
      *
      * @param status estado de la tienda.

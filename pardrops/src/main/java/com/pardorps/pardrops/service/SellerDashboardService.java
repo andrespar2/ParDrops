@@ -3,7 +3,6 @@ package com.pardorps.pardrops.service;
 import com.pardorps.pardrops.dto.NotificationResponse;
 import com.pardorps.pardrops.dto.SellerDashboardResponse;
 import com.pardorps.pardrops.model.OrderStatus;
-import com.pardorps.pardrops.model.OrderSubOrder;
 import com.pardorps.pardrops.model.SellerBalance;
 import com.pardorps.pardrops.model.Store;
 import com.pardorps.pardrops.model.User;
@@ -65,20 +64,13 @@ public class SellerDashboardService {
      */
     @Transactional(readOnly = true)
     public SellerDashboardResponse loadSummary(User seller) {
-        List<OrderSubOrder> orders = subOrderRepository.findBySellerId(seller.getId());
-
-        long salesCount = orders.stream()
-                .filter(order -> order.getStatus() == OrderStatus.DELIVERED)
-                .count();
-
-        long pendingOrderCount = orders.stream()
-                .filter(order -> order.getStatus() != null && !order.getStatus().isTerminal())
-                .count();
-
-        double revenue = orders.stream()
-                .filter(order -> order.getStatus() != OrderStatus.CANCELLED)
-                .mapToDouble(order -> order.getTotal() == null ? 0.0 : order.getTotal())
-                .sum();
+        long orderCount = subOrderRepository.countBySellerId(seller.getId());
+        long salesCount = subOrderRepository.countBySellerIdAndStatus(
+                seller.getId(), OrderStatus.DELIVERED);
+        long pendingOrderCount = subOrderRepository.countPendingBySellerId(
+                seller.getId(), List.of(OrderStatus.DELIVERED, OrderStatus.CANCELLED));
+        double revenue = nz(subOrderRepository.sumNonCancelledBySellerId(
+                seller.getId(), OrderStatus.CANCELLED));
 
         long publishedProductCount =
                 productRepository.countPublishedBySellerId(seller.getId());
@@ -103,7 +95,7 @@ public class SellerDashboardService {
                 store == null ? null : store.getName(),
                 store == null ? null : store.getSlug(),
                 salesCount,
-                orders.size(),
+                orderCount,
                 pendingOrderCount,
                 publishedProductCount,
                 outOfStockCount,

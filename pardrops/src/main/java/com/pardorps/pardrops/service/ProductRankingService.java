@@ -265,11 +265,15 @@ public class ProductRankingService {
             return Map.of();
         }
         Map<String, Set<String>> categories = new HashMap<>();
-        for (Object[] row : productRepository.findCategoryPairsByProductIds(productIds)) {
-            String id = (String) row[0];
-            String category = row[1] == null ? "" : row[1].toString();
-            categories.computeIfAbsent(id, key -> new HashSet<>())
-                    .add(category.trim().toLowerCase(Locale.ROOT));
+        // Lotes de 500 para no superar límites de parámetros en PostgreSQL.
+        for (int start = 0; start < productIds.size(); start += 500) {
+            List<String> batch = productIds.subList(start, Math.min(start + 500, productIds.size()));
+            for (Object[] row : productRepository.findCategoryPairsByProductIds(batch)) {
+                String id = (String) row[0];
+                String category = row[1] == null ? "" : row[1].toString();
+                categories.computeIfAbsent(id, key -> new HashSet<>())
+                        .add(category.trim().toLowerCase(Locale.ROOT));
+            }
         }
         return categories;
     }

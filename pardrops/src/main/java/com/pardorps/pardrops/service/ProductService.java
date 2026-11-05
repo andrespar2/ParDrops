@@ -605,11 +605,85 @@ public class ProductService {
     }
 
     /**
-     * Publica u oculta un producto del catálogo (moderación del administrador).
+     * Publica u oculta varios productos en una sola operación.
      *
-     * <p>Al ocultar un producto se avisa al vendedor responsable y se deja
-     * constancia en la bitácora de auditoría, porque se trata de una acción del
-     * administrador que afecta a un tercero.</p>
+     * @param ids    productos seleccionados.
+     * @param active {@code true} para publicar, {@code false} para ocultar.
+     * @param admin  administrador que ejecuta la acción.
+     * @return resultado de la acción en masa.
+     */
+    @Transactional
+    public com.pardorps.pardrops.dto.BulkActionResponse bulkSetActive(
+            List<String> ids, boolean active, User admin) {
+        List<Product> products = loadSelectedProducts(ids);
+        int updated = 0;
+        int skipped = 0;
+        for (Product product : products) {
+            if (product.isActive() == active) {
+                skipped++;
+                continue;
+            }
+            product.setActive(active);
+            productRepository.save(product);
+            recordModeration(product, active, admin);
+            updated++;
+        }
+        if (updated > 0) {
+            invalidateLocalPublished();
+            cacheInvalidator.invalidateCatalog();
+            rankingService.invalidate();
+        }
+        return com.pardorps.pardrops.dto.BulkActionResponse.of(products.size(), updated, skipped);
+    }
+
+    /**
+     * Elimina varios productos y sus reseñas.
+     *
+     * @param ids   productos seleccionados.
+     * @param admin administrador que ejecuta la acción.
+     * @return resultado de la acción en masa.
+     */
+    @Transactional
+    public com.pardorps.pardrops.dto.BulkActionResponse bulkDelete(
+            List<String> ids, User admin) {
+        List<Product> products = loadSelectedProducts(ids);
+        for (Product product : products) {
+            productReviewRepository.deleteByProductId(product.getId());
+            productRepository.delete(product);
+        }
+        if (!products.isEmpty()) {
+            invalidateLocalPublished();
+            cacheInvalidator.invalidateCatalog();
+            rankingService.invalidate();
+        }
+        return com.pardorps.pardrops.dto.BulkActionResponse.of(
+                products.size(), products.size(), 0);
+    }
+
+    private List<Product> loadSelectedProducts(List<String> ids) {
+        List<String> normalized = ids.stream()
+                .filter(id -> id != null && !id.isBlank())
+                .distinct()
+                .toList();
+        if (normalized.isEmpty()) {
+            throw ApiException.badRequest("Selecciona al menos un producto");
+        }
+        if (normalized.size() > 100) {
+            throw ApiException.badRequest("Puedes actuar sobre 100 productos como máximo");
+        }
+        List<Product> products = productRepository.findAllById(normalized);
+        if (products.size() != normalized.size()) {
+            List<String> found = products.stream().map(Product::getId).toList();
+            List<String> missing = normalized.stream()
+                    .filter(id -> !found.contains(id))
+                    .toList();
+            throw ApiException.notFound("No se encontraron los productos: " + missing);
+        }
+        return products;
+    }
+
+    /**
+     * Establece la visibilidad de un producto.
      *
      * @param id     identificador del producto.
      * @param active {@code true} para publicarlo, {@code false} para ocultarlo.

@@ -98,6 +98,9 @@ public class AdminStoreProductService {
         }
 
         for (Store store : storeRepository.findAllWithOwner()) {
+            if (store.getStatus() == com.pardorps.pardrops.model.StoreStatus.DELETED) {
+                continue;
+            }
             Long sellerId = store.getSeller().getId();
             long total = totals.getOrDefault(sellerId, 0L);
             long active = published.getOrDefault(sellerId, 0L);

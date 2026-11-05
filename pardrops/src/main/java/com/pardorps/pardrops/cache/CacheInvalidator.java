@@ -83,6 +83,23 @@ public class CacheInvalidator {
         });
     }
 
+    /**
+     * Invalida las cachés de reseñas tras una moderación en masa.
+     */
+    public void invalidateReviews() {
+        afterCommit(() -> {
+            cacheService.evictByPrefix(CacheKeys.REVIEWS_PRODUCT);
+            cacheService.evictByPrefix(CacheKeys.REVIEWS_SELLER);
+            cacheService.evictByPrefix(CacheKeys.PRODUCTS_PUBLISHED);
+            cacheService.evictByPrefix(CacheKeys.PRODUCTS_FEED);
+            cacheService.evictByPrefix(CacheKeys.PRODUCTS_RANKING);
+            cacheService.evictByPrefix(CacheKeys.PRODUCTS_SEARCH);
+            cacheService.evictByPrefix(CacheKeys.PRODUCT_DETAIL);
+            cacheService.evictByPrefix(CacheKeys.STORES_PUBLIC);
+            cacheService.evictByPrefix(CacheKeys.STORES_SUMMARY);
+        });
+    }
+
     private void runSafely(Runnable action) {
         try {
             action.run();

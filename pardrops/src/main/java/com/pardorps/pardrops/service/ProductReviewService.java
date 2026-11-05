@@ -5,6 +5,7 @@ import com.pardorps.pardrops.cache.CacheKeys;
 import com.pardorps.pardrops.cache.CacheService;
 import com.pardorps.pardrops.dto.CreateReviewRequest;
 import com.pardorps.pardrops.dto.AdminReviewResponse;
+import com.pardorps.pardrops.dto.BulkActionResponse;
 import com.pardorps.pardrops.dto.ProductReviewResponse;
 import com.pardorps.pardrops.dto.ReviewEligibilityResponse;
 import com.pardorps.pardrops.dto.SellerReviewResponse;
@@ -315,6 +316,47 @@ public class ProductReviewService {
                 "PRODUCT_REVIEW",
                 String.valueOf(reviewId),
                 "Reseña eliminada del producto " + productName);
+    }
+
+    /**
+     * Elimina varias reseñas seleccionadas y recalcula las valoraciones.
+     *
+     * @param admin administrador que ejecuta la acción.
+     * @param ids   reseñas seleccionadas.
+     * @return resultado de la acción en masa.
+     */
+    @Transactional
+    public BulkActionResponse bulkDelete(User admin, java.util.List<Long> ids) {
+        java.util.List<Long> normalized = ids.stream()
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .toList();
+        if (normalized.isEmpty()) {
+            throw ApiException.badRequest("Selecciona al menos una reseña");
+        }
+        if (normalized.size() > 100) {
+            throw ApiException.badRequest("Puedes eliminar 100 reseñas como máximo");
+        }
+
+        java.util.List<ProductReview> reviews = productReviewRepository.findAllById(normalized);
+        if (reviews.size() != normalized.size()) {
+            java.util.List<Long> found = reviews.stream().map(ProductReview::getId).toList();
+            java.util.List<Long> missing = normalized.stream()
+                    .filter(id -> !found.contains(id))
+                    .toList();
+            throw ApiException.notFound("No se encontraron las reseñas: " + missing);
+        }
+
+        for (ProductReview review : reviews) {
+            Product product = review.getProduct();
+            productReviewRepository.delete(review);
+            refreshProductRating(product);
+            auditLogService.record(admin, AuditAction.REVIEW_DELETED,
+                    "PRODUCT_REVIEW", String.valueOf(review.getId()),
+                    "Reseña eliminada del producto " + product.getName());
+        }
+        cacheInvalidator.invalidateReviews();
+        return BulkActionResponse.of(reviews.size(), reviews.size(), 0);
     }
 
     /**

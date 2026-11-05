@@ -16,6 +16,9 @@
     @if (errorMessage()) {
       <div class="alert alert--error" role="alert">{{ errorMessage() }}</div>
     }
+    @if (okMessage()) {
+      <div class="alert alert--ok" role="status">{{ okMessage() }}</div>
+    }
 
     <!-- Selector de tiendas: no se cargan productos hasta elegir una. -->
     @if (!selectedStore()) {
@@ -283,6 +286,31 @@
         <button type="submit" class="btn-primary">Buscar</button>
       </form>
 
+      @if (selectedIds().size > 0) {
+        <div class="admin-bulk-bar">
+          <span class="admin-bulk-bar__info">
+            {{ selectedIds().size }} producto(s) seleccionado(s)
+          </span>
+          <div class="table__actions">
+            <button type="button" class="btn-ghost" [disabled]="bulkSaving()"
+                    (click)="bulkVisibility(true)">
+              Publicar seleccionados
+            </button>
+            <button type="button" class="btn-ghost" [disabled]="bulkSaving()"
+                    (click)="bulkVisibility(false)">
+              Ocultar seleccionados
+            </button>
+            <button type="button" class="btn-danger" [disabled]="bulkSaving()"
+                    (click)="bulkDelete()">
+              Eliminar seleccionados
+            </button>
+            <button type="button" class="btn-ghost" (click)="clearSelection()">
+              Limpiar selección
+            </button>
+          </div>
+        </div>
+      }
+
       @if (adminLoading()) {
         <p class="list__message">Cargando catálogo…</p>
       } @else if (adminPage(); as page) {
@@ -292,6 +320,10 @@
           <table class="table">
             <thead>
               <tr>
+                <th class="admin-checkbox-cell">
+                  <input type="checkbox" [checked]="allSelected()" (change)="toggleAll()"
+                         aria-label="Seleccionar todos los productos" />
+                </th>
                 <th>Imagen</th>
                 <th>Producto</th>
                 <th>Propietario</th>
@@ -304,6 +336,11 @@
             <tbody>
               @for (product of page.content; track product.id) {
                 <tr>
+                  <td class="admin-checkbox-cell">
+                    <input type="checkbox" [checked]="isSelected(product.id)"
+                           (change)="toggleSelection(product.id)"
+                           [attr.aria-label]="'Seleccionar ' + product.name" />
+                  </td>
                   <td>
                     <img [src]="product.imageUrl || ''" [alt]="product.name"
                          class="table__image" loading="lazy" decoding="async">

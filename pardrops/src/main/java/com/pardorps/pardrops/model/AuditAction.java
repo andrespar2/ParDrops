@@ -42,6 +42,12 @@ public enum AuditAction {
     /** Tienda reactivada por el administrador. */
     STORE_REACTIVATED,
 
+    /** Tienda eliminada lógicamente por el administrador. */
+    STORE_DELETED,
+
+    /** Tienda restaurada por el administrador. */
+    STORE_RESTORED,
+
     /** Cuenta creada con Google. */
     GOOGLE_ACCOUNT_CREATED,
 

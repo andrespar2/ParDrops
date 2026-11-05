@@ -35,6 +35,12 @@
     border: 1px solid #fecaca;
     color: var(--color-danger);
   }
+
+  &--ok {
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: var(--color-success);
+  }
 }
 
 .btn-primary,
@@ -324,4 +330,34 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background-color: var(--color-surface-secondary);
+}
+
+.admin-bulk-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-secondary);
+}
+
+.admin-bulk-bar__info {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.admin-checkbox-cell {
+  width: 36px;
+  text-align: center;
+
+  input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
 }

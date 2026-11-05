@@ -1,13 +1,18 @@
 package com.pardorps.pardrops.controller;
 
 import com.pardorps.pardrops.dto.AdminReviewResponse;
+import com.pardorps.pardrops.dto.BulkActionResponse;
+import com.pardorps.pardrops.dto.BulkIdsRequest;
 import com.pardorps.pardrops.model.User;
 import com.pardorps.pardrops.service.AuthService;
 import com.pardorps.pardrops.service.ProductReviewService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -53,5 +58,19 @@ public class AdminReviewController {
         User admin = authService.getCurrentUser();
         reviewService.deleteReview(admin, id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Elimina varias reseñas seleccionadas.
+     *
+     * @param request reseñas seleccionadas.
+     * @return 200 con el resultado de la acción en masa.
+     */
+    @PostMapping("/bulk-delete")
+    public ResponseEntity<BulkActionResponse> bulkDelete(
+            @Valid @RequestBody BulkIdsRequest request
+    ) {
+        User admin = authService.getCurrentUser();
+        return ResponseEntity.ok(reviewService.bulkDelete(admin, request.ids()));
     }
 }

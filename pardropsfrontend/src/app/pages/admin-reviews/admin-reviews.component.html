@@ -23,15 +23,41 @@
     <div class="admin-alert admin-alert--ok" role="status">{{ okMessage() }}</div>
   }
 
+  @if (selected().size > 0) {
+    <div class="admin-bulk-bar">
+      <span class="admin-bulk-bar__info">{{ selected().size }} reseña(s) seleccionada(s)</span>
+      <div class="admin-table__actions">
+        <button type="button" class="admin-btn admin-btn--danger"
+                [disabled]="bulkSaving()" (click)="bulkDelete()">
+          Eliminar seleccionadas
+        </button>
+        <button type="button" class="admin-btn" (click)="clearSelection()">
+          Limpiar selección
+        </button>
+      </div>
+    </div>
+  }
+
   @if (loading()) {
     <p class="admin-message">Cargando reseñas…</p>
   } @else if (reviews().length === 0) {
     <p class="admin-message">No hay reseñas registradas.</p>
   } @else {
+    <div class="admin-bulk-bar">
+      <label class="admin-form__check">
+        <input type="checkbox" [checked]="allSelected()" (change)="toggleAll()" />
+        Seleccionar todas las reseñas
+      </label>
+    </div>
     <div class="review-admin__list">
       @for (review of reviews(); track review.id) {
         <article class="review-admin">
           <header class="review-admin__header">
+            <label class="admin-form__check">
+              <input type="checkbox" [checked]="isSelected(review.id)"
+                     (change)="toggleSelection(review.id)"
+                     [attr.aria-label]="'Seleccionar reseña de ' + review.productName" />
+            </label>
             <div>
               <strong>{{ review.productName }}</strong>
               <span class="review-admin__author">por {{ review.customerName }}</span>

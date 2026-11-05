@@ -13,5 +13,14 @@ public enum StoreStatus {
     ACTIVE,
 
     /** Tienda suspendida: sus productos quedan ocultos del catálogo. */
-    SUSPENDED
+    SUSPENDED,
+
+    /**
+     * Tienda eliminada por el administrador.
+     *
+     * <p>Es una eliminación lógica: la tienda y su historial se conservan en la
+     * base de datos, pero deja de mostrarse en el marketplace y en los listados
+     * operativos. Puede restaurarse desde el panel.</p>
+     */
+    DELETED
 }

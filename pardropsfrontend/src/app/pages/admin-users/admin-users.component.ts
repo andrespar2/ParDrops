@@ -74,6 +74,12 @@ export class AdminUsersComponent {
   /** Tamaño de página. */
   private readonly pageSize = 10;
 
+  /** Cuentas seleccionadas para acciones en masa. */
+  public readonly selected = signal<Set<number>>(new Set<number>());
+
+  /** Indica si una acción en masa está en curso. */
+  public readonly bulkSaving = signal<boolean>(false);
+
   constructor() {
     this.reload();
   }
@@ -108,6 +114,7 @@ export class AdminUsersComponent {
     this.adminService.listUsers(filters).subscribe({
       next: page => {
         this.page.set(page);
+        this.selected.set(new Set());
         this.loading.set(false);
       },
       error: (error: HttpErrorResponse) => {
@@ -203,6 +210,93 @@ export class AdminUsersComponent {
           error.error?.message || 'No se pudo cambiar el estado de la cuenta.'
         );
         this.savingId.set(null);
+      }
+    });
+  }
+
+  /**
+   * Añade o quita una cuenta de la selección.
+   *
+   * @param userId identificador de la cuenta.
+   */
+  public toggleSelection(userId: number): void {
+    this.selected.update(current => {
+      const next = new Set(current);
+      if (next.has(userId)) next.delete(userId); else next.add(userId);
+      return next;
+    });
+  }
+
+  /** Indica si una cuenta está seleccionada. */
+  public isSelected(userId: number): boolean {
+    return this.selected().has(userId);
+  }
+
+  /** Indica si todas las cuentas seleccionables están marcadas. */
+  public allSelected(): boolean {
+    const selectable = (this.page()?.content ?? []).filter(user => user.role !== 'ADMIN');
+    return selectable.length > 0 && selectable.every(user => this.selected().has(user.id));
+  }
+
+  /** Limpia la selección. */
+  public clearSelection(): void {
+    this.selected.set(new Set());
+  }
+
+  /** Selecciona o deselecciona todas las cuentas visibles. */
+  public toggleAll(): void {
+    if (this.allSelected()) {
+      this.selected.set(new Set());
+      return;
+    }
+    this.selected.set(new Set(
+      (this.page()?.content ?? [])
+        .filter(user => user.role !== 'ADMIN')
+        .map(user => user.id)
+    ));
+  }
+
+  /** Indica si una cuenta se puede incluir en acciones en masa. */
+  public isSelectable(user: AdminUser): boolean {
+    return user.role !== 'ADMIN';
+  }
+
+  /**
+   * Suspende o reactiva las cuentas seleccionadas.
+   *
+   * @param status estado que se quiere aplicar.
+   */
+  public bulkChangeStatus(status: AdminUserStatus): void {
+    const ids = [...this.selected()];
+    if (ids.length === 0) return;
+
+    let reason: string | null = null;
+    if (status === 'SUSPENDED') {
+      reason = window.prompt('Motivo de la suspensión en masa (opcional):');
+    }
+    const action = status === 'SUSPENDED' ? 'suspender' : 'reactivar';
+    if (!window.confirm(`¿Seguro que quieres ${action} ${ids.length} cuenta(s) seleccionada(s)?`)) {
+      return;
+    }
+
+    this.bulkSaving.set(true);
+    this.errorMessage.set(null);
+    this.okMessage.set(null);
+    this.adminService.bulkChangeUserStatus(ids, status, reason).subscribe({
+      next: result => {
+        this.bulkSaving.set(false);
+        this.okMessage.set(
+          `${result.updated} cuenta(s) actualizada(s); ${result.skipped} omitida(s).`
+        );
+        this.selected.set(new Set());
+        this.closeDetail();
+        this.load();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.bulkSaving.set(false);
+        this.errorMessage.set(
+          error.error?.message || 'No se pudieron actualizar las cuentas seleccionadas.'
+        );
       }
     });
   }

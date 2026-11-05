@@ -120,7 +120,7 @@ public class ProductRankingService {
             @Value("${app.ranking.bayesian-prior-mean:4.0}") double priorMean,
             @Value("${app.ranking.bayesian-prior-weight:5}") double priorWeight,
             @Value("${app.ranking.novelty-half-life-days:30}") double halfLifeDays,
-            @Value("${app.ranking.aggregate-ttl-seconds:120}") long aggregateTtlSeconds
+            @Value("${app.ranking.aggregate-ttl-seconds:600}") long aggregateTtlSeconds
     ) {
         this.productRepository = productRepository;
         this.orderItemRepository = orderItemRepository;

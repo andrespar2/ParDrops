@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 6
     steps:
-      - name: Ping a /actuator/health
+      - name: Ping a /actuator/health y al feed
         run: |
           set -u
           for attempt in 1 2 3 4 5 6 7 8; do
@@ -31,9 +31,18 @@ jobs:
               --output /dev/null \
               --write-out "%{http_code}" \
               https://pardrops-api.onrender.com/actuator/health || true)
-            echo "Intento ${attempt}: HTTP ${code}"
+            echo "Intento ${attempt}: health HTTP ${code}"
             if [ "$code" = "200" ]; then
-              exit 0
+              feed_code=$(curl --silent --show-error --location \
+                --max-time 60 \
+                --user-agent "Mozilla/5.0 (compatible; ParDropsKeepAlive/1.0)" \
+                --output /dev/null \
+                --write-out "%{http_code}" \
+                "https://pardrops-api.onrender.com/api/products/feed?seed=keepalive&page=0&size=1" || true)
+              echo "Intento ${attempt}: feed HTTP ${feed_code}"
+              if [ "$feed_code" = "200" ]; then
+                exit 0
+              fi
             fi
             sleep 20
           done

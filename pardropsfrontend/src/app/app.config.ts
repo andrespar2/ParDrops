@@ -13,13 +13,14 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import { routes } from './app.routes';
 import { provideClientHydration } from '@angular/platform-browser';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { apiRetryInterceptor } from './core/interceptors/api-retry.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideClientHydration(),
-    // Cliente HTTP basado en fetch con el interceptor de autenticación.
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor]))
+    // Cliente HTTP basado en fetch con autenticación y reintentos de arranque.
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor, apiRetryInterceptor]))
   ]
 };

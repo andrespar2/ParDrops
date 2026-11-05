@@ -1,0 +1,41 @@
+name: Keep API awake
+
+# Render Free suspende el servicio tras unos minutos de inactividad y la
+# primera petición puede tardar 30-60 s o fallar con 502/503. Un ping cada
+# 5 minutos mantiene la instancia caliente sin cambiar de proveedor ni de plan.
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: keep-api-awake
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    name: Despertar API
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Ping a /actuator/health
+        run: |
+          set -u
+          for attempt in 1 2 3 4 5 6 7 8; do
+            code=$(curl --silent --show-error --location \
+              --max-time 45 \
+              --user-agent "Mozilla/5.0 (compatible; ParDropsKeepAlive/1.0)" \
+              --output /dev/null \
+              --write-out "%{http_code}" \
+              https://pardrops-api.onrender.com/actuator/health || true)
+            echo "Intento ${attempt}: HTTP ${code}"
+            if [ "$code" = "200" ]; then
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "La API no respondió después de los reintentos." >&2
+          exit 1

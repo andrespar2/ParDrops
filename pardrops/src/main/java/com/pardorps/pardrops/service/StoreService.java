@@ -128,17 +128,8 @@ public class StoreService {
                     if (sellerId == null) {
                         return toResponse(store, 0L, 0.0, 0L);
                     }
-                    double[] rating = ratings.get(sellerId);
-                    if (rating == null) {
-                        Double average = reviewRepository.averageRatingBySellerId(sellerId);
-                        double value = average == null ? 0.0 : Math.round(average * 100.0) / 100.0;
-                        rating = new double[]{value,
-                                reviewRepository.countByProductSellerId(sellerId)};
-                    }
-                    Long productCount = products.get(sellerId);
-                    if (productCount == null) {
-                        productCount = productRepository.countPublishedBySellerId(sellerId);
-                    }
+                    double[] rating = ratings.getOrDefault(sellerId, new double[]{0.0, 0L});
+                    long productCount = products.getOrDefault(sellerId, 0L);
                     return toResponse(store, productCount, rating[0], (long) rating[1]);
                 })
                 .toList();

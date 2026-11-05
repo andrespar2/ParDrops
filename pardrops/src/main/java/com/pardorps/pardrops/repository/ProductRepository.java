@@ -24,6 +24,15 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     Optional<Product> findBySlug(String slug);
 
     /**
+     * Busca un producto por su slug cargando también su vendedor.
+     *
+     * @param slug slug a buscar.
+     * @return el producto si existe.
+     */
+    @Query("select p from Product p left join fetch p.seller where p.slug = :slug")
+    Optional<Product> findBySlugWithSeller(@Param("slug") String slug);
+
+    /**
      * Comprueba si ya existe un producto con ese slug.
      *
      * @param slug slug a comprobar.
@@ -220,11 +229,32 @@ public interface ProductRepository extends JpaRepository<Product, String> {
      * @return productos ordenados por media y número de reseñas.
      */
     @Query("""
-            select p from Product p
+            select p from Product p left join fetch p.seller
             where p.active = true and p.reviewCount > 0
             order by p.rating desc, p.reviewCount desc
             """)
     List<Product> findTopRated(Pageable pageable);
+
+    /**
+     * Busca productos por una colección de identificadores cargando su
+     * vendedor en la misma consulta.
+     *
+     * @param ids identificadores.
+     * @return productos encontrados.
+     */
+    @Query("select distinct p from Product p left join fetch p.seller where p.id in :ids")
+    List<Product> findByIdInWithSeller(@Param("ids") java.util.Collection<String> ids);
+
+    /**
+     * Cuenta los productos por categoría en una sola consulta agregada.
+     *
+     * @return filas con nombre de categoría y total de productos.
+     */
+    @Query("""
+            select c, count(distinct p) from Product p join p.categories c
+            group by c
+            """)
+    List<Object[]> countGroupedByCategory();
 
     /**
      * Busca productos por una colección de identificadores.

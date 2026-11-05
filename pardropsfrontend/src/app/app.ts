@@ -9,10 +9,11 @@
  * @version 1.0.0
  */
 
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './shared/components/header/header.component';
 import { FooterComponent } from './shared/components/footer/footer.component';
+import { ConnectionStatusService } from './core/services/connection-status.service';
 
 @Component({
   selector: 'app-root',
@@ -24,4 +25,7 @@ import { FooterComponent } from './shared/components/footer/footer.component';
 export class App {
   /** Título de la aplicación */
   public readonly title = 'ParDrops';
+
+  /** Aviso de reconexión cuando el backend está despertando. */
+  public readonly connection = inject(ConnectionStatusService);
 }

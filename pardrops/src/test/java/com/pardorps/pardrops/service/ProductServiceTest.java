@@ -292,7 +292,7 @@ class ProductServiceTest {
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any()))
                 .thenReturn(List.<Object[]>of(new Object[]{"prod-1", 5L}));
-        when(productRepository.findByIdIn(List.of("prod-1"))).thenReturn(List.of(product));
+        when(productRepository.findByIdInWithSeller(List.of("prod-1"))).thenReturn(List.of(product));
         when(productRepository.findTopRated(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(List.of(product));
         when(storeRepository.findAll()).thenReturn(List.of());

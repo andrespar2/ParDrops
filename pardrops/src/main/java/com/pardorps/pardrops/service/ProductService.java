@@ -30,11 +30,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -65,6 +67,22 @@ public class ProductService {
     private final Duration productTtl;
     private final Duration catalogTtl;
     private final Duration adminTtl;
+
+    /** Tiempo de vida de la copia local del catálogo publicado. */
+    private static final Duration LOCAL_CATALOG_TTL = Duration.ofSeconds(60);
+
+    /** Máximo de productos que se mantienen en memoria para el feed. */
+    private static final int LOCAL_CATALOG_MAX = 2_000;
+
+    /** Copia local del catálogo publicado para evitar consultas repetidas. */
+    private final AtomicReference<LocalPublished> localPublished = new AtomicReference<>();
+
+    /** Catálogo local con su fecha de expiración. */
+    private record LocalPublished(Instant expiresAt, Map<String, Product> byId, List<Product> products) {
+        boolean valid() {
+            return Instant.now().isBefore(expiresAt);
+        }
+    }
 
     /**
      * @param productRepository      acceso a los productos.
@@ -149,7 +167,7 @@ public class ProductService {
         List<String> ids = rows.stream()
                 .map(row -> (String) row[0])
                 .toList();
-        Map<String, Product> byId = productRepository.findByIdIn(ids).stream()
+        Map<String, Product> byId = productRepository.findByIdInWithSeller(ids).stream()
                 .collect(java.util.stream.Collectors.toMap(Product::getId, product -> product));
         List<Product> bestSellers = ids.stream()
                 .map(byId::get)
@@ -188,15 +206,45 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public List<Product> findPublished() {
+        LocalPublished local = localPublished.get();
+        if (local != null && local.valid()) {
+            return local.products();
+        }
+
         var cached = cacheService.getList(CacheKeys.PRODUCTS_PUBLISHED, Product.class);
         if (cached.isPresent()) {
-            return cached.get();
+            List<Product> products = cached.get();
+            rememberPublished(products);
+            return products;
         }
+
         List<Product> products = productRepository.findPublished();
         enrich(products);
         List<Product> immutable = List.copyOf(products);
+        rememberPublished(immutable);
         cacheService.put(CacheKeys.PRODUCTS_PUBLISHED, immutable, catalogTtl);
         return immutable;
+    }
+
+    /**
+     * Guarda una copia local acotada del catálogo publicado.
+     */
+    private void rememberPublished(List<Product> products) {
+        if (products.size() > LOCAL_CATALOG_MAX) {
+            localPublished.set(null);
+            return;
+        }
+        Map<String, Product> byId = products.stream()
+                .collect(Collectors.toMap(Product::getId, product -> product, (first, second) -> first));
+        localPublished.set(new LocalPublished(
+                Instant.now().plus(LOCAL_CATALOG_TTL), Map.copyOf(byId), List.copyOf(products)));
+    }
+
+    /**
+     * Invalida la copia local del catálogo tras una escritura.
+     */
+    private void invalidateLocalPublished() {
+        localPublished.set(null);
     }
 
     /**
@@ -252,15 +300,29 @@ public class ProductService {
         int to = Math.min(from + safeSize, ordered.size());
         List<String> pageIds = ordered.subList(from, to);
 
-        Map<String, Product> byId = pageIds.isEmpty()
-                ? Map.of()
-                : productRepository.findByIdIn(pageIds).stream()
-                        .collect(Collectors.toMap(Product::getId, product -> product));
+        Map<String, Product> byId;
+        boolean alreadyEnriched;
+        if (pageIds.isEmpty()) {
+            byId = Map.of();
+            alreadyEnriched = true;
+        } else if (total <= LOCAL_CATALOG_MAX) {
+            // Catálogo pequeño/mediano: una sola carga completa se reutiliza
+            // durante 60 s y evita consultas por página y N+1 de vendedores.
+            byId = findPublished().stream()
+                    .collect(Collectors.toMap(Product::getId, product -> product, (first, second) -> first));
+            alreadyEnriched = true;
+        } else {
+            byId = productRepository.findByIdInWithSeller(pageIds).stream()
+                    .collect(Collectors.toMap(Product::getId, product -> product));
+            alreadyEnriched = false;
+        }
         List<Product> content = pageIds.stream()
                 .map(byId::get)
                 .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toCollection(ArrayList::new));
-        enrich(content);
+        if (!alreadyEnriched) {
+            enrich(content);
+        }
 
         int totalPages = total == 0 ? 0 : (int) Math.ceil((double) total / safeSize);
         ProductFeedResponse response = new ProductFeedResponse(
@@ -286,7 +348,7 @@ public class ProductService {
                 .distinct()
                 .limit(60)
                 .toList();
-        List<Product> products = productRepository.findByIdIn(limited).stream()
+        List<Product> products = productRepository.findByIdInWithSeller(limited).stream()
                 .filter(this::isAvailable)
                 .toList();
         enrich(products);
@@ -451,7 +513,7 @@ public class ProductService {
         if (cached.isPresent()) {
             return cached.get();
         }
-        Product product = productRepository.findBySlug(slug)
+        Product product = productRepository.findBySlugWithSeller(slug)
                 .orElseThrow(() -> ApiException.notFound("Producto no encontrado: " + slug));
         enrich(List.of(product));
         cacheService.put(key, product, productTtl);
@@ -480,6 +542,7 @@ public class ProductService {
         product.setSeller(owner);
         Product saved = productRepository.save(product);
         enrich(List.of(saved));
+        invalidateLocalPublished();
         cacheInvalidator.invalidateCatalog();
         rankingService.invalidate();
         return saved;
@@ -511,6 +574,7 @@ public class ProductService {
         applyRequest(product, request);
         Product saved = productRepository.save(product);
         enrich(List.of(saved));
+        invalidateLocalPublished();
         cacheInvalidator.invalidateCatalog();
         rankingService.invalidate();
         return saved;
@@ -535,6 +599,7 @@ public class ProductService {
         // violar la clave extranjera de la tabla de reseñas.
         productReviewRepository.deleteByProductId(id);
         productRepository.deleteById(id);
+        invalidateLocalPublished();
         cacheInvalidator.invalidateCatalog();
         rankingService.invalidate();
     }
@@ -567,6 +632,7 @@ public class ProductService {
             recordModeration(saved, active, admin);
         }
 
+        invalidateLocalPublished();
         cacheInvalidator.invalidateCatalog();
         rankingService.invalidate();
         return saved;

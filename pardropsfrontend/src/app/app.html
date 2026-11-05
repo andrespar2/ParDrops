@@ -5,6 +5,13 @@
 
 <app-header></app-header>
 
+@if (connection.wakingUp()) {
+  <div class="connection-banner" role="status" aria-live="polite">
+    <span class="connection-banner__dot" aria-hidden="true"></span>
+    El servidor está despertando. Estamos reintentando automáticamente…
+  </div>
+}
+
 <main class="main-content">
   <router-outlet></router-outlet>
 </main>

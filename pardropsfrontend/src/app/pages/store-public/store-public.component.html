@@ -107,7 +107,7 @@
                 @if (review.images?.length) {
                   <div class="store-review__images">
                     @for (image of review.images; track image) {
-                      <img [src]="image" alt="Imagen de la reseña" />
+                      <img [src]="image" alt="Imagen de la reseña" loading="lazy" decoding="async" />
                     }
                   </div>
                 }

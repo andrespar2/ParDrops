@@ -2,9 +2,12 @@
 
 ## Configuración
 
-- **Motor**: H2 (archivo)
-- **URL**: `jdbc:h2:file:./data/pardropsdb;DB_CLOSE_ON_EXIT=FALSE`
+- **Desarrollo**: H2 (archivo) en `./data/pardropsdb`.
+- **Producción**: PostgreSQL 18 en Neon (`aws-sa-east-1`).
+- **URL local**: `jdbc:h2:file:./data/pardropsdb;DB_CLOSE_ON_EXIT=FALSE`
 - **DDL**: `spring.jpa.hibernate.ddl-auto=update` (crea/actualiza esquema automáticamente)
+- **Índices**: `DatabaseIndexMigration` crea 26 índices idempotentes al arrancar
+  (filtros por vendedor, categoría, estado, fecha, pedidos y reseñas).
 - **Consola H2**: `http://localhost:8080/h2-console` (habilitada en desarrollo)
 - **Datos**: carpeta `./data/` excluida del repositorio (`.gitignore`)
 

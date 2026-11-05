@@ -92,7 +92,7 @@
       <section class="results">
         <div class="results__header">
           <p class="results__count">
-            Mostrando {{ filteredProducts().length }} producto{{ filteredProducts().length !== 1 ? 's' : '' }}
+            Mostrando {{ totalElements() }} producto{{ totalElements() !== 1 ? 's' : '' }}
           </p>
         </div>
 
@@ -102,6 +102,13 @@
               <app-product-card [product]="product"></app-product-card>
             }
           </div>
+          @if (hasMore()) {
+            <div class="results__more">
+              <button type="button" class="results__more-button" (click)="loadMore()">
+                Ver más productos
+              </button>
+            </div>
+          }
         } @else {
           <div class="empty-state">
             <h2 class="empty-state__title">No se encontraron productos</h2>

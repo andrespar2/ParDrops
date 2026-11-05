@@ -2,7 +2,6 @@ package com.pardorps.pardrops.service;
 
 import com.pardorps.pardrops.dto.SellerDashboardResponse;
 import com.pardorps.pardrops.model.OrderStatus;
-import com.pardorps.pardrops.model.OrderSubOrder;
 import com.pardorps.pardrops.model.Role;
 import com.pardorps.pardrops.model.Store;
 import com.pardorps.pardrops.model.StoreStatus;
@@ -45,11 +44,13 @@ class SellerDashboardServiceTest {
         User seller = seller(1L);
         Store store = store(seller);
 
-        when(subOrderRepository.findBySellerId(1L)).thenReturn(List.of(
-                subOrder(OrderStatus.DELIVERED, 100.0),
-                subOrder(OrderStatus.PREPARED, 80.0),
-                subOrder(OrderStatus.CANCELLED, 50.0)
-        ));
+        when(subOrderRepository.countBySellerId(1L)).thenReturn(3L);
+        when(subOrderRepository.countBySellerIdAndStatus(1L, OrderStatus.DELIVERED))
+                .thenReturn(1L);
+        when(subOrderRepository.countPendingBySellerId(1L,
+                List.of(OrderStatus.DELIVERED, OrderStatus.CANCELLED))).thenReturn(1L);
+        when(subOrderRepository.sumNonCancelledBySellerId(1L, OrderStatus.CANCELLED))
+                .thenReturn(180.0);
         when(productRepository.countPublishedBySellerId(1L)).thenReturn(6L);
         when(productRepository.countOutOfStockBySellerId(1L)).thenReturn(2L);
         when(storeRepository.findBySellerId(1L)).thenReturn(Optional.of(store));
@@ -72,7 +73,13 @@ class SellerDashboardServiceTest {
     void queriesOnlyTheAuthenticatedSeller() {
         User seller = seller(7L);
 
-        when(subOrderRepository.findBySellerId(7L)).thenReturn(List.of());
+        when(subOrderRepository.countBySellerId(7L)).thenReturn(0L);
+        when(subOrderRepository.countBySellerIdAndStatus(7L, OrderStatus.DELIVERED))
+                .thenReturn(0L);
+        when(subOrderRepository.countPendingBySellerId(7L,
+                List.of(OrderStatus.DELIVERED, OrderStatus.CANCELLED))).thenReturn(0L);
+        when(subOrderRepository.sumNonCancelledBySellerId(7L, OrderStatus.CANCELLED))
+                .thenReturn(0.0);
         when(productRepository.countPublishedBySellerId(7L)).thenReturn(0L);
         when(productRepository.countOutOfStockBySellerId(7L)).thenReturn(0L);
         when(storeRepository.findBySellerId(7L)).thenReturn(Optional.empty());
@@ -84,7 +91,7 @@ class SellerDashboardServiceTest {
         assertNull(summary.storeName());
         assertNull(summary.storeSlug());
         assertTrue(summary.recentNotifications().isEmpty());
-        verify(subOrderRepository).findBySellerId(7L);
+        verify(subOrderRepository).countBySellerId(7L);
         verify(productRepository).countPublishedBySellerId(7L);
         verify(productRepository).countOutOfStockBySellerId(7L);
     }
@@ -106,7 +113,7 @@ class SellerDashboardServiceTest {
     }
 
     /**
-     * Construye la tienda de un vendedor.
+     * Construye una tienda de prueba.
      *
      * @param seller vendedor propietario.
      * @return la tienda lista para usar.
@@ -119,19 +126,5 @@ class SellerDashboardServiceTest {
         store.setSlug("estilo-urbano");
         store.setStatus(StoreStatus.ACTIVE);
         return store;
-    }
-
-    /**
-     * Construye una parte de pedido con su estado e importe.
-     *
-     * @param status estado del subpedido.
-     * @param total  importe total.
-     * @return el subpedido listo para usar.
-     */
-    private OrderSubOrder subOrder(OrderStatus status, double total) {
-        OrderSubOrder subOrder = new OrderSubOrder();
-        subOrder.setStatus(status);
-        subOrder.setTotal(total);
-        return subOrder;
     }
 }

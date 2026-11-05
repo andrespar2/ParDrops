@@ -14,13 +14,13 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ProductService } from '../../core/services/product.service';
 import { AdminService } from '../../core/services/admin.service';
 import { ProductRequest } from '../../core/models/product-request.model';
 import { Product, ProductImage, ProductVariant } from '../../core/models/product.model';
 import {
   AdminCategory,
   AdminProduct,
+  AdminStoreProductSummary,
   AdminStoreStatus,
   AdminUserStatus,
   PageResponse
@@ -38,20 +38,34 @@ import { VariantEditorComponent } from '../../shared/components/variant-editor/v
 })
 export class AdminProductsComponent {
   private readonly fb = inject(FormBuilder);
-  private readonly productService = inject(ProductService);
   private readonly adminService = inject(AdminService);
-
-  /** Lista de productos (signal del servicio), usada por el formulario. */
-  public readonly products = this.productService.products;
-
-  /** Indica si el catálogo está cargándose. */
-  public readonly loading = this.productService.loading;
 
   /** Página del catálogo global devuelta por el panel de administración. */
   public readonly adminPage = signal<PageResponse<AdminProduct> | null>(null);
 
   /** Indica si el catálogo global se está cargando. */
   public readonly adminLoading = signal<boolean>(true);
+
+  /** Tiendas con contadores de productos. */
+  public readonly storePage = signal<PageResponse<AdminStoreProductSummary> | null>(null);
+
+  /** Indica si se están cargando las tiendas. */
+  public readonly storeLoading = signal<boolean>(true);
+
+  /** Tienda seleccionada (nulo = catálogo propio). */
+  public readonly selectedStore = signal<AdminStoreProductSummary | null>(null);
+
+  /** Búsqueda de tiendas. */
+  public storeSearch = '';
+
+  /** Orden de tiendas. */
+  public storeSort: 'name' | 'products' = 'name';
+
+  /** Página actual del listado de tiendas. */
+  private storePageIndex = 0;
+
+  /** Tamaño de página del listado de tiendas. */
+  private readonly storePageSize = 12;
 
   /** Categorías disponibles para asignar al producto. */
   public readonly categories = signal<AdminCategory[]>([]);
@@ -112,11 +126,80 @@ export class AdminProductsComponent {
    * Carga el catálogo global y las categorías al abrir el panel.
    */
   constructor() {
-    this.loadAdminProducts();
+    this.loadProductStores();
     this.adminService.listCategories(true).subscribe({
       next: categories => this.categories.set(categories),
       error: () => this.categories.set([])
     });
+  }
+
+  /**
+   * Carga las tiendas con sus contadores agregados.
+   */
+  public loadProductStores(): void {
+    this.storeLoading.set(true);
+    this.adminService.listProductStores(
+      this.storeSearch,
+      this.storeSort,
+      this.storePageIndex,
+      this.storePageSize
+    ).subscribe({
+      next: page => {
+        this.storePage.set(page);
+        this.storeLoading.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.errorMessage.set(
+          error.error?.message || 'No se pudieron cargar las tiendas.'
+        );
+        this.storeLoading.set(false);
+      }
+    });
+  }
+
+  /**
+   * Busca tiendas desde la primera página.
+   */
+  public reloadStores(): void {
+    this.storePageIndex = 0;
+    this.loadProductStores();
+  }
+
+  /**
+   * Cambia la página del listado de tiendas.
+   *
+   * @param delta desplazamiento (-1 o 1).
+   */
+  public changeStorePage(delta: number): void {
+    const total = this.storePage()?.totalPages ?? 0;
+    const next = this.storePageIndex + delta;
+    if (next < 0 || next >= total) return;
+    this.storePageIndex = next;
+    this.loadProductStores();
+  }
+
+  /**
+   * Selecciona una tienda y consulta solo su catálogo.
+   *
+   * @param store tienda seleccionada.
+   */
+  public selectStore(store: AdminStoreProductSummary): void {
+    this.selectedStore.set(store);
+    this.currentPage = 0;
+    this.search = '';
+    this.activeFilter = '';
+    this.loadAdminProducts();
+  }
+
+  /**
+   * Vuelve al selector de tiendas.
+   */
+  public backToStores(): void {
+    this.selectedStore.set(null);
+    this.adminPage.set(null);
+    this.formOpen.set(false);
+    this.editingId.set(null);
+    this.loadProductStores();
   }
 
   /**
@@ -130,6 +213,9 @@ export class AdminProductsComponent {
 
     this.adminService.listProducts({
       search: this.search,
+      sellerId: this.selectedStore()
+        ? (this.selectedStore()!.storeId === null ? -1 : this.selectedStore()!.sellerId)
+        : null,
       active: this.activeFilter === '' ? null : this.activeFilter === 'true',
       page: this.currentPage,
       size: this.pageSize
@@ -192,7 +278,7 @@ export class AdminProductsComponent {
     this.adminService.changeProductVisibility(product.id, !product.active).subscribe({
       next: () => {
         this.loadAdminProducts();
-        this.productService.loadProducts();
+        this.loadProductStores();
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage.set(
@@ -217,7 +303,7 @@ export class AdminProductsComponent {
     this.adminService.deleteProduct(product.id).subscribe({
       next: () => {
         this.loadAdminProducts();
-        this.productService.loadProducts();
+        this.loadProductStores();
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage.set(
@@ -249,17 +335,14 @@ export class AdminProductsComponent {
    * @returns {void}
    */
   public editFromAdmin(adminProduct: AdminProduct): void {
-    const full = this.products().find(product => product.id === adminProduct.id);
-
-    if (!full) {
-      this.errorMessage.set(
-        'Este producto está oculto: publícalo antes de editarlo para no perder ' +
-        'sus imágenes ni su descripción.'
-      );
-      return;
-    }
-
-    this.openEdit(full);
+    this.adminService.getFullProduct(adminProduct.id).subscribe({
+      next: product => this.openEdit(product),
+      error: (error: HttpErrorResponse) => {
+        this.errorMessage.set(
+          error.error?.message || 'No se pudo cargar el producto para editarlo.'
+        );
+      }
+    });
   }
 
   /**
@@ -507,7 +590,7 @@ export class AdminProductsComponent {
         this.saving.set(false);
         this.cancel();
         this.loadAdminProducts();
-        this.productService.loadProducts();
+        this.loadProductStores();
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage.set(
@@ -531,7 +614,7 @@ export class AdminProductsComponent {
     this.adminService.deleteProduct(product.id).subscribe({
       next: () => {
         this.loadAdminProducts();
-        this.productService.loadProducts();
+        this.loadProductStores();
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage.set(error.error?.message || 'No se pudo eliminar el producto.');

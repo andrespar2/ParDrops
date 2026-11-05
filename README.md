@@ -80,6 +80,7 @@ ParDrops está desplegado en producción con tres servicios gratuitos:
 - Decisiones técnicas y registro de la migración H2 → PostgreSQL: [`docs/despliegue-produccion.md`](docs/despliegue-produccion.md).
 - Plantilla de variables de entorno: [`.env.example`](.env.example).
 - Correo transaccional con Brevo: [`docs/correo-brevo.md`](docs/correo-brevo.md).
+- Optimización integral (caché, índices, ranking, paneles): [`docs/optimizacion.md`](docs/optimizacion.md).
 
 ---
 

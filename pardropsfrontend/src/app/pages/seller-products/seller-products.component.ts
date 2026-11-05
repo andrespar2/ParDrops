@@ -15,6 +15,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SellerService } from '../../core/services/seller.service';
+import { ProductService } from '../../core/services/product.service';
 import { Product, ProductImage, ProductVariant } from '../../core/models/product.model';
 import { ProductRequest } from '../../core/models/product-request.model';
 import { ImageUploaderComponent } from '../../shared/components/image-uploader/image-uploader.component';
@@ -30,6 +31,7 @@ import { formatCurrency } from '../../core/config/commerce.config';
 })
 export class SellerProductsComponent {
   private readonly sellerService = inject(SellerService);
+  private readonly productService = inject(ProductService);
   private readonly fb = inject(FormBuilder);
 
   /** Productos del vendedor (publicados y ocultos). */
@@ -289,6 +291,7 @@ export class SellerProductsComponent {
       next: () => {
         this.successMessage.set(
           editingId ? 'Producto actualizado.' : 'Producto creado.');
+        this.productService.clearLocalCache();
         this.saving.set(false);
         this.formOpen.set(false);
         this.editingId.set(null);
@@ -315,6 +318,7 @@ export class SellerProductsComponent {
       next: updated => {
         this.products.update(list =>
           list.map(item => (item.id === updated.id ? updated : item)));
+        this.productService.clearLocalCache();
         this.successMessage.set(
           active ? 'Producto publicado.' : 'Producto oculto.');
       },
@@ -340,6 +344,7 @@ export class SellerProductsComponent {
     this.sellerService.deleteProduct(product.id).subscribe({
       next: () => {
         this.products.update(list => list.filter(item => item.id !== product.id));
+        this.productService.clearLocalCache();
         this.successMessage.set('Producto eliminado.');
       },
       error: (error: HttpErrorResponse) => {

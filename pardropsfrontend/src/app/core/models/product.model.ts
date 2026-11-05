@@ -151,3 +151,32 @@ export interface ProductHighlights {
   /** Productos con mejor valoraci�n. */
   topRated: Product[];
 }
+
+/**
+ * Filtros del catálogo paginado.
+ *
+ * @interface ProductFeedFilters
+ */
+export interface ProductFeedFilters {
+  search?: string;
+  category?: string | null;
+  minPrice?: number | null;
+  maxPrice?: number | null;
+  onlyNew?: boolean;
+  onlySale?: boolean;
+  sort?: 'relevance' | 'price-asc' | 'price-desc' | 'recent';
+}
+
+/**
+ * Página del catálogo con la semilla de distribución.
+ *
+ * @interface ProductFeedPage
+ */
+export interface ProductFeedPage {
+  content: Product[];
+  seed: string;
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}

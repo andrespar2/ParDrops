@@ -108,9 +108,12 @@ public class MediaController {
      * @return la respuesta con la URL absoluta del fichero.
      */
     private MediaAssetResponse toResponse(MediaAsset asset) {
-        String url = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path(asset.getPublicPath())
-                .toUriString();
+        String publicPath = asset.getPublicPath();
+        String url = publicPath.startsWith("http://") || publicPath.startsWith("https://")
+                ? publicPath
+                : ServletUriComponentsBuilder.fromCurrentContextPath()
+                        .path(publicPath)
+                        .toUriString();
         return new MediaAssetResponse(
                 asset.getId(),
                 url,

@@ -94,6 +94,18 @@ public class AdminProductController {
     }
 
     /**
+     * Devuelve el producto completo para el editor del panel, incluidas sus
+     * imágenes y variantes, aunque esté oculto.
+     *
+     * @param id identificador del producto.
+     * @return 200 con la entidad completa.
+     */
+    @GetMapping("/{id}/full")
+    public ResponseEntity<Product> full(@PathVariable String id) {
+        return ResponseEntity.ok(productService.findFullForAdmin(id));
+    }
+
+    /**
      * Crea un producto de la plataforma (sin vendedor asignado).
      *
      * @param request datos del producto.

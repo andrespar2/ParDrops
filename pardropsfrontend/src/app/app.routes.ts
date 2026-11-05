@@ -117,6 +117,11 @@ export const routes: Routes = [
         title: 'ParDrops - Pedidos de mi tienda'
       },
       {
+        path: 'resenas',
+        loadComponent: () => import('./pages/seller-reviews/seller-reviews.component').then(m => m.SellerReviewsComponent),
+        title: 'ParDrops - Reseñas de mi tienda'
+      },
+      {
         path: 'saldo',
         loadComponent: () => import('./pages/seller-balance/seller-balance.component').then(m => m.SellerBalanceComponent),
         title: 'ParDrops - Mi saldo'

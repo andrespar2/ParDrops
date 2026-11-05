@@ -2,8 +2,9 @@
  * @file src/app/pages/home/home.component.ts
  * @description Escaparate de productos con filtros y carga progresiva.
  *
- * La portada muestra el catálogo como contenido principal: buscador en la
- * cabecera, filtros en una barra lateral plegable y una cuadrícula amplia.
+ * Los filtros se resuelven en el servidor para no descargar todo el catálogo.
+ * La primera página usa una semilla de distribución nueva en cada recarga y
+ * las páginas siguientes conservan esa misma semilla.
  */
 
 import { Component, computed, inject, signal } from '@angular/core';
@@ -12,7 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ProductService } from '../../core/services/product.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Product } from '../../core/models/product.model';
+import { ProductFeedFilters } from '../../core/models/product.model';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 import { CategoryService } from '../../core/services/category.service';
 import { Category } from '../../core/models/category.model';
@@ -53,6 +54,9 @@ export class HomeComponent {
   /** Error de carga, si existe. */
   public readonly error = this.productService.error;
 
+  /** Total de resultados del filtro actual. */
+  public readonly totalElements = this.productService.totalElements;
+
   /** Indica si el usuario puede publicar productos. */
   public readonly isSeller = this.authService.isSeller;
 
@@ -70,9 +74,6 @@ export class HomeComponent {
 
   /** Filtro rápido de la URL (nuevos, ofertas). */
   public readonly quickFilter = signal<'all' | 'nuevos' | 'ofertas'>('all');
-
-  /** Número de productos visibles (carga progresiva). */
-  public readonly visibleCount = signal<number>(12);
 
   /** Estado de la barra lateral en escritorio. */
   public readonly sidebarOpen = signal<boolean>(true);
@@ -101,60 +102,19 @@ export class HomeComponent {
     () => !this.categorySearch().trim() && this.categories().length > 8
   );
 
-
   /** Categorías destacadas para la portada. */
   public readonly featuredCategories = computed(() =>
     this.categories().filter(category => category.featured && !category.collection).slice(0, 8)
   );
 
-  /** Catálogo filtrado y ordenado. */
-  public readonly filtered = computed(() => {
-    const term = this.searchTerm().trim().toLowerCase();
-    const category = this.category();
-    const range = this.priceRange();
-    const quick = this.quickFilter();
-
-    let result: Product[] = this.products();
-
-    if (term) {
-      result = result.filter(product =>
-        product.name.toLowerCase().includes(term) ||
-        (product.description ?? '').toLowerCase().includes(term) ||
-        (product.tags ?? []).some(tag => tag.toLowerCase().includes(term))
-      );
-    }
-
-    if (category !== 'all') {
-      result = result.filter(product =>
-        (product.categories ?? []).some(name => name.toLowerCase() === category.toLowerCase())
-      );
-    }
-
-    result = result.filter(product => this.matchesRange(product.price, range));
-
-    if (quick === 'nuevos') {
-      result = result.filter(product => product.isNew);
-    } else if (quick === 'ofertas') {
-      result = result.filter(product => product.onSale);
-    }
-
-    const sort = this.sort();
-    const sorted = [...result];
-    if (sort === 'price-asc') {
-      sorted.sort((a, b) => a.price - b.price);
-    } else if (sort === 'price-desc') {
-      sorted.sort((a, b) => b.price - a.price);
-    } else if (sort === 'recent') {
-      sorted.sort((a, b) => String(b.createdAt ?? '').localeCompare(String(a.createdAt ?? '')));
-    }
-    return sorted;
-  });
+  /** Productos ya filtrados y ordenados por el servidor. */
+  public readonly filtered = computed(() => this.products());
 
   /** Productos que se muestran en la cuadrícula. */
-  public readonly visible = computed(() => this.filtered().slice(0, this.visibleCount()));
+  public readonly visible = computed(() => this.products());
 
-  /** Indica si quedan productos por mostrar. */
-  public readonly hasMore = computed(() => this.visibleCount() < this.filtered().length);
+  /** Indica si quedan páginas por mostrar. */
+  public readonly hasMore = this.productService.hasMore;
 
   constructor() {
     this.categoryService.list().subscribe({
@@ -167,15 +127,13 @@ export class HomeComponent {
       this.category.set(params.get('category') ?? 'all');
       const filter = (params.get('filter') ?? '').toLowerCase();
       this.quickFilter.set(filter === 'nuevos' || filter === 'ofertas' ? filter : 'all');
-      this.visibleCount.set(12);
+      this.reload();
     });
   }
 
-  /**
-   * Aplica la búsqueda escrita y reinicia la paginación.
-   */
+  /** Aplica la búsqueda escrita. */
   public applySearch(): void {
-    this.visibleCount.set(12);
+    this.reload();
   }
 
   /**
@@ -185,7 +143,7 @@ export class HomeComponent {
    */
   public selectCategory(name: string): void {
     this.category.set(name);
-    this.visibleCount.set(12);
+    this.reload();
   }
 
   /**
@@ -195,7 +153,7 @@ export class HomeComponent {
    */
   public selectRange(range: PriceRange): void {
     this.priceRange.set(range);
-    this.visibleCount.set(12);
+    this.reload();
   }
 
   /**
@@ -205,12 +163,12 @@ export class HomeComponent {
    */
   public selectSort(value: string): void {
     this.sort.set(value as SortOption);
-    this.visibleCount.set(12);
+    this.reload();
   }
 
-  /** Muestra más productos. */
+  /** Carga la siguiente página conservando la semilla. */
   public loadMore(): void {
-    this.visibleCount.update(count => count + 12);
+    this.productService.loadMore();
   }
 
   /** Limpia todos los filtros. */
@@ -220,12 +178,12 @@ export class HomeComponent {
     this.priceRange.set('all');
     this.quickFilter.set('all');
     this.sort.set('relevance');
-    this.visibleCount.set(12);
+    this.reload();
   }
 
-  /** Recarga el catálogo desde la API. */
+  /** Recarga el catálogo con una distribución nueva. */
   public retry(): void {
-    this.productService.loadProducts();
+    this.productService.reloadDistribution(this.buildFilters());
   }
 
   /** Alterna la barra lateral. */
@@ -242,24 +200,39 @@ export class HomeComponent {
     return formatCurrency(value);
   }
 
-  /**
-   * Comprueba si un precio cae en el rango seleccionado.
-   *
-   * @param price precio del producto.
-   * @param range rango seleccionado.
-   */
-  private matchesRange(price: number, range: PriceRange): boolean {
+  private reload(): void {
+    this.productService.loadProducts(this.buildFilters());
+  }
+
+  private buildFilters(): ProductFeedFilters {
+    const range = this.priceRange();
+    const filters: ProductFeedFilters = {
+      search: this.searchTerm().trim(),
+      category: this.category() === 'all' ? null : this.category(),
+      sort: this.sort()
+    };
+
     switch (range) {
       case 'lt100':
-        return price < 100_000;
+        filters.maxPrice = 99_999;
+        break;
       case '100-300':
-        return price >= 100_000 && price < 300_000;
+        filters.minPrice = 100_000;
+        filters.maxPrice = 299_999;
+        break;
       case '300-1000':
-        return price >= 300_000 && price < 1_000_000;
+        filters.minPrice = 300_000;
+        filters.maxPrice = 999_999;
+        break;
       case 'gt1000':
-        return price >= 1_000_000;
+        filters.minPrice = 1_000_001;
+        break;
       default:
-        return true;
+        break;
     }
+
+    if (this.quickFilter() === 'nuevos') filters.onlyNew = true;
+    if (this.quickFilter() === 'ofertas') filters.onlySale = true;
+    return filters;
   }
 }

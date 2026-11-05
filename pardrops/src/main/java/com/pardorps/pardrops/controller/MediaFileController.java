@@ -57,7 +57,8 @@ public class MediaFileController {
 
         return ResponseEntity.ok()
                 .contentType(mediaType)
-                .cacheControl(CacheControl.maxAge(Duration.ofDays(30)).cachePublic())
+                .eTag(storedName)
+                .cacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable())
                 .body(file.getContent());
     }
 }

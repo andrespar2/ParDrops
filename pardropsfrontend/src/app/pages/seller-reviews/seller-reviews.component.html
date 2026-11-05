@@ -1,0 +1,91 @@
+<!--
+  @file src/app/pages/seller-reviews/seller-reviews.component.html
+  @description Reseñas del vendedor en modo solo lectura.
+-->
+
+<main class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <h1 class="admin-page__title">Calificaciones y reseñas</h1>
+      <p class="admin-page__subtitle">
+        Consulta lo que opinan los compradores de tus productos. Solo lectura:
+        la moderación corresponde a la administración.
+      </p>
+    </div>
+    <button type="button" class="admin-btn" (click)="load()">Actualizar</button>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="admin-alert admin-alert--error" role="alert">{{ errorMessage() }}</div>
+  }
+
+  <section class="admin-cards">
+    <article class="admin-card">
+      <p class="admin-card__label">Valoración media</p>
+      <p class="admin-card__value">{{ average() }} / 5</p>
+      <p class="admin-card__hint">{{ reviews().length }} reseña(s) recibida(s)</p>
+    </article>
+    <article class="admin-card">
+      <p class="admin-card__label">Reseñas de 5 estrellas</p>
+      <p class="admin-card__value">
+        {{ reviews().filter(review => review.rating === 5).length }}
+      </p>
+      <p class="admin-card__hint">Opiniones positivas</p>
+    </article>
+    <article class="admin-card">
+      <p class="admin-card__label">Reseñas de 1 a 2 estrellas</p>
+      <p class="admin-card__value">
+        {{ reviews().filter(review => review.rating <= 2).length }}
+      </p>
+      <p class="admin-card__hint">Requieren revisar el producto o el envío</p>
+    </article>
+  </section>
+
+  <div class="admin-filters">
+    <div class="admin-field">
+      <label for="review-rating">Filtrar por estrellas</label>
+      <select id="review-rating" class="admin-select" [(ngModel)]="ratingFilter">
+        <option [ngValue]="0">Todas</option>
+        <option [ngValue]="5">5 estrellas</option>
+        <option [ngValue]="4">4 estrellas</option>
+        <option [ngValue]="3">3 estrellas</option>
+        <option [ngValue]="2">2 estrellas</option>
+        <option [ngValue]="1">1 estrella</option>
+      </select>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="admin-message">Cargando reseñas…</p>
+  } @else if (filtered().length === 0) {
+    <p class="admin-message">No hay reseñas para el filtro seleccionado.</p>
+  } @else {
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Valoración</th>
+          <th>Comentario</th>
+          <th>Cliente</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (review of filtered(); track review.id) {
+          <tr>
+            <td>{{ review.productName }}</td>
+            <td>
+              <span class="review-stars" [attr.aria-label]="stars(review.rating)">
+                {{ stars(review.rating) }}
+              </span>
+              <span class="admin-badge">{{ review.rating }}/5</span>
+            </td>
+            <td class="review-comment">{{ review.comment }}</td>
+            <td>{{ review.authorName }}</td>
+            <td>{{ formatDate(review.createdAt) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</main>

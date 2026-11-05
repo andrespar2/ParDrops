@@ -1,9 +1,13 @@
 package com.pardorps.pardrops.service;
 
+import com.pardorps.pardrops.cache.CacheInvalidator;
+import com.pardorps.pardrops.cache.CacheKeys;
+import com.pardorps.pardrops.cache.CacheService;
 import com.pardorps.pardrops.dto.CreateReviewRequest;
 import com.pardorps.pardrops.dto.AdminReviewResponse;
 import com.pardorps.pardrops.dto.ProductReviewResponse;
 import com.pardorps.pardrops.dto.ReviewEligibilityResponse;
+import com.pardorps.pardrops.dto.SellerReviewResponse;
 import com.pardorps.pardrops.exception.ApiException;
 import com.pardorps.pardrops.model.AuditAction;
 import com.pardorps.pardrops.model.OrderStatus;
@@ -35,23 +39,46 @@ public class ProductReviewService {
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
     private final AuditLogService auditLogService;
+    private final CacheService cacheService;
+    private final CacheInvalidator cacheInvalidator;
 
     /**
      * @param productReviewRepository acceso a las reseñas.
      * @param productRepository       acceso al catálogo (valoración media).
      * @param orderRepository         acceso a los pedidos (validación de compra).
      * @param auditLogService         bitácora de auditoría.
+     * @param cacheService            caché de reseñas públicas.
+     * @param cacheInvalidator        invalidación tras confirmar la escritura.
      */
+    @org.springframework.beans.factory.annotation.Autowired
     public ProductReviewService(
             ProductReviewRepository productReviewRepository,
             ProductRepository productRepository,
             OrderRepository orderRepository,
-            AuditLogService auditLogService
+            AuditLogService auditLogService,
+            CacheService cacheService,
+            CacheInvalidator cacheInvalidator
     ) {
         this.productReviewRepository = productReviewRepository;
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
         this.auditLogService = auditLogService;
+        this.cacheService = cacheService;
+        this.cacheInvalidator = cacheInvalidator;
+    }
+
+    /**
+     * Constructor de compatibilidad para pruebas unitarias.
+     */
+    ProductReviewService(
+            ProductReviewRepository productReviewRepository,
+            ProductRepository productRepository,
+            OrderRepository orderRepository,
+            AuditLogService auditLogService
+    ) {
+        this(productReviewRepository, productRepository, orderRepository, auditLogService,
+                new com.pardorps.pardrops.cache.NoOpCacheService(),
+                new CacheInvalidator(new com.pardorps.pardrops.cache.NoOpCacheService()));
     }
 
     /**
@@ -64,10 +91,19 @@ public class ProductReviewService {
     @Transactional(readOnly = true)
     public List<ProductReviewResponse> getReviews(String productId) {
         requireProduct(productId);
-        return productReviewRepository.findByProductIdOrderByCreatedAtDesc(productId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        String key = CacheKeys.REVIEWS_PRODUCT + productId;
+        var cached = cacheService.getList(key, ProductReviewResponse.class);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
+        List<ProductReviewResponse> reviews =
+                productReviewRepository.findByProductIdOrderByCreatedAtDesc(productId)
+                        .stream()
+                        .map(this::toResponse)
+                        .toList();
+        List<ProductReviewResponse> immutable = List.copyOf(reviews);
+        cacheService.put(key, immutable, java.time.Duration.ofSeconds(180));
+        return immutable;
     }
 
     /**
@@ -144,6 +180,7 @@ public class ProductReviewService {
         }
 
         refreshProductRating(product);
+        cacheInvalidator.invalidateProductReviews(productId);
         return toResponse(saved);
     }
 
@@ -206,13 +243,50 @@ public class ProductReviewService {
     }
 
     /**
+     * Devuelve las reseñas de los productos de un vendedor en modo lectura.
+     *
+     * <p>El filtro se aplica siempre con el identificador del usuario
+     * autenticado. No existe una variante de escritura para vendedores.</p>
+     *
+     * @param seller vendedor autenticado.
+     * @return reseñas recientes de sus productos.
+     */
+    @Transactional(readOnly = true)
+    public List<SellerReviewResponse> findForSeller(User seller) {
+        if (seller == null) {
+            throw ApiException.unauthorized("Debes iniciar sesión como vendedor");
+        }
+        String key = CacheKeys.REVIEWS_SELLER + seller.getId();
+        var cached = cacheService.getList(key, SellerReviewResponse.class);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
+        List<SellerReviewResponse> reviews = productReviewRepository
+                .findRecentBySellerId(seller.getId(),
+                        org.springframework.data.domain.PageRequest.of(0, 100))
+                .stream()
+                .map(review -> new SellerReviewResponse(
+                        review.getId(),
+                        review.getProduct().getId(),
+                        review.getProduct().getName(),
+                        review.getRating(),
+                        review.getComment(),
+                        review.getUser() == null ? "Cliente" : review.getUser().getFullName(),
+                        review.getImages() == null ? List.of() : List.copyOf(review.getImages()),
+                        review.getCreatedAt()))
+                .toList();
+        List<SellerReviewResponse> immutable = List.copyOf(reviews);
+        cacheService.put(key, immutable, java.time.Duration.ofSeconds(180));
+        return immutable;
+    }
+
+    /**
      * Lista todas las reseñas para la moderación del administrador.
      *
      * @return reseñas de la más reciente a la más antigua.
      */
     @Transactional(readOnly = true)
-    public List<AdminReviewResponse> findAllForAdmin() {
-        return productReviewRepository.findAll(
+    public List<AdminReviewResponse> findAllForAdmin() {        return productReviewRepository.findAll(
                         org.springframework.data.domain.Sort.by(
                                 org.springframework.data.domain.Sort.Direction.DESC, "createdAt"))
                 .stream()
@@ -234,6 +308,7 @@ public class ProductReviewService {
         String productName = product.getName();
         productReviewRepository.delete(review);
         refreshProductRating(product);
+        cacheInvalidator.invalidateProductReviews(product.getId());
         auditLogService.record(
                 admin,
                 AuditAction.REVIEW_DELETED,

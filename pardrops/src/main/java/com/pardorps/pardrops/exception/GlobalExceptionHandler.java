@@ -7,10 +7,13 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +27,8 @@ import java.util.Map;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
      * Maneja los errores de negocio controlados.
@@ -118,15 +123,35 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Responde 405 cuando el rol tiene acceso a la ruta pero no existe la
+     * operación solicitada. Es el caso, por ejemplo, de un vendedor que
+     * intenta publicar o modificar una reseña: no hay endpoint de escritura.
+     *
+     * @param exception excepción de método no soportado.
+     * @return respuesta 405 sin detalles internos.
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(
+            HttpRequestMethodNotSupportedException exception) {
+        return ResponseEntity
+                .status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(ErrorResponse.of("La operación solicitada no está permitida."));
+    }
+
+    /**
      * Red de seguridad para cualquier error no previsto.
+     *
+     * <p>El detalle se registra en el servidor, pero nunca se envía al cliente:
+     * así no se exponen rutas, SQL ni credenciales accidentales.</p>
      *
      * @param exception excepción inesperada.
      * @return respuesta 500 con un mensaje genérico.
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception exception) {
+        log.error("Error no controlado en la API", exception);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of("Ha ocurrido un error inesperado: " + exception.getMessage()));
+                .body(ErrorResponse.of("Ha ocurrido un error inesperado."));
     }
 }

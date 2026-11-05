@@ -85,7 +85,7 @@
         <div class="results__summary">
           <h1 class="results__title">Productos</h1>
           <p class="results__count">
-            {{ filtered().length }} {{ filtered().length === 1 ? 'resultado' : 'resultados' }}
+            {{ totalElements() }} {{ totalElements() === 1 ? 'resultado' : 'resultados' }}
             @if (quickFilter() !== 'all') {
               · {{ quickFilter() === 'nuevos' ? 'recién publicado' : 'ofertas' }}
             }
@@ -130,7 +130,7 @@
           <p>No pudimos cargar el catálogo.</p>
           <button type="button" class="results__action" (click)="retry()">Reintentar</button>
         </div>
-      } @else if (filtered().length === 0) {
+      } @else if (totalElements() === 0) {
         <div class="results__empty">
           <p>No encontramos productos con esos filtros.</p>
           <button type="button" class="results__action" (click)="clearFilters()">Ver todo el catálogo</button>

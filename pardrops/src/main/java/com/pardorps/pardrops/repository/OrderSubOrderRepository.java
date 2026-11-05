@@ -58,6 +58,41 @@ public interface OrderSubOrderRepository extends JpaRepository<OrderSubOrder, Lo
     long countBySellerId(Long sellerId);
 
     /**
+     * Cuenta las partes de un vendedor en un estado concreto.
+     *
+     * @param sellerId identificador del vendedor.
+     * @param status   estado a contar.
+     * @return número de partes en ese estado.
+     */
+    long countBySellerIdAndStatus(Long sellerId, OrderStatus status);
+
+    /**
+     * Cuenta las partes pendientes de un vendedor sin traerlas a memoria.
+     *
+     * @param sellerId identificador del vendedor.
+     * @param statuses estados que no cuentan como pendientes.
+     * @return número de partes pendientes.
+     */
+    @Query("select count(s) from OrderSubOrder s "
+            + "where s.seller.id = :sellerId and s.status not in :statuses")
+    long countPendingBySellerId(
+            @Param("sellerId") Long sellerId,
+            @Param("statuses") List<OrderStatus> statuses);
+
+    /**
+     * Suma los importes no cancelados de un vendedor.
+     *
+     * @param sellerId  identificador del vendedor.
+     * @param cancelled estado cancelado.
+     * @return importe total no cancelado.
+     */
+    @Query("select coalesce(sum(s.total), 0) from OrderSubOrder s "
+            + "where s.seller.id = :sellerId and s.status <> :cancelled")
+    Double sumNonCancelledBySellerId(
+            @Param("sellerId") Long sellerId,
+            @Param("cancelled") OrderStatus cancelled);
+
+    /**
      * Suma el importe de las partes de pedido de un vendedor.
      *
      * @param sellerId identificador del vendedor.

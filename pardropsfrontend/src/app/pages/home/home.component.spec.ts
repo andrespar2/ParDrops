@@ -14,7 +14,7 @@ function product(id: string, price: number, category: string, isNew = false): Pr
     id,
     name: `Producto ${id}`,
     slug: `producto-${id}`,
-    description: 'DescripciÃ³n de prueba',
+    description: 'Descripción de prueba',
     price,
     currency: 'COP',
     stock: 5,
@@ -36,17 +36,29 @@ function product(id: string, price: number, category: string, isNew = false): Pr
 
 describe('HomeComponent', () => {
   let products: Product[];
+  let loadProductsCalls: Array<Record<string, unknown>>;
+  let loadMoreCalls: number;
 
   beforeEach(() => {
     products = Array.from({ length: 20 }, (_, index) =>
       product(`p${index}`, 10_000 * (index + 1), index % 2 === 0 ? 'Ropa' : 'Calzado', index < 3),
     );
+    loadProductsCalls = [];
+    loadMoreCalls = 0;
 
     const productService = {
       products: signal(products),
       loading: signal(false),
       error: signal<string | null>(null),
-      loadProducts: () => undefined,
+      totalElements: signal(products.length),
+      hasMore: signal(true),
+      loadProducts: (filters: Record<string, unknown>) => {
+        loadProductsCalls.push(filters ?? {});
+      },
+      loadMore: () => {
+        loadMoreCalls++;
+      },
+      reloadDistribution: () => undefined
     };
 
     TestBed.configureTestingModule({
@@ -59,51 +71,47 @@ describe('HomeComponent', () => {
     });
   });
 
-  it('muestra como mÃ¡ximo 12 productos y permite cargar mÃ¡s', () => {
+  it('muestra los productos de la página y delega la carga de más', () => {
     const fixture = TestBed.createComponent(HomeComponent);
     const component = fixture.componentInstance;
 
-    expect(component.visible().length).toBe(12);
+    expect(component.visible().length).toBe(20);
     expect(component.hasMore()).toBe(true);
 
     component.loadMore();
 
-    expect(component.visible().length).toBe(20);
-    expect(component.hasMore()).toBe(false);
+    expect(loadMoreCalls).toBe(1);
   });
 
-  it('filtra por categorÃ­a y por precio', () => {
+  it('envía la categoría y el rango de precio al servidor', () => {
     const fixture = TestBed.createComponent(HomeComponent);
     const component = fixture.componentInstance;
 
     component.selectCategory('Ropa');
-    expect(component.filtered().every(item => item.categories.includes('Ropa'))).toBe(true);
+    expect(loadProductsCalls.at(-1)?.['category']).toBe('Ropa');
 
-    component.selectCategory('all');
     component.selectRange('lt100');
-    expect(component.filtered().every(item => item.price < 100_000)).toBe(true);
+    expect(loadProductsCalls.at(-1)?.['maxPrice']).toBe(99_999);
   });
 
-  it('ordena por precio ascendente y descendente', () => {
+  it('envía el orden seleccionado al servidor', () => {
     const fixture = TestBed.createComponent(HomeComponent);
     const component = fixture.componentInstance;
 
     component.selectSort('price-asc');
-    const ascending = component.filtered().map(item => item.price);
-    expect([...ascending].sort((a, b) => a - b)).toEqual(ascending);
+    expect(loadProductsCalls.at(-1)?.['sort']).toBe('price-asc');
 
     component.selectSort('price-desc');
-    const descending = component.filtered().map(item => item.price);
-    expect([...descending].sort((a, b) => b - a)).toEqual(descending);
+    expect(loadProductsCalls.at(-1)?.['sort']).toBe('price-desc');
   });
 
-  it('limita la carga inicial a 12 aunque haya mÃ¡s resultados', () => {
+  it('usa el total del servidor para los filtros rápidos', () => {
     const fixture = TestBed.createComponent(HomeComponent);
     const component = fixture.componentInstance;
 
-    component.selectCategory('Calzado');
-    expect(component.filtered().length).toBe(10);
-    expect(component.visible().length).toBe(10);
+    component.clearFilters();
+
+    expect(loadProductsCalls.at(-1)?.['onlyNew']).toBeUndefined();
+    expect(component.totalElements()).toBe(20);
   });
 });
-

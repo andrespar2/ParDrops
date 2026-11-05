@@ -1,0 +1,18 @@
+/**
+ * @file src/app/pages/seller-reviews/seller-reviews.component.scss
+ * @description Estilos de la consulta de reseñas del vendedor.
+ */
+
+@use '../admin/admin-shared' as *;
+
+.review-stars {
+  color: #f59e0b;
+  letter-spacing: 1px;
+  margin-right: var(--space-2);
+}
+
+.review-comment {
+  max-width: 420px;
+  white-space: normal;
+  line-height: var(--line-height-snug);
+}

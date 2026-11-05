@@ -11,8 +11,10 @@ import com.pardorps.pardrops.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Servicio con la lógica del catálogo de categorías.
@@ -58,7 +60,21 @@ public class CategoryService {
         List<Category> categories = activeOnly
                 ? categoryRepository.findByActiveTrueOrderByNameAsc()
                 : categoryRepository.findAllByOrderByNameAsc();
-        return categories.stream().map(this::toResponse).toList();
+        Map<String, Long> productCounts = new HashMap<>();
+        List<Object[]> grouped = productRepository.countGroupedByCategory();
+        if (grouped != null) {
+            for (Object[] row : grouped) {
+                if (row[0] != null) {
+                    productCounts.put(row[0].toString().toLowerCase(Locale.ROOT),
+                            row[1] == null ? 0L : ((Number) row[1]).longValue());
+                }
+            }
+        }
+        return categories.stream()
+                .map(category -> toResponse(category,
+                        productCounts.getOrDefault(
+                                category.getName().toLowerCase(Locale.ROOT), 0L)))
+                .toList();
     }
 
     /**
@@ -301,6 +317,17 @@ public class CategoryService {
      * @return la categoría lista para enviar al cliente.
      */
     private CategoryResponse toResponse(Category category) {
+        return toResponse(category, productRepository.countByCategory(category.getName()));
+    }
+
+    /**
+     * Convierte una categoría usando un contador ya calculado en lote.
+     *
+     * @param category     categoría a convertir.
+     * @param productCount número de productos que la usan.
+     * @return la categoría lista para enviar al cliente.
+     */
+    private CategoryResponse toResponse(Category category, long productCount) {
         return new CategoryResponse(
                 category.getId(),
                 category.getName(),
@@ -313,7 +340,7 @@ public class CategoryService {
                 category.getSortOrder(),
                 category.getImageUrl(),
                 category.isCollection(),
-                productRepository.countByCategory(category.getName()),
+                productCount,
                 category.getCreatedAt(),
                 category.getUpdatedAt()
         );

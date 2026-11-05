@@ -98,7 +98,10 @@ class StoreServiceTest {
         Store suspended = store(2L, user(2L), "urbano-suspendido", StoreStatus.SUSPENDED);
 
         when(storeRepository.findAllByOrderByNameAsc()).thenReturn(List.of(active, suspended));
-        when(productRepository.countPublishedBySellerId(1L)).thenReturn(3L);
+        when(productRepository.countPublishedGroupedBySeller())
+                .thenReturn(List.<Object[]>of(new Object[]{1L, 3L}));
+        when(reviewRepository.ratingSummaryBySeller())
+                .thenReturn(List.<Object[]>of(new Object[]{1L, 4.5, 8L}));
 
         List<StoreResponse> stores = storeService.findAllActive();
 

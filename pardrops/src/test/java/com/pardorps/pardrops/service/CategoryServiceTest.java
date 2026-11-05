@@ -185,6 +185,24 @@ class CategoryServiceTest {
      * @param name nombre de la categoría.
      * @return la categoría lista para usar.
      */
+    @Test
+    @DisplayName("Lista categorías con un solo agregado de productos")
+    void listsCategoriesWithGroupedCounts() {
+        Category ropa = category(1L, "Ropa");
+        Category calzado = category(2L, "Calzado");
+        when(categoryRepository.findByActiveTrueOrderByNameAsc())
+                .thenReturn(List.of(ropa, calzado));
+        when(productRepository.countGroupedByCategory())
+                .thenReturn(List.<Object[]>of(new Object[]{"ropa", 3L}));
+
+        List<CategoryResponse> categories = categoryService.findAll(true);
+
+        assertEquals(2, categories.size());
+        assertEquals(3L, categories.get(0).productCount());
+        assertEquals(0L, categories.get(1).productCount());
+        verify(productRepository, never()).countByCategory(any());
+    }
+
     private Category category(Long id, String name) {
         Category category = new Category();
         category.setId(id);

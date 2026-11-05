@@ -9,7 +9,9 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Siembra el árbol de categorías del marketplace general.
@@ -119,15 +121,20 @@ public class CatalogCategorySeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        Map<String, Category> existing = new HashMap<>();
+        for (Category category : categoryRepository.findAll()) {
+            existing.put(category.getSlug(), category);
+        }
+
         int created = 0;
         for (Seed seed : MAIN) {
-            created += seedCategory(seed, false);
+            created += seedCategory(seed, false, existing);
         }
         for (Seed seed : SUBCATEGORIES) {
-            created += seedCategory(seed, false);
+            created += seedCategory(seed, false, existing);
         }
         for (Seed seed : COLLECTIONS) {
-            created += seedCategory(seed, true);
+            created += seedCategory(seed, true, existing);
         }
 
         if (created > 0) {
@@ -136,21 +143,20 @@ public class CatalogCategorySeeder implements CommandLineRunner {
     }
 
     /**
-     * Crea la categoría si no existe.
+     * Crea la categoría si no existe, usando el mapa cargado al arrancar.
      *
      * @param seed       definición.
      * @param collection indica si es una colección.
+     * @param existing   categorías existentes por slug.
      * @return 1 si se creó, 0 si ya existía.
      */
-    private int seedCategory(Seed seed, boolean collection) {
-        Category category = categoryRepository.findBySlug(seed.slug()).orElse(null);
+    private int seedCategory(Seed seed, boolean collection, Map<String, Category> existing) {
+        Category category = existing.get(seed.slug());
         if (category != null) {
             return 0;
         }
 
-        Category parent = seed.parentSlug() == null
-                ? null
-                : categoryRepository.findBySlug(seed.parentSlug()).orElse(null);
+        Category parent = seed.parentSlug() == null ? null : existing.get(seed.parentSlug());
 
         Category created = new Category();
         created.setName(seed.name());
@@ -160,7 +166,8 @@ public class CatalogCategorySeeder implements CommandLineRunner {
         created.setSortOrder(seed.order());
         created.setCollection(collection);
         created.setParent(parent);
-        categoryRepository.save(created);
+        Category saved = categoryRepository.save(created);
+        existing.put(saved.getSlug(), saved);
         return 1;
     }
 }

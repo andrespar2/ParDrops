@@ -32,6 +32,12 @@ export class AdminReviewsComponent implements OnInit {
   /** Mensaje de éxito. */
   public readonly okMessage = signal<string | null>(null);
 
+  /** Reseñas seleccionadas para eliminación en masa. */
+  public readonly selected = signal<Set<number>>(new Set<number>());
+
+  /** Indica si una acción en masa está en curso. */
+  public readonly bulkSaving = signal<boolean>(false);
+
   public ngOnInit(): void {
     this.load();
   }
@@ -47,6 +53,7 @@ export class AdminReviewsComponent implements OnInit {
     this.adminService.listReviews().subscribe({
       next: reviews => {
         this.reviews.set(reviews);
+        this.selected.set(new Set());
         this.loading.set(false);
       },
       error: (error: HttpErrorResponse) => {
@@ -73,6 +80,70 @@ export class AdminReviewsComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage.set(error.error?.message || 'No se pudo eliminar la reseña.');
+      }
+    });
+  }
+
+  /** Añade o quita una reseña de la selección. */
+  public toggleSelection(id: number): void {
+    this.selected.update(current => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  /** Indica si una reseña está seleccionada. */
+  public isSelected(id: number): boolean {
+    return this.selected().has(id);
+  }
+
+  /** Indica si todas las reseñas visibles están seleccionadas. */
+  public allSelected(): boolean {
+    const list = this.reviews();
+    return list.length > 0 && list.every(review => this.selected().has(review.id));
+  }
+
+  /** Limpia la selección. */
+  public clearSelection(): void {
+    this.selected.set(new Set());
+  }
+
+  /** Selecciona o deselecciona todas las reseñas visibles. */
+  public toggleAll(): void {
+    if (this.allSelected()) {
+      this.selected.set(new Set());
+      return;
+    }
+    this.selected.set(new Set(this.reviews().map(review => review.id)));
+  }
+
+  /** Elimina en masa las reseñas seleccionadas. */
+  public bulkDelete(): void {
+    const ids = [...this.selected()];
+    if (ids.length === 0) return;
+    if (typeof window !== 'undefined'
+        && !window.confirm(`¿Eliminar ${ids.length} reseña(s) seleccionada(s)?`)) {
+      return;
+    }
+
+    this.bulkSaving.set(true);
+    this.errorMessage.set(null);
+    this.okMessage.set(null);
+    this.adminService.bulkDeleteReviews(ids).subscribe({
+      next: result => {
+        this.bulkSaving.set(false);
+        this.okMessage.set(
+          `${result.updated} reseña(s) eliminada(s) y valoraciones actualizadas.`
+        );
+        this.selected.set(new Set());
+        this.load();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.bulkSaving.set(false);
+        this.errorMessage.set(
+          error.error?.message || 'No se pudieron eliminar las reseñas seleccionadas.'
+        );
       }
     });
   }

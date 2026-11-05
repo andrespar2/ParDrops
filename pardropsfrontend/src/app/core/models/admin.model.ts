@@ -18,7 +18,7 @@ export type AdminRole = 'CUSTOMER' | 'SELLER' | 'ADMIN';
 export type AdminUserStatus = 'ACTIVE' | 'SUSPENDED';
 
 /** Estado de la tienda de un vendedor. */
-export type AdminStoreStatus = 'ACTIVE' | 'SUSPENDED' | 'PENDING';
+export type AdminStoreStatus = 'ACTIVE' | 'SUSPENDED' | 'PENDING' | 'DELETED';
 
 /**
  * Página de resultados devuelta por los endpoints paginados.
@@ -36,6 +36,22 @@ export interface PageResponse<T> {
   totalElements: number;
   /** Total de páginas disponibles. */
   totalPages: number;
+}
+
+/**
+ * Resultado de una acción en masa.
+ *
+ * @interface BulkActionResponse
+ */
+export interface BulkActionResponse {
+  /** Elementos solicitados. */
+  requested: number;
+  /** Elementos modificados. */
+  updated: number;
+  /** Elementos omitidos. */
+  skipped: number;
+  /** Errores puntuales. */
+  errors: string[];
 }
 
 /**

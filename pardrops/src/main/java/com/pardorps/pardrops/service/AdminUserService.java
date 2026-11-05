@@ -1,8 +1,10 @@
 package com.pardorps.pardrops.service;
 
+import com.pardorps.pardrops.cache.CacheInvalidator;
 import com.pardorps.pardrops.dto.AdminSellerResponse;
 import com.pardorps.pardrops.dto.AdminUserDetailResponse;
 import com.pardorps.pardrops.dto.AdminUserResponse;
+import com.pardorps.pardrops.dto.BulkActionResponse;
 import com.pardorps.pardrops.dto.PageResponse;
 import com.pardorps.pardrops.dto.UserStatusRequest;
 import com.pardorps.pardrops.exception.ApiException;
@@ -28,6 +30,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -55,6 +58,8 @@ public class AdminUserService {
     private final NotificationService notificationService;
     private final SellerBalanceRepository balanceRepository;
     private final SellerApplicationRepository sellerApplicationRepository;
+    private final CacheInvalidator cacheInvalidator;
+    private final ProductRankingService rankingService;
 
     /**
      * @param userRepository       acceso a los usuarios.
@@ -66,6 +71,7 @@ public class AdminUserService {
      * @param balanceRepository    saldo y comisiones del vendedor.
      * @param sellerApplicationRepository solicitudes para los datos legales.
      */
+    @org.springframework.beans.factory.annotation.Autowired
     public AdminUserService(
             UserRepository userRepository,
             StoreRepository storeRepository,
@@ -74,7 +80,9 @@ public class AdminUserService {
             AuditLogService auditLogService,
             NotificationService notificationService,
             SellerBalanceRepository balanceRepository,
-            SellerApplicationRepository sellerApplicationRepository
+            SellerApplicationRepository sellerApplicationRepository,
+            CacheInvalidator cacheInvalidator,
+            ProductRankingService rankingService
     ) {
         this.userRepository = userRepository;
         this.storeRepository = storeRepository;
@@ -84,6 +92,30 @@ public class AdminUserService {
         this.notificationService = notificationService;
         this.balanceRepository = balanceRepository;
         this.sellerApplicationRepository = sellerApplicationRepository;
+        this.cacheInvalidator = cacheInvalidator;
+        this.rankingService = rankingService;
+    }
+
+    /**
+     * Constructor de compatibilidad para pruebas unitarias.
+     */
+    AdminUserService(
+            UserRepository userRepository,
+            StoreRepository storeRepository,
+            ProductRepository productRepository,
+            OrderSubOrderRepository subOrderRepository,
+            AuditLogService auditLogService,
+            NotificationService notificationService,
+            SellerBalanceRepository balanceRepository,
+            SellerApplicationRepository sellerApplicationRepository
+    ) {
+        this(userRepository, storeRepository, productRepository, subOrderRepository,
+                auditLogService, notificationService, balanceRepository,
+                sellerApplicationRepository,
+                new CacheInvalidator(new com.pardorps.pardrops.cache.NoOpCacheService()),
+                new ProductRankingService(null, null,
+                        new com.pardorps.pardrops.cache.NoOpCacheService(),
+                        0.38, 0.18, 0.24, 0.12, 0.08, 0.10, 4.0, 5, 30, 600));
     }
 
     /**
@@ -200,7 +232,9 @@ public class AdminUserService {
     @Transactional(readOnly = true)
     public List<AdminSellerResponse> findSellers(StoreStatus storeStatus, String search) {
         List<Store> stores = storeStatus == null
-                ? storeRepository.findAllWithOwner()
+                ? storeRepository.findAllWithOwner().stream()
+                        .filter(store -> store.getStatus() != StoreStatus.DELETED)
+                        .toList()
                 : storeRepository.findByStatusWithOwner(storeStatus);
 
         String term = search == null ? null : search.trim().toLowerCase();
@@ -260,31 +294,109 @@ public class AdminUserService {
             throw ApiException.conflict("No puedes suspender tu propia cuenta");
         }
 
-        boolean suspending = request.status() == UserStatus.SUSPENDED;
-        user.setStatus(request.status());
-        User saved = userRepository.save(user);
+        applyStatus(user, request.status(), request.reason(), admin);
+        invalidateCatalogIfSeller(user);
+        return toResponse(user);
+    }
+
+    /**
+     * Cambia el estado de varias cuentas seleccionadas.
+     *
+     * <p>Los administradores y la propia cuenta del actor se omiten para evitar
+     * bloqueos accidentales. Las cuentas restantes se procesan en una sola
+     * transacción.</p>
+     *
+     * @param ids    cuentas seleccionadas.
+     * @param status estado que se quiere aplicar.
+     * @param reason motivo opcional.
+     * @param admin  administrador que ejecuta la acción.
+     * @return resultado de la acción en masa.
+     */
+    @Transactional
+    public BulkActionResponse bulkChangeStatus(
+            List<Long> ids, UserStatus status, String reason, User admin) {
+        List<Long> normalized = new ArrayList<>();
+        for (Long id : ids) {
+            if (id != null && !normalized.contains(id)) {
+                normalized.add(id);
+            }
+        }
+        if (normalized.isEmpty()) {
+            throw ApiException.badRequest("Selecciona al menos una cuenta");
+        }
+
+        List<User> users = userRepository.findAllById(normalized);
+        if (users.size() != normalized.size()) {
+            List<Long> found = users.stream().map(User::getId).toList();
+            List<Long> missing = normalized.stream().filter(id -> !found.contains(id)).toList();
+            throw ApiException.notFound("No se encontraron las cuentas: " + missing);
+        }
+
+        int updated = 0;
+        int skipped = 0;
+        boolean sellersChanged = false;
+        for (User user : users) {
+            if (user.getRole() == Role.ADMIN
+                    || (admin != null && admin.getId().equals(user.getId()))) {
+                skipped++;
+                continue;
+            }
+            if (user.getStatus() == status) {
+                skipped++;
+                continue;
+            }
+            applyStatus(user, status, reason, admin);
+            sellersChanged = sellersChanged || user.getRole() == Role.SELLER;
+            updated++;
+        }
+
+        if (sellersChanged) {
+            invalidateCatalog();
+        }
+        return BulkActionResponse.of(normalized.size(), updated, skipped);
+    }
+
+    /**
+     * Aplica el estado y registra auditoría/aviso.
+     */
+    private void applyStatus(User user, UserStatus status, String reason, User admin) {
+        boolean suspending = status == UserStatus.SUSPENDED;
+        user.setStatus(status);
+        userRepository.save(user);
 
         if (suspending) {
             suspendStore(user);
             auditLogService.record(admin, AuditAction.USER_SUSPENDED, ENTITY_TYPE,
-                    String.valueOf(userId),
-                    "Cuenta suspendida: " + (request.reason() == null ? "sin motivo" : request.reason()));
+                    String.valueOf(user.getId()),
+                    "Cuenta suspendida: " + (reason == null ? "sin motivo" : reason));
             notificationService.notify(
                     user, NotificationType.ACCOUNT, "Tu cuenta fue suspendida",
-                    request.reason() == null
+                    reason == null
                             ? "El administrador suspendió temporalmente tu acceso."
-                            : request.reason(),
+                            : reason,
                     null);
         } else {
             auditLogService.record(admin, AuditAction.USER_REACTIVATED, ENTITY_TYPE,
-                    String.valueOf(userId), "Cuenta reactivada");
+                    String.valueOf(user.getId()), "Cuenta reactivada");
             notificationService.notify(
                     user, NotificationType.ACCOUNT, "Tu cuenta fue reactivada",
                     "Ya puedes volver a usar ParDrops con normalidad.",
                     null);
         }
+    }
 
-        return toResponse(saved);
+    /**
+     * Invalida catálogo y ranking si el cambio afecta a un vendedor.
+     */
+    private void invalidateCatalogIfSeller(User user) {
+        if (user.getRole() == Role.SELLER) {
+            invalidateCatalog();
+        }
+    }
+
+    private void invalidateCatalog() {
+        cacheInvalidator.invalidateCatalog();
+        rankingService.invalidate();
     }
 
     /**

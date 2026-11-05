@@ -3,6 +3,8 @@ package com.pardorps.pardrops.controller;
 import com.pardorps.pardrops.dto.AdminSellerResponse;
 import com.pardorps.pardrops.dto.AdminUserDetailResponse;
 import com.pardorps.pardrops.dto.AdminUserResponse;
+import com.pardorps.pardrops.dto.BulkActionResponse;
+import com.pardorps.pardrops.dto.BulkUserStatusRequest;
 import com.pardorps.pardrops.dto.PageResponse;
 import com.pardorps.pardrops.dto.UserStatusRequest;
 import com.pardorps.pardrops.model.Role;
@@ -104,6 +106,21 @@ public class AdminUserController {
     ) {
         User admin = authService.getCurrentUser();
         return ResponseEntity.ok(adminUserService.changeStatus(id, admin, request));
+    }
+
+    /**
+     * Suspende o reactiva varias cuentas seleccionadas.
+     *
+     * @param request cuentas, estado y motivo.
+     * @return 200 con el resultado de la acción en masa.
+     */
+    @PatchMapping("/bulk-status")
+    public ResponseEntity<BulkActionResponse> bulkChangeStatus(
+            @Valid @RequestBody BulkUserStatusRequest request
+    ) {
+        User admin = authService.getCurrentUser();
+        return ResponseEntity.ok(adminUserService.bulkChangeStatus(
+                request.ids(), request.status(), request.reason(), admin));
     }
 }
 

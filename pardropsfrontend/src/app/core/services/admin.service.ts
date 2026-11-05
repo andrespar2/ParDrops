@@ -28,6 +28,7 @@ import {
   AdminUserStatus,
   AdminStoreStatus,
   AuditLog,
+  BulkActionResponse,
   CategoryRequest,
   EmailTemplate,
   EmailTemplateCode,
@@ -158,6 +159,25 @@ export class AdminService {
   }
 
   /**
+   * Suspende o reactiva varias cuentas.
+   *
+   * @param ids    cuentas seleccionadas.
+   * @param status estado a aplicar.
+   * @param reason motivo opcional.
+   * @returns observable con el resultado de la acción.
+   */
+  public bulkChangeUserStatus(
+    ids: number[],
+    status: AdminUserStatus,
+    reason: string | null
+  ): Observable<BulkActionResponse> {
+    return this.http.patch<BulkActionResponse>(
+      `${this.adminUrl}/users/bulk-status`,
+      { ids, status, reason }
+    );
+  }
+
+  /**
    * Lista los vendedores con su tienda y su actividad.
    *
    * @param status filtro por estado de la tienda.
@@ -172,6 +192,42 @@ export class AdminService {
     if (status) params = params.set('status', status);
     if (search.trim()) params = params.set('search', search.trim());
     return this.http.get<AdminSeller[]>(`${this.adminUrl}/sellers`, { params });
+  }
+
+  /**
+   * Elimina lógicamente una tienda.
+   *
+   * @param storeId identificador de la tienda.
+   * @returns observable con el resultado.
+   */
+  public deleteStore(storeId: number): Observable<BulkActionResponse> {
+    return this.http.delete<BulkActionResponse>(`${this.adminUrl}/stores/${storeId}`);
+  }
+
+  /**
+   * Elimina lógicamente varias tiendas.
+   *
+   * @param storeIds tiendas seleccionadas.
+   * @returns observable con el resultado de la acción.
+   */
+  public bulkDeleteStores(storeIds: number[]): Observable<BulkActionResponse> {
+    return this.http.post<BulkActionResponse>(
+      `${this.adminUrl}/stores/bulk-delete`,
+      { ids: storeIds }
+    );
+  }
+
+  /**
+   * Restaura una tienda eliminada.
+   *
+   * @param storeId identificador de la tienda.
+   * @returns observable con el resultado.
+   */
+  public restoreStore(storeId: number): Observable<BulkActionResponse> {
+    return this.http.patch<BulkActionResponse>(
+      `${this.adminUrl}/stores/${storeId}/restore`,
+      {}
+    );
   }
 
   // ------------------------------------------------------------------
@@ -251,6 +307,36 @@ export class AdminService {
   public changeProductVisibility(id: string, active: boolean): Observable<unknown> {
     const params = new HttpParams().set('active', String(active));
     return this.http.patch(`${this.adminUrl}/products/${id}/visibility`, {}, { params });
+  }
+
+  /**
+   * Publica u oculta varios productos.
+   *
+   * @param ids    productos seleccionados.
+   * @param active visibilidad deseada.
+   * @returns observable con el resultado.
+   */
+  public bulkProductVisibility(
+    ids: string[],
+    active: boolean
+  ): Observable<BulkActionResponse> {
+    return this.http.patch<BulkActionResponse>(
+      `${this.adminUrl}/products/bulk-visibility`,
+      { ids, active }
+    );
+  }
+
+  /**
+   * Elimina varios productos.
+   *
+   * @param ids productos seleccionados.
+   * @returns observable con el resultado.
+   */
+  public bulkDeleteProducts(ids: string[]): Observable<BulkActionResponse> {
+    return this.http.post<BulkActionResponse>(
+      `${this.adminUrl}/products/bulk-delete`,
+      { ids }
+    );
   }
 
   /**
@@ -389,6 +475,19 @@ export class AdminService {
    */
   public deleteReview(id: number): Observable<void> {
     return this.http.delete<void>(`${this.adminUrl}/reviews/${id}`);
+  }
+
+  /**
+   * Elimina varias reseñas seleccionadas.
+   *
+   * @param ids reseñas seleccionadas.
+   * @returns observable con el resultado.
+   */
+  public bulkDeleteReviews(ids: number[]): Observable<BulkActionResponse> {
+    return this.http.post<BulkActionResponse>(
+      `${this.adminUrl}/reviews/bulk-delete`,
+      { ids }
+    );
   }
 
   // ------------------------------------------------------------------

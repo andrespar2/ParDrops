@@ -53,6 +53,12 @@ export class AdminSellersComponent {
   /** Estado de tienda seleccionado en el filtro. */
   public statusFilter: AdminStoreStatus | '' = '';
 
+  /** Tiendas seleccionadas para acciones en masa. */
+  public readonly selected = signal<Set<number>>(new Set<number>());
+
+  /** Indica si una acción en masa está en curso. */
+  public readonly bulkSaving = signal<boolean>(false);
+
   constructor() {
     this.load();
   }
@@ -71,6 +77,7 @@ export class AdminSellersComponent {
       .subscribe({
         next: sellers => {
           this.sellers.set(sellers);
+          this.selected.set(new Set());
           this.loading.set(false);
         },
         error: (error: HttpErrorResponse) => {
@@ -88,8 +95,7 @@ export class AdminSellersComponent {
    * @param seller vendedor a modificar.
    * @returns {void}
    */
-  public toggleStatus(seller: AdminSeller): void {
-    const suspend = seller.accountStatus === 'ACTIVE';
+  public toggleStatus(seller: AdminSeller): void {    const suspend = seller.accountStatus === 'ACTIVE';
     const action = suspend ? 'suspender' : 'reactivar';
     const confirmed = window.confirm(
       `¿Seguro que quieres ${action} la cuenta de ${seller.fullName} ` +
@@ -128,6 +134,136 @@ export class AdminSellersComponent {
   }
 
   /**
+   * Añade o quita una tienda de la selección.
+   *
+   * @param storeId identificador de la tienda.
+   */
+  public toggleSelection(storeId: number): void {
+    this.selected.update(current => {
+      const next = new Set(current);
+      if (next.has(storeId)) next.delete(storeId); else next.add(storeId);
+      return next;
+    });
+  }
+
+  /** Indica si una tienda está seleccionada. */
+  public isSelected(storeId: number): boolean {
+    return this.selected().has(storeId);
+  }
+
+  /** Indica si todas las tiendas visibles están seleccionadas. */
+  public allSelected(): boolean {
+    const sellers = this.sellers();
+    return sellers.length > 0 && sellers.every(seller => this.selected().has(seller.storeId));
+  }
+
+  /** Limpia la selección. */
+  public clearSelection(): void {
+    this.selected.set(new Set());
+  }
+
+  /** Selecciona o deselecciona todas las tiendas visibles. */
+  public toggleAll(): void {
+    if (this.allSelected()) {
+      this.selected.set(new Set());
+      return;
+    }
+    this.selected.set(new Set(this.sellers().map(seller => seller.storeId)));
+  }
+
+  /**
+   * Elimina una tienda con confirmación.
+   *
+   * @param seller tienda/vendedor a eliminar.
+   */
+  public deleteStore(seller: AdminSeller): void {
+    const confirmed = window.confirm(
+      `¿Eliminar la tienda "${seller.storeName}"?\n\n` +
+      'Dejará de mostrarse en el marketplace. Los pedidos y el historial se conservan.'
+    );
+    if (!confirmed) return;
+
+    this.bulkSaving.set(true);
+    this.errorMessage.set(null);
+    this.okMessage.set(null);
+    this.adminService.deleteStore(seller.storeId).subscribe({
+      next: result => {
+        this.bulkSaving.set(false);
+        this.okMessage.set(
+          `Tienda eliminada. ${result.updated} cambio(s) aplicado(s).`
+        );
+        this.load();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.bulkSaving.set(false);
+        this.errorMessage.set(
+          error.error?.message || 'No se pudo eliminar la tienda.'
+        );
+      }
+    });
+  }
+
+  /** Elimina en masa las tiendas seleccionadas. */
+  public bulkDelete(): void {
+    const ids = [...this.selected()];
+    if (ids.length === 0) return;
+    const confirmed = window.confirm(
+      `¿Eliminar ${ids.length} tienda(s) seleccionada(s)?\n\n` +
+      'Dejarán de mostrarse en el marketplace. Los pedidos y el historial se conservan.'
+    );
+    if (!confirmed) return;
+
+    this.bulkSaving.set(true);
+    this.errorMessage.set(null);
+    this.okMessage.set(null);
+    this.adminService.bulkDeleteStores(ids).subscribe({
+      next: result => {
+        this.bulkSaving.set(false);
+        this.okMessage.set(
+          `${result.updated} tienda(s) eliminada(s); ${result.skipped} ya estaban eliminadas.`
+        );
+        this.selected.set(new Set());
+        this.load();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.bulkSaving.set(false);
+        this.errorMessage.set(
+          error.error?.message || 'No se pudieron eliminar las tiendas seleccionadas.'
+        );
+      }
+    });
+  }
+
+  /**
+   * Restaura una tienda eliminada.
+   *
+   * @param seller tienda/vendedor a restaurar.
+   */
+  public restoreStore(seller: AdminSeller): void {
+    const confirmed = window.confirm(
+      `¿Restaurar la tienda "${seller.storeName}"? Volverá a estar disponible según el estado de la cuenta.`
+    );
+    if (!confirmed) return;
+
+    this.bulkSaving.set(true);
+    this.errorMessage.set(null);
+    this.okMessage.set(null);
+    this.adminService.restoreStore(seller.storeId).subscribe({
+      next: () => {
+        this.bulkSaving.set(false);
+        this.okMessage.set('Tienda restaurada.');
+        this.load();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.bulkSaving.set(false);
+        this.errorMessage.set(
+          error.error?.message || 'No se pudo restaurar la tienda.'
+        );
+      }
+    });
+  }
+
+  /**
    * Devuelve la etiqueta legible del estado de una tienda.
    *
    * @param status estado de la tienda.
@@ -137,6 +273,7 @@ export class AdminSellersComponent {
     switch (status) {
       case 'ACTIVE': return 'Activa';
       case 'SUSPENDED': return 'Suspendida';
+      case 'DELETED': return 'Eliminada';
       default: return 'Pendiente';
     }
   }

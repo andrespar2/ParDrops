@@ -55,6 +55,12 @@ export class AdminProductsComponent {
   /** Tienda seleccionada (nulo = catálogo propio). */
   public readonly selectedStore = signal<AdminStoreProductSummary | null>(null);
 
+  /** Productos seleccionados para acciones en masa. */
+  public readonly selectedIds = signal<Set<string>>(new Set<string>());
+
+  /** Indica si una acción en masa está en curso. */
+  public readonly bulkSaving = signal<boolean>(false);
+
   /** Búsqueda de tiendas. */
   public storeSearch = '';
 
@@ -93,6 +99,9 @@ export class AdminProductsComponent {
 
   /** Mensaje de error del formulario. */
   public readonly errorMessage = signal<string | null>(null);
+
+  /** Mensaje de confirmación de acciones en masa. */
+  public readonly okMessage = signal<string | null>(null);
 
   /** Imágenes que se están editando. */
   public readonly images = signal<ProductImage[]>([]);
@@ -222,6 +231,7 @@ export class AdminProductsComponent {
     }).subscribe({
       next: page => {
         this.adminPage.set(page);
+        this.selectedIds.set(new Set());
         this.adminLoading.set(false);
       },
       error: (error: HttpErrorResponse) => {
@@ -308,6 +318,107 @@ export class AdminProductsComponent {
       error: (error: HttpErrorResponse) => {
         this.errorMessage.set(
           error.error?.message || 'No se pudo eliminar el producto.'
+        );
+      }
+    });
+  }
+
+  /**
+   * Añade o quita un producto de la selección.
+   *
+   * @param id identificador del producto.
+   */
+  public toggleSelection(id: string): void {
+    this.selectedIds.update(current => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  /** Indica si un producto está seleccionado. */
+  public isSelected(id: string): boolean {
+    return this.selectedIds().has(id);
+  }
+
+  /** Indica si todos los productos visibles están seleccionados. */
+  public allSelected(): boolean {
+    const content = this.adminPage()?.content ?? [];
+    return content.length > 0 && content.every(product => this.selectedIds().has(product.id));
+  }
+
+  /** Limpia la selección. */
+  public clearSelection(): void {
+    this.selectedIds.set(new Set());
+  }
+
+  /** Selecciona o deselecciona los productos visibles. */
+  public toggleAll(): void {
+    if (this.allSelected()) {
+      this.selectedIds.set(new Set());
+      return;
+    }
+    this.selectedIds.set(new Set((this.adminPage()?.content ?? []).map(product => product.id)));
+  }
+
+  /**
+   * Publica u oculta los productos seleccionados.
+   *
+   * @param active visibilidad deseada.
+   */
+  public bulkVisibility(active: boolean): void {
+    const ids = [...this.selectedIds()];
+    if (ids.length === 0) return;
+    const action = active ? 'publicar' : 'ocultar';
+    if (!window.confirm(`¿${action.charAt(0).toUpperCase() + action.slice(1)} ${ids.length} producto(s)?`)) {
+      return;
+    }
+
+    this.bulkSaving.set(true);
+    this.errorMessage.set(null);
+    this.adminService.bulkProductVisibility(ids, active).subscribe({
+      next: result => {
+        this.bulkSaving.set(false);
+        this.okMessage.set(
+          `${result.updated} producto(s) actualizado(s); ${result.skipped} sin cambios.`
+        );
+        this.selectedIds.set(new Set());
+        this.loadAdminProducts();
+        this.loadProductStores();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.bulkSaving.set(false);
+        this.errorMessage.set(
+          error.error?.message || 'No se pudieron actualizar los productos seleccionados.'
+        );
+      }
+    });
+  }
+
+  /** Elimina en masa los productos seleccionados. */
+  public bulkDelete(): void {
+    const ids = [...this.selectedIds()];
+    if (ids.length === 0) return;
+    if (!window.confirm(`¿Eliminar ${ids.length} producto(s) seleccionado(s)?`)) {
+      return;
+    }
+
+    this.bulkSaving.set(true);
+    this.errorMessage.set(null);
+    this.adminService.bulkDeleteProducts(ids).subscribe({
+      next: result => {
+        this.bulkSaving.set(false);
+        this.okMessage.set(
+          `${result.updated} producto(s) eliminado(s).`
+        );
+        this.selectedIds.set(new Set());
+        this.loadAdminProducts();
+        this.loadProductStores();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.bulkSaving.set(false);
+        this.errorMessage.set(
+          error.error?.message || 'No se pudieron eliminar los productos seleccionados.'
         );
       }
     });

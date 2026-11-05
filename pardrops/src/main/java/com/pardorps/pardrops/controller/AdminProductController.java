@@ -1,6 +1,9 @@
 package com.pardorps.pardrops.controller;
 
 import com.pardorps.pardrops.dto.AdminProductResponse;
+import com.pardorps.pardrops.dto.BulkActionResponse;
+import com.pardorps.pardrops.dto.BulkProductIdsRequest;
+import com.pardorps.pardrops.dto.BulkProductVisibilityRequest;
 import com.pardorps.pardrops.dto.PageResponse;
 import com.pardorps.pardrops.dto.ProductRequest;
 import com.pardorps.pardrops.model.Product;
@@ -163,5 +166,34 @@ public class AdminProductController {
     ) {
         User admin = authService.getCurrentUser();
         return ResponseEntity.ok(productService.setActive(id, active, admin));
+    }
+
+    /**
+     * Publica u oculta varios productos seleccionados.
+     *
+     * @param request productos y visibilidad deseada.
+     * @return 200 con el resultado de la acción en masa.
+     */
+    @PatchMapping("/bulk-visibility")
+    public ResponseEntity<BulkActionResponse> bulkVisibility(
+            @Valid @RequestBody BulkProductVisibilityRequest request
+    ) {
+        User admin = authService.getCurrentUser();
+        return ResponseEntity.ok(productService.bulkSetActive(
+                request.ids(), request.active(), admin));
+    }
+
+    /**
+     * Elimina varios productos seleccionados.
+     *
+     * @param request productos seleccionados.
+     * @return 200 con el resultado de la acción en masa.
+     */
+    @PostMapping("/bulk-delete")
+    public ResponseEntity<BulkActionResponse> bulkDelete(
+            @Valid @RequestBody BulkProductIdsRequest request
+    ) {
+        User admin = authService.getCurrentUser();
+        return ResponseEntity.ok(productService.bulkDelete(request.ids(), admin));
     }
 }

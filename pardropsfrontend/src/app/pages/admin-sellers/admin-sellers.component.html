@@ -42,10 +42,26 @@
         <option value="ACTIVE">Activa</option>
         <option value="SUSPENDED">Suspendida</option>
         <option value="PENDING">Pendiente</option>
+        <option value="DELETED">Eliminada</option>
       </select>
     </div>
     <button type="submit" class="admin-btn admin-btn--primary">Buscar</button>
   </form>
+
+  @if (selected().size > 0) {
+    <div class="admin-bulk-bar">
+      <span class="admin-bulk-bar__info">{{ selected().size }} tienda(s) seleccionada(s)</span>
+      <div class="admin-table__actions">
+        <button type="button" class="admin-btn admin-btn--danger"
+                [disabled]="bulkSaving()" (click)="bulkDelete()">
+          Eliminar seleccionadas
+        </button>
+        <button type="button" class="admin-btn" (click)="clearSelection()">
+          Limpiar selección
+        </button>
+      </div>
+    </div>
+  }
 
   @if (loading()) {
     <p class="admin-message">Cargando vendedores…</p>
@@ -55,6 +71,10 @@
     <table class="admin-table">
       <thead>
         <tr>
+          <th class="admin-checkbox-cell">
+            <input type="checkbox" [checked]="allSelected()" (change)="toggleAll()"
+                   aria-label="Seleccionar todas las tiendas" />
+          </th>
           <th>Vendedor</th>
           <th>Tienda</th>
           <th>Estado tienda</th>
@@ -71,6 +91,11 @@
       <tbody>
         @for (seller of sellers(); track seller.sellerId) {
           <tr>
+            <td class="admin-checkbox-cell">
+              <input type="checkbox" [checked]="isSelected(seller.storeId)"
+                     (change)="toggleSelection(seller.storeId)"
+                     [attr.aria-label]="'Seleccionar ' + seller.storeName" />
+            </td>
             <td>
               <strong>{{ seller.fullName }}</strong><br />
               <span class="admin-message">{{ seller.email }}</span>
@@ -99,15 +124,28 @@
             <td>{{ formatPrice(seller.availableBalance) }}</td>
             <td>{{ formatDate(seller.createdAt) }}</td>
             <td>
-              <button
-                type="button"
-                class="admin-btn"
-                [class.admin-btn--danger]="seller.accountStatus === 'ACTIVE'"
-                [disabled]="savingId() === seller.sellerId"
-                (click)="toggleStatus(seller)"
-              >
-                {{ seller.accountStatus === 'ACTIVE' ? 'Suspender' : 'Reactivar' }}
-              </button>
+              <div class="admin-table__actions">
+                <button
+                  type="button"
+                  class="admin-btn"
+                  [class.admin-btn--danger]="seller.accountStatus === 'ACTIVE'"
+                  [disabled]="savingId() === seller.sellerId || bulkSaving()"
+                  (click)="toggleStatus(seller)"
+                >
+                  {{ seller.accountStatus === 'ACTIVE' ? 'Suspender' : 'Reactivar' }}
+                </button>
+                @if (seller.storeStatus === 'DELETED') {
+                  <button type="button" class="admin-btn"
+                          [disabled]="bulkSaving()" (click)="restoreStore(seller)">
+                    Restaurar tienda
+                  </button>
+                } @else {
+                  <button type="button" class="admin-btn admin-btn--danger"
+                          [disabled]="bulkSaving()" (click)="deleteStore(seller)">
+                    Eliminar tienda
+                  </button>
+                }
+              </div>
             </td>
           </tr>
         }

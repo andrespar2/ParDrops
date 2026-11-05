@@ -52,6 +52,25 @@
     <button type="submit" class="admin-btn admin-btn--primary">Buscar</button>
   </form>
 
+  @if (selected().size > 0) {
+    <div class="admin-bulk-bar">
+      <span class="admin-bulk-bar__info">{{ selected().size }} cuenta(s) seleccionada(s)</span>
+      <div class="admin-table__actions">
+        <button type="button" class="admin-btn admin-btn--danger"
+                [disabled]="bulkSaving()" (click)="bulkChangeStatus('SUSPENDED')">
+          Suspender seleccionadas
+        </button>
+        <button type="button" class="admin-btn"
+                [disabled]="bulkSaving()" (click)="bulkChangeStatus('ACTIVE')">
+          Reactivar seleccionadas
+        </button>
+        <button type="button" class="admin-btn" (click)="clearSelection()">
+          Limpiar selección
+        </button>
+      </div>
+    </div>
+  }
+
   @if (loading()) {
     <p class="admin-message">Cargando cuentas…</p>
   } @else if (page(); as data) {
@@ -61,6 +80,10 @@
       <table class="admin-table">
         <thead>
           <tr>
+            <th class="admin-checkbox-cell">
+              <input type="checkbox" [checked]="allSelected()" (change)="toggleAll()"
+                     aria-label="Seleccionar todas las cuentas" />
+            </th>
             <th>Cuenta</th>
             <th>Rol</th>
             <th>Estado</th>
@@ -72,6 +95,12 @@
         <tbody>
           @for (user of data.content; track user.id) {
             <tr>
+              <td class="admin-checkbox-cell">
+                <input type="checkbox" [checked]="isSelected(user.id)"
+                       [disabled]="!isSelectable(user)"
+                       (change)="toggleSelection(user.id)"
+                       [attr.aria-label]="'Seleccionar ' + user.fullName" />
+              </td>
               <td>
                 <strong>{{ user.fullName }}</strong><br />
                 <span class="admin-message">{{ user.email }}</span>
@@ -95,7 +124,7 @@
                     type="button"
                     class="admin-btn"
                     [class.admin-btn--danger]="user.status === 'ACTIVE'"
-                    [disabled]="savingId() === user.id || user.role === 'ADMIN'"
+                    [disabled]="savingId() === user.id || bulkSaving() || user.role === 'ADMIN'"
                     (click)="toggleStatus(user)"
                   >
                     {{ user.status === 'ACTIVE' ? 'Suspender' : 'Reactivar' }}

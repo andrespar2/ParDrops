@@ -2,8 +2,12 @@ package com.pardorps.pardrops.service;
 
 import com.pardorps.pardrops.dto.AdminProductResponse;
 import com.pardorps.pardrops.dto.PageResponse;
+import com.pardorps.pardrops.dto.ProductFeedResponse;
 import com.pardorps.pardrops.dto.ProductHighlightsResponse;
 import com.pardorps.pardrops.dto.ProductRequest;
+import com.pardorps.pardrops.cache.CacheInvalidator;
+import com.pardorps.pardrops.cache.CacheKeys;
+import com.pardorps.pardrops.cache.CacheService;
 import com.pardorps.pardrops.exception.ApiException;
 import com.pardorps.pardrops.model.AuditAction;
 import com.pardorps.pardrops.model.NotificationType;
@@ -25,9 +29,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -52,6 +59,12 @@ public class ProductService {
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
     private final OrderItemRepository orderItemRepository;
+    private final CacheService cacheService;
+    private final CacheInvalidator cacheInvalidator;
+    private final ProductRankingService rankingService;
+    private final Duration productTtl;
+    private final Duration catalogTtl;
+    private final Duration adminTtl;
 
     /**
      * @param productRepository      acceso a los productos.
@@ -61,7 +74,11 @@ public class ProductService {
      * @param auditLogService        bitácora de auditoría.
      * @param notificationService    avisos dentro de la aplicación.
      * @param orderItemRepository    líneas vendidas para los rankings.
+     * @param cacheService           caché opcional de servidor.
+     * @param cacheInvalidator       invalidación después del commit.
+     * @param rankingService         distribución dinámica del catálogo.
      */
+    @org.springframework.beans.factory.annotation.Autowired
     public ProductService(
             ProductRepository productRepository,
             ProductReviewRepository productReviewRepository,
@@ -69,7 +86,13 @@ public class ProductService {
             CategoryService categoryService,
             AuditLogService auditLogService,
             NotificationService notificationService,
-            OrderItemRepository orderItemRepository
+            OrderItemRepository orderItemRepository,
+            CacheService cacheService,
+            CacheInvalidator cacheInvalidator,
+            ProductRankingService rankingService,
+            @org.springframework.beans.factory.annotation.Value("${app.cache.ttl.products:300}") long productTtlSeconds,
+            @org.springframework.beans.factory.annotation.Value("${app.cache.ttl.catalog:120}") long catalogTtlSeconds,
+            @org.springframework.beans.factory.annotation.Value("${app.cache.ttl.admin:30}") long adminTtlSeconds
     ) {
         this.productRepository = productRepository;
         this.productReviewRepository = productReviewRepository;
@@ -78,6 +101,35 @@ public class ProductService {
         this.auditLogService = auditLogService;
         this.notificationService = notificationService;
         this.orderItemRepository = orderItemRepository;
+        this.cacheService = cacheService;
+        this.cacheInvalidator = cacheInvalidator;
+        this.rankingService = rankingService;
+        this.productTtl = Duration.ofSeconds(Math.max(productTtlSeconds, 10));
+        this.catalogTtl = Duration.ofSeconds(Math.max(catalogTtlSeconds, 10));
+        this.adminTtl = Duration.ofSeconds(Math.max(adminTtlSeconds, 5));
+    }
+
+    /**
+     * Constructor de compatibilidad para pruebas unitarias que no ejercitan
+     * la caché ni el ranking.
+     */
+    ProductService(
+            ProductRepository productRepository,
+            ProductReviewRepository productReviewRepository,
+            StoreRepository storeRepository,
+            CategoryService categoryService,
+            AuditLogService auditLogService,
+            NotificationService notificationService,
+            OrderItemRepository orderItemRepository
+    ) {
+        this(productRepository, productReviewRepository, storeRepository, categoryService,
+                auditLogService, notificationService, orderItemRepository,
+                new com.pardorps.pardrops.cache.NoOpCacheService(),
+                new CacheInvalidator(new com.pardorps.pardrops.cache.NoOpCacheService()),
+                new ProductRankingService(null, null,
+                        new com.pardorps.pardrops.cache.NoOpCacheService(),
+                        0.38, 0.18, 0.24, 0.12, 0.08, 0.10, 4.0, 5, 30, 120),
+                300, 120, 30);
     }
 
     /**
@@ -87,6 +139,11 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public ProductHighlightsResponse highlights() {
+        var cached = cacheService.get(CacheKeys.PRODUCTS_HIGHLIGHTS, ProductHighlightsResponse.class);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
+
         List<Object[]> rows = orderItemRepository.findBestSellingProductIds(
                 OrderStatus.CANCELLED, PageRequest.of(0, 8));
         List<String> ids = rows.stream()
@@ -107,7 +164,9 @@ public class ProductService {
 
         enrich(bestSellers);
         enrich(topRated);
-        return new ProductHighlightsResponse(bestSellers, topRated);
+        ProductHighlightsResponse response = new ProductHighlightsResponse(bestSellers, topRated);
+        cacheService.put(CacheKeys.PRODUCTS_HIGHLIGHTS, response, catalogTtl);
+        return response;
     }
 
     /** Indica si el producto se puede comprar. */
@@ -129,7 +188,107 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public List<Product> findPublished() {
+        var cached = cacheService.getList(CacheKeys.PRODUCTS_PUBLISHED, Product.class);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
         List<Product> products = productRepository.findPublished();
+        enrich(products);
+        List<Product> immutable = List.copyOf(products);
+        cacheService.put(CacheKeys.PRODUCTS_PUBLISHED, immutable, catalogTtl);
+        return immutable;
+    }
+
+    /**
+     * Devuelve una página del catálogo con orden dinámico y consistente para
+     * una semilla de navegación.
+     *
+     * @param search    texto de búsqueda.
+     * @param category  categoría exacta.
+     * @param minPrice  precio mínimo.
+     * @param maxPrice  precio máximo.
+     * @param onlyNew   solo novedades.
+     * @param onlyOnSale solo ofertas.
+     * @param sort      orden explícito o relevance.
+     * @param seed      semilla de distribución (se genera si llega vacía).
+     * @param viewerId  usuario autenticado, si existe.
+     * @param page      página solicitada.
+     * @param size      tamaño solicitado.
+     * @return la página de productos.
+     */
+    @Transactional(readOnly = true)
+    public ProductFeedResponse feed(
+            String search,
+            String category,
+            Double minPrice,
+            Double maxPrice,
+            boolean onlyNew,
+            boolean onlyOnSale,
+            String sort,
+            String seed,
+            Long viewerId,
+            int page,
+            int size
+    ) {
+        int safeSize = Math.max(1, Math.min(size, 48));
+        int safePage = Math.max(0, page);
+        String normalizedSeed = seed == null || seed.isBlank()
+                ? UUID.randomUUID().toString()
+                : seed.trim();
+
+        ProductRankingService.FeedFilter filter = new ProductRankingService.FeedFilter(
+                trimToNull(search), trimToNull(category), minPrice, maxPrice, onlyNew, onlyOnSale);
+        String cacheKey = CacheKeys.of(CacheKeys.PRODUCTS_FEED, normalizedSeed,
+                filter.signature(), sort == null ? "relevance" : sort, viewerId, safePage, safeSize);
+
+        var cached = cacheService.get(cacheKey, ProductFeedResponse.class);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
+
+        List<String> ordered = rankingService.rank(filter, normalizedSeed, sort, viewerId);
+        long total = ordered.size();
+        int from = Math.min(safePage * safeSize, ordered.size());
+        int to = Math.min(from + safeSize, ordered.size());
+        List<String> pageIds = ordered.subList(from, to);
+
+        Map<String, Product> byId = pageIds.isEmpty()
+                ? Map.of()
+                : productRepository.findByIdIn(pageIds).stream()
+                        .collect(Collectors.toMap(Product::getId, product -> product));
+        List<Product> content = pageIds.stream()
+                .map(byId::get)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toCollection(ArrayList::new));
+        enrich(content);
+
+        int totalPages = total == 0 ? 0 : (int) Math.ceil((double) total / safeSize);
+        ProductFeedResponse response = new ProductFeedResponse(
+                List.copyOf(content), normalizedSeed, safePage, safeSize, total, totalPages);
+        cacheService.put(cacheKey, response, catalogTtl);
+        return response;
+    }
+
+    /**
+     * Devuelve productos públicos concretos por identificador. Se usa para
+     * resolver favoritos sin descargar todo el catálogo.
+     *
+     * @param ids identificadores solicitados.
+     * @return productos publicados encontrados.
+     */
+    @Transactional(readOnly = true)
+    public List<Product> findPublishedByIds(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        List<String> limited = ids.stream()
+                .filter(id -> id != null && !id.isBlank())
+                .distinct()
+                .limit(60)
+                .toList();
+        List<Product> products = productRepository.findByIdIn(limited).stream()
+                .filter(this::isAvailable)
+                .toList();
         enrich(products);
         return products;
     }
@@ -142,9 +301,16 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public List<Product> findAll() {
+        String key = CacheKeys.PRODUCTS_SEARCH + "all";
+        var cached = cacheService.getList(key, Product.class);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
         List<Product> products = productRepository.findAllWithSeller();
         enrich(products);
-        return products;
+        List<Product> immutable = List.copyOf(products);
+        cacheService.put(key, immutable, adminTtl);
+        return immutable;
     }
 
     /**
@@ -178,8 +344,9 @@ public class ProductService {
         List<Product> products = result.getContent();
         enrich(products);
 
+        Map<Long, Store> stores = storeMap(products);
         List<AdminProductResponse> content = products.stream()
-                .map(this::toAdminResponse)
+                .map(product -> toAdminResponse(product, stores))
                 .toList();
 
         return PageResponse.of(content, result.getNumber(), result.getSize(),
@@ -198,7 +365,22 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> ApiException.notFound("Producto no encontrado: " + id));
         enrich(List.of(product));
-        return toAdminResponse(product);
+        return toAdminResponse(product, storeMap(List.of(product)));
+    }
+
+    /**
+     * Devuelve un producto completo para editarlo desde administración,
+     * incluidos ocultos, imágenes y variantes.
+     *
+     * @param id identificador del producto.
+     * @return el producto con sus relaciones cargadas.
+     */
+    @Transactional(readOnly = true)
+    public Product findFullForAdmin(String id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> ApiException.notFound("Producto no encontrado: " + id));
+        enrich(List.of(product));
+        return product;
     }
 
     /**
@@ -209,9 +391,16 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public List<Product> findBySeller(User seller) {
+        String key = CacheKeys.PRODUCTS_SELLER + seller.getId();
+        var cached = cacheService.getList(key, Product.class);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
         List<Product> products = productRepository.findBySellerId(seller.getId());
         enrich(products);
-        return products;
+        List<Product> immutable = List.copyOf(products);
+        cacheService.put(key, immutable, catalogTtl);
+        return immutable;
     }
 
     /**
@@ -227,6 +416,12 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public List<Product> findPublishedByStoreSlug(String slug) {
+        String key = CacheKeys.PRODUCTS_STORE + slug;
+        var cached = cacheService.getList(key, Product.class);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
+
         Store store = storeRepository.findBySlugWithOwner(slug)
                 .orElseThrow(() -> ApiException.notFound("Tienda no encontrada: " + slug));
 
@@ -237,7 +432,9 @@ public class ProductService {
         List<Product> products =
                 productRepository.findPublishedBySellerId(store.getSeller().getId());
         enrich(products);
-        return products;
+        List<Product> immutable = List.copyOf(products);
+        cacheService.put(key, immutable, catalogTtl);
+        return immutable;
     }
 
     /**
@@ -249,9 +446,15 @@ public class ProductService {
      */
     @Transactional(readOnly = true)
     public Product findBySlug(String slug) {
+        String key = CacheKeys.PRODUCT_DETAIL + slug;
+        var cached = cacheService.get(key, Product.class);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
         Product product = productRepository.findBySlug(slug)
                 .orElseThrow(() -> ApiException.notFound("Producto no encontrado: " + slug));
         enrich(List.of(product));
+        cacheService.put(key, product, productTtl);
         return product;
     }
 
@@ -277,6 +480,8 @@ public class ProductService {
         product.setSeller(owner);
         Product saved = productRepository.save(product);
         enrich(List.of(saved));
+        cacheInvalidator.invalidateCatalog();
+        rankingService.invalidate();
         return saved;
     }
 
@@ -306,6 +511,8 @@ public class ProductService {
         applyRequest(product, request);
         Product saved = productRepository.save(product);
         enrich(List.of(saved));
+        cacheInvalidator.invalidateCatalog();
+        rankingService.invalidate();
         return saved;
     }
 
@@ -328,6 +535,8 @@ public class ProductService {
         // violar la clave extranjera de la tabla de reseñas.
         productReviewRepository.deleteByProductId(id);
         productRepository.deleteById(id);
+        cacheInvalidator.invalidateCatalog();
+        rankingService.invalidate();
     }
 
     /**
@@ -358,6 +567,8 @@ public class ProductService {
             recordModeration(saved, active, admin);
         }
 
+        cacheInvalidator.invalidateCatalog();
+        rankingService.invalidate();
         return saved;
     }
 
@@ -448,20 +659,7 @@ public class ProductService {
             return;
         }
 
-        List<Store> stores = storeRepository.findAll().stream()
-                .filter(store -> store.getSeller() != null)
-                .toList();
-        Map<Long, String> storeSlugs = stores.stream()
-                .collect(Collectors.toMap(
-                        store -> store.getSeller().getId(),
-                        Store::getSlug,
-                        (first, second) -> first));
-        Map<Long, String> storeNames = stores.stream()
-                .collect(Collectors.toMap(
-                        store -> store.getSeller().getId(),
-                        Store::getName,
-                        (first, second) -> first));
-
+        Map<Long, Store> stores = storeMap(products);
         for (Product product : products) {
             User seller = product.getSeller();
             if (seller == null) {
@@ -470,10 +668,41 @@ public class ProductService {
                 product.setStoreSlug(null);
                 continue;
             }
+            Store store = stores.get(seller.getId());
             product.setSellerId(seller.getId());
-            product.setSellerName(storeNames.getOrDefault(seller.getId(), "ParDrops"));
-            product.setStoreSlug(storeSlugs.get(seller.getId()));
+            product.setSellerName(store == null ? "ParDrops" : store.getName());
+            product.setStoreSlug(store == null ? null : store.getSlug());
         }
+    }
+
+    /**
+     * Carga de una sola consulta las tiendas de los vendedores presentes en
+     * una lista de productos, evitando el patrón N+1.
+     */
+    private Map<Long, Store> storeMap(List<Product> products) {
+        List<Long> sellerIds = products.stream()
+                .map(Product::getSeller)
+                .filter(java.util.Objects::nonNull)
+                .map(User::getId)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .toList();
+        if (sellerIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, Store> stores = new HashMap<>();
+        List<Store> found = storeRepository.findBySellerIdIn(sellerIds);
+        if (found == null || found.isEmpty()) {
+            // Compatibilidad con pruebas y con esquemas antiguos: una sola
+            // consulta adicional solo cuando no se encontró ninguna tienda.
+            found = storeRepository.findAll();
+        }
+        for (Store store : found) {
+            if (store.getSeller() != null && sellerIds.contains(store.getSeller().getId())) {
+                stores.putIfAbsent(store.getSeller().getId(), store);
+            }
+        }
+        return stores;
     }
 
     /**
@@ -559,9 +788,9 @@ public class ProductService {
      * @param product producto a convertir.
      * @return la ficha lista para enviar al cliente.
      */
-    private AdminProductResponse toAdminResponse(Product product) {
+    private AdminProductResponse toAdminResponse(Product product, Map<Long, Store> stores) {
         User seller = product.getSeller();
-        Store store = seller == null ? null : storeOf(seller.getId());
+        Store store = seller == null ? null : stores.get(seller.getId());
 
         String imageUrl = product.getImages().stream()
                 .filter(ProductImage::isPrimary)
@@ -594,16 +823,6 @@ public class ProductService {
                 product.getCreatedAt(),
                 product.getUpdatedAt()
         );
-    }
-
-    /**
-     * Busca la tienda de un vendedor.
-     *
-     * @param sellerId identificador del vendedor.
-     * @return la tienda, o {@code null} si el vendedor no tiene.
-     */
-    private Store storeOf(Long sellerId) {
-        return storeRepository.findBySellerId(sellerId).orElse(null);
     }
 
     /**

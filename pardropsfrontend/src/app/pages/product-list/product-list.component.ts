@@ -1,12 +1,9 @@
 ﻿/**
  * @file src/app/pages/product-list/product-list.component.ts
- * @description PÃ¡gina para listar y filtrar productos.
- * 
- * Muestra catÃ¡logo completo con filtros por categorÃ­a, estado (nuevo/oferta)
- * y bÃºsqueda. Incluye vista de cuadrÃ­cula.
- * 
- * @author ParDrops E-commerce
- * @version 1.0.0
+ * @description Página para listar y filtrar productos.
+ *
+ * Los filtros se envían al endpoint paginado del catálogo. La distribución se
+ * mantiene estable mientras el usuario navega y cambia al recargar la página.
  */
 
 import { Component, computed, inject, signal } from '@angular/core';
@@ -15,7 +12,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../core/services/product.service';
 import { CategoryService } from '../../core/services/category.service';
-import { Product } from '../../core/models/product.model';
+import { ProductFeedFilters } from '../../core/models/product.model';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 
 @Component({
@@ -29,87 +26,56 @@ export class ProductListComponent {
   private readonly productService = inject(ProductService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-
-  /** Categorias del backend. */
   private readonly categoryService = inject(CategoryService);
 
-  /** TÃ©rmino de bÃºsqueda */
+  /** Término de búsqueda. */
   public searchQuery = signal<string>('');
 
-  /** CategorÃ­a seleccionada */
+  /** Categoría seleccionada. */
   public selectedCategory = signal<string>('all');
 
-  /** Filtro activo (all, nuevos, ofertas) */
+  /** Filtro activo (all, nuevos, ofertas). */
   public activeFilter = signal<string>('all');
 
-  /** Categorias disponibles (desde la API). */
+  /** Categorías disponibles (desde la API). */
   public categories: string[] = [];
 
-  /** Productos filtrados computados */
-  public readonly filteredProducts = computed(() => {
-    let products: Product[] = this.productService.products();
+  /** Total de resultados del filtro actual. */
+  public readonly totalElements = this.productService.totalElements;
 
-    // Filtrar por bÃºsqueda
-    const query = this.searchQuery().toLowerCase().trim();
-    if (query) {
-      products = products.filter(product => 
-        product.name.toLowerCase().includes(query) ||
-        product.description.toLowerCase().includes(query) ||
-        product.tags?.some(tag => tag.toLowerCase().includes(query))
-      );
-    }
+  /** Productos ya filtrados por el servidor. */
+  public readonly filteredProducts = computed(() => this.productService.products());
 
-    // Filtrar por categorÃ­a
-    const category = this.selectedCategory();
-    if (category !== 'all') {
-      products = products.filter(product => 
-        product.categories.some(cat => 
-          cat.toLowerCase() === category.toLowerCase()
-        )
-      );
-    }
+  /** Indica si quedan más páginas. */
+  public readonly hasMore = this.productService.hasMore;
 
-    // Filtrar por estado
-    const filter = this.activeFilter();
-    if (filter === 'nuevos') {
-      products = products.filter(product => product.isNew);
-    } else if (filter === 'ofertas') {
-      products = products.filter(product => product.onSale);
-    }
-
-    return products;
-  });
+  /** Temporizador de búsqueda para no lanzar una petición por tecla. */
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     this.categoryService.list().subscribe({
       next: categories => {
-        this.categories = categories.filter(category => !category.collection).map(category => category.name);
+        this.categories = categories
+          .filter(category => !category.collection)
+          .map(category => category.name);
       },
       error: () => {
         this.categories = [];
       }
     });
 
-    // Suscribirse a los query params
     this.route.queryParams.subscribe(params => {
-      if (params['category']) {
-        this.selectedCategory.set(params['category']);
-      }
-      if (params['filter']) {
-        const filter = params['filter'].toLowerCase();
-        if (filter === 'nuevos' || filter === 'ofertas') {
-          this.activeFilter.set(filter);
-        }
-      }
-      if (params['search']) {
-        this.searchQuery.set(params['search']);
-      }
+      this.selectedCategory.set(params['category'] ?? 'all');
+      const filter = String(params['filter'] ?? 'all').toLowerCase();
+      this.activeFilter.set(filter === 'nuevos' || filter === 'ofertas' ? filter : 'all');
+      this.searchQuery.set(params['search'] ?? '');
+      this.reload();
     });
   }
 
   /**
-   * Actualiza el filtro de categorÃ­a.
-   * @param {string} category - CategorÃ­a seleccionada.
+   * Actualiza el filtro de categoría.
+   * @param {string} category - Categoría seleccionada.
    */
   public setCategory(category: string): void {
     this.selectedCategory.set(category);
@@ -126,17 +92,25 @@ export class ProductListComponent {
   }
 
   /**
-   * Actualiza la bÃºsqueda.
-   * @param {string} query - TÃ©rmino de bÃºsqueda.
+   * Actualiza la búsqueda con un pequeño retardo.
+   * @param {string} query - Término de búsqueda.
    */
   public setSearch(query: string): void {
     this.searchQuery.set(query);
-    this.updateQueryParams({ search: query.trim() || null });
+    if (this.searchTimer) {
+      clearTimeout(this.searchTimer);
+    }
+    this.searchTimer = setTimeout(() => {
+      this.updateQueryParams({ search: query.trim() || null });
+    }, 250);
   }
 
-  /**
-   * Limpia todos los filtros.
-   */
+  /** Carga la siguiente página conservando la distribución. */
+  public loadMore(): void {
+    this.productService.loadMore();
+  }
+
+  /** Limpia todos los filtros. */
   public clearFilters(): void {
     this.searchQuery.set('');
     this.selectedCategory.set('all');
@@ -147,16 +121,25 @@ export class ProductListComponent {
     });
   }
 
+  private reload(): void {
+    const filters: ProductFeedFilters = {
+      search: this.searchQuery().trim(),
+      category: this.selectedCategory() === 'all' ? null : this.selectedCategory(),
+      onlyNew: this.activeFilter() === 'nuevos',
+      onlySale: this.activeFilter() === 'ofertas'
+    };
+    this.productService.loadProducts(filters);
+  }
+
   /**
-   * Actualiza los query params sin recargar la pÃ¡gina.
-   * @param params - ParÃ¡metros a actualizar.
+   * Actualiza los query params sin recargar la página.
+   * @param params - Parámetros a actualizar.
    */
-  private updateQueryParams(params: any): void {
+  private updateQueryParams(params: Record<string, string | null>): void {
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: params,
       queryParamsHandling: 'merge'
     });
   }
-}
-
+}

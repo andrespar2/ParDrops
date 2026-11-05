@@ -58,12 +58,8 @@ export class ProductDetailComponent {
   /** Slug de la ruta actual. */
   private readonly slug = signal<string | null>(null);
 
-  /** Producto actual, derivado de la lista cargada y del slug de la ruta. */
-  public readonly product = computed<Product | undefined>(() => {
-    const currentSlug = this.slug();
-    if (!currentSlug) return undefined;
-    return this.productService.products().find(product => product.slug === currentSlug);
-  });
+  /** Producto actual, cargado del servidor o de la caché local. */
+  public readonly product = signal<Product | undefined>(undefined);
 
   /** Imagen seleccionada. */
   public readonly selectedImageIndex = signal<number>(0);
@@ -167,18 +163,14 @@ export class ProductDetailComponent {
 
   constructor() {
     this.route.paramMap.subscribe(params => {
-      this.slug.set(params.get('slug'));
+      const slug = params.get('slug');
+      this.slug.set(slug);
       this.selectedImageIndex.set(0);
       this.quantity.set(1);
       this.addedToCart.set(false);
       this.resetReviewState();
-    });
-
-    // Si el catálogo ya se cargó y el slug no existe, se vuelve al listado.
-    effect(() => {
-      const loaded = this.productService.loaded();
-      if (loaded && this.slug() && !this.product()) {
-        this.router.navigate(['/productos']);
+      if (slug) {
+        this.loadProduct(slug);
       }
     });
 
@@ -392,8 +384,9 @@ export class ProductDetailComponent {
         this.reviewForm.reset({ rating: 0, comment: '' });
         this.loadReviews(prod.id);
         this.loadEligibility(prod.id);
-        // Refresca el catálogo para actualizar la valoración media del producto.
-        this.productService.loadProducts();
+        // Refresca el producto para actualizar la valoración media.
+        this.productService.invalidateProduct(prod.slug);
+        this.loadProduct(prod.slug);
       },
       error: (error: HttpErrorResponse) => {
         const apiMessage = error.error?.message;
@@ -402,6 +395,19 @@ export class ProductDetailComponent {
         );
       },
       complete: () => this.submitting.set(false)
+    });
+  }
+
+  /**
+   * Carga el producto de la ruta actual.
+   *
+   * @param slug slug del producto.
+   */
+  private loadProduct(slug: string): void {
+    this.product.set(undefined);
+    this.productService.fetchProductBySlug(slug).subscribe({
+      next: product => this.product.set(product),
+      error: () => this.router.navigate(['/productos'])
     });
   }
 

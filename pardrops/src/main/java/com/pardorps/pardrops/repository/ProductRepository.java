@@ -58,6 +58,17 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     List<Product> findPublished();
 
     /**
+     * Cuenta los productos publicados sin cargarlos en memoria.
+     *
+     * @return total de productos visibles en el catálogo público.
+     */
+    @Query("select count(distinct p) from Product p "
+            + "where p.active = true and (p.seller is null or exists "
+            + "(select s.id from Store s where s.seller.id = p.seller.id "
+            + "and s.status = com.pardorps.pardrops.model.StoreStatus.ACTIVE))")
+    long countPublished();
+
+    /**
      * Devuelve todos los productos con su vendedor cargado (uso del panel de
      * administración).
      *
@@ -143,7 +154,8 @@ public interface ProductRepository extends JpaRepository<Product, String> {
             + "where (lower(p.name) like lower(concat('%', :search, '%')) "
             + "   or lower(p.slug) like lower(concat('%', :search, '%')) "
             + "   or lower(p.description) like lower(concat('%', :search, '%'))) "
-            + "  and (:sellerId is null or p.seller.id = :sellerId) "
+            + "  and (:sellerId is null or (:sellerId = -1 and p.seller is null) "
+            + "       or p.seller.id = :sellerId) "
             + "  and (:active is null or p.active = :active)")
     Page<Product> searchForAdmin(
             @Param("search") String search,
@@ -168,7 +180,8 @@ public interface ProductRepository extends JpaRepository<Product, String> {
             + "where (lower(p.name) like lower(concat('%', :search, '%')) "
             + "   or lower(p.slug) like lower(concat('%', :search, '%')) "
             + "   or lower(p.description) like lower(concat('%', :search, '%'))) "
-            + "  and (:sellerId is null or p.seller.id = :sellerId) "
+            + "  and (:sellerId is null or (:sellerId = -1 and p.seller is null) "
+            + "       or p.seller.id = :sellerId) "
             + "  and (:active is null or p.active = :active) "
             + "  and exists ("
             + "        select 1 from Product p2 join p2.categories c "
@@ -220,4 +233,92 @@ public interface ProductRepository extends JpaRepository<Product, String> {
      * @return productos encontrados.
      */
     List<Product> findByIdIn(java.util.Collection<String> ids);
+
+    /**
+     * Devuelve solo los campos escalares necesarios para construir el ranking
+     * del catálogo. Evita cargar imágenes, variantes y categorías de todo el
+     * catálogo en cada petición.
+     *
+     * @param search  texto de búsqueda (cadena vacía para no filtrar).
+     * @param category categoría exacta (nula para no filtrar).
+     * @param minPrice precio mínimo (nulo para no filtrar).
+     * @param maxPrice precio máximo (nulo para no filtrar).
+     * @param onlyNew solo novedades cuando es verdadero.
+     * @param onlyOnSale solo ofertas cuando es verdadero.
+     * @return filas con id, rating, reviewCount, createdAt, featured, isNew,
+     *         stock, price y sellerId.
+     */
+    @Query("""
+            select p.id, p.rating, p.reviewCount, p.createdAt, p.isFeatured,
+                   p.isNew, p.stock, p.price, p.seller.id
+            from Product p
+            where p.active = true
+              and (p.seller is null or exists (
+                    select s.id from Store s
+                    where s.seller.id = p.seller.id
+                      and s.status = com.pardorps.pardrops.model.StoreStatus.ACTIVE))
+              and (:search = '' or lower(p.name) like lower(concat('%', :search, '%'))
+                   or lower(p.slug) like lower(concat('%', :search, '%'))
+                   or lower(p.description) like lower(concat('%', :search, '%')))
+              and (:category is null or exists (
+                    select 1 from Product p2 join p2.categories c
+                    where p2.id = p.id and lower(c) = lower(:category)))
+              and (:minPrice is null or p.price >= :minPrice)
+              and (:maxPrice is null or p.price <= :maxPrice)
+              and (:onlyNew = false or p.isNew = true)
+              and (:onlyOnSale = false or p.onSale = true)
+            """)
+    List<Object[]> findRankingCandidates(
+            @Param("search") String search,
+            @Param("category") String category,
+            @Param("minPrice") Double minPrice,
+            @Param("maxPrice") Double maxPrice,
+            @Param("onlyNew") boolean onlyNew,
+            @Param("onlyOnSale") boolean onlyOnSale);
+
+    /**
+     * Devuelve la pareja producto/categoría de los productos publicados.
+     *
+     * <p>Se usa para calcular afinidad con las categorías compradas por el
+     * usuario sin cargar las entidades completas.</p>
+     *
+     * @param ids identificadores a consultar.
+     * @return filas con id de producto y nombre de categoría.
+     */
+    @Query("""
+            select p.id, c from Product p join p.categories c
+            where p.id in :ids
+            """)
+    List<Object[]> findCategoryPairsByProductIds(@Param("ids") java.util.Collection<String> ids);
+
+    /**
+     * Cuenta los productos por vendedor en una sola consulta agregada.
+     *
+     * @return filas con sellerId y total de productos.
+     */
+    @Query("""
+            select p.seller.id, count(p) from Product p
+            where p.seller is not null
+            group by p.seller.id
+            """)
+    List<Object[]> countGroupedBySeller();
+
+    /**
+     * Cuenta los productos publicados por vendedor en una sola consulta.
+     *
+     * @return filas con sellerId y total publicado.
+     */
+    @Query("""
+            select p.seller.id, count(p) from Product p
+            where p.seller is not null and p.active = true
+            group by p.seller.id
+            """)
+    List<Object[]> countPublishedGroupedBySeller();
+
+    /**
+     * Cuenta los productos publicados del catálogo propio (sin vendedor).
+     *
+     * @return total de productos propios publicados.
+     */
+    long countBySellerIsNullAndActiveTrue();
 }

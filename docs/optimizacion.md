@@ -303,7 +303,28 @@ permiten medir “después” en producción.
 | Token Cloudflare con Zone:Read/Cache Purge | Pendiente | Permite revisar/purgar caché de zona. |
 | `RANKING_*` | Opcional | Ajusta pesos del ranking sin desplegar código. |
 
-## 6. Riesgos y limitaciones
+## 6. Issues, Project, commits y Pull Request
+
+- Issues creados: #117 (Redis), #118 (caché local), #119 (base de datos),
+  #120 (admin por tiendas), #121 (panel vendedor), #122 (ranking),
+  #123 (CDN/R2), #124 (pruebas y documentación).
+- Project usado: **#7 ParDrops | Optimización de Marketplace y Ventas**.
+  Estados actualizados: #117 In Review; #123 Blocked; el resto Done.
+- Commits locales en `main`:
+  - `89f4ad9` perf(cache): Redis opcional y métricas.
+  - `0279678` feat(catalogo): ranking dinámico y paginación.
+  - `46d335d` perf(bd): índices y consultas agregadas.
+  - `b86273b` feat(admin): catálogo por tiendas.
+  - `e7c314b` feat(vendedor): panel homologado y reseñas solo lectura.
+  - `41f40fd` feat(cdn): R2 opcional y caché de imágenes.
+  - `18fdd52` docs(calidad): documentación, caché local y configuración.
+  - `e66aa2e` perf(catalogo): evita la carga duplicada inicial.
+- Pull Request: **#125** `perf: optimizacion integral de infraestructura,
+  cache, paneles y catalogo`, desde `perf/optimizacion-integral` hacia `main`.
+- El push se hizo a la rama del PR, **no a `main`**, para no disparar el
+  despliegue automático de Render/Cloudflare.
+
+## 7. Riesgos y limitaciones
 
 - Redis no se probó contra un servidor real; sí se probó el camino sin Redis.
 - La migración de imágenes a R2 no se ejecutó; requiere credenciales S3.
